@@ -189,7 +189,7 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                     bottom = KeyC("W"),
                 ),
                 KeyItemC(
-                    center = KeyC("r", size = LARGE),
+                    center = KeyC("R", size = LARGE),
                 ),
                 EMOJI_KEY_ITEM_ALT,
                 KeyItemC(
