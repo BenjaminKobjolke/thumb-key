@@ -4,6 +4,7 @@
 [![status-badge](https://woodpecker.join-lemmy.org/api/badges/dessalines/thumb-key/status.svg)](https://woodpecker.join-lemmy.org/dessalines/thumb-key)
 [![GitHub issues](https://img.shields.io/github/issues-raw/dessalines/thumb-key.svg)](https://github.com/dessalines/thumb-key/issues)
 [![License](https://img.shields.io/github/license/dessalines/thumb-key.svg)](LICENSE)
+[![Translation status](https://hosted.weblate.org/widget/thumb-key/thumb-key/svg-badge.svg)](https://hosted.weblate.org/engage/thumb-key/)
 ![GitHub stars](https://img.shields.io/github/stars/dessalines/thumb-key?style=social)
 
 </div>
@@ -13,7 +14,7 @@
     <img width=200px height=200px src="https://raw.githubusercontent.com/dessalines/thumb-key/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" alt="phone_screen" />
   </a>
 
- <h3 align="center"><a href="https://github.com/dessalines/thumb-key">Thumb-Key</a></h3>
+<h3 align="center"><a href="https://github.com/dessalines/thumb-key">Thumb-Key</a></h3>
   <p align="center">
     A privacy-conscious keyboard made for your thumbs
     <br />
@@ -27,8 +28,8 @@
   <p align="center">
     <a href="https://apt.izzysoft.de/fdroid/index/apk/com.dessalines.thumbkey"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80"></a>
     <a href="https://f-droid.org/packages/com.dessalines.thumbkey"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
-    <a href="https://play.google.com/store/apps/details?id=com.dessalines.thumbkey"><img src="https://cdn.rawgit.com/steverichey/google-play-badge-svg/master/img/en_get.svg" height="80"></a>
-    <a href="https://github.com/dessalines/thumb-key/releases/latest"><img src="https://raw.githubusercontent.com/andOTP/andOTP/master/assets/badges/get-it-on-github.png" height="80"></a>
+    <a href="https://play.google.com/store/apps/details?id=com.dessalines.thumbkey"><img src="https://cdn.rawgit.com/steverichey/google-play-badge-svg/master/img/en_get.svg" alt="Get it on the Google play store" height="80"></a>
+    <a href="https://github.com/dessalines/thumb-key/releases/latest"><img src="https://raw.githubusercontent.com/andOTP/andOTP/master/assets/badges/get-it-on-github.png" alt="Get it on Github" height="80"></a>
   </p>
 </p>
 
@@ -37,25 +38,32 @@
 <!-- toc -->
 
 - [About Thumb-Key](#about-thumb-key)
-  * [Features](#features)
+  - [Features](#features)
 - [User Guide](#user-guide)
-  * [Emoji Key](#emoji-key)
-  * [Symbols / Letters Key](#symbols--letters-key)
-  * [Slide gestures](#slide-gestures)
-  * [Drag-and-return](#drag-and-return)
-  * [Ghost keys](#ghost-keys)
-  * [Coming from MessagEase Keyboard Tips](#coming-from-messagease-keyboard-tips)
-  * [Other](#other)
+  - [Emoji Key](#emoji-key)
+  - [Symbols / Letters Key](#symbols--letters-key)
+  - [Slide gestures](#slide-gestures)
+  - [Drag-and-return](#drag-and-return)
+  - [Ghost keys](#ghost-keys)
+  - [Coming from MessagEase Keyboard Tips](#coming-from-messagease-keyboard-tips)
+  - [Modify keys](#modify-keys)
+    - [Example 1](#example-1)
+    - [Example 2](#example-2)
+    - [Example 3](#example-3)
+    - [Example 4](#example-4)
+    - [Example 5](#example-5)
+    - [Example 6](#example-6)
+  - [Other](#other)
 - [Thumb-Key Design](#thumb-key-design)
-  * [A History of Phone Keyboards](#a-history-of-phone-keyboards)
-    + [When phone keyboards became Keyloggers](#when-phone-keyboards-became-keyloggers)
-    + [MessagEase](#messagease)
-  * [Thumb-Key Letter Positions](#thumb-key-letter-positions)
-  * [Built With](#built-with)
+  - [A History of Phone Keyboards](#a-history-of-phone-keyboards)
+    - [When phone keyboards became Keyloggers](#when-phone-keyboards-became-keyloggers)
+    - [MessagEase](#messagease)
+  - [Thumb-Key Letter Positions](#thumb-key-letter-positions)
+  - [Built With](#built-with)
 - [Installation / Releases](#installation--releases)
 - [Contributing](#contributing)
 - [Support / Donate](#support--donate)
-  * [Crypto](#crypto)
+  - [Crypto](#crypto)
 - [Social / Contact](#social--contact)
 - [Android IME Resources](#android-ime-resources)
 
@@ -84,7 +92,7 @@ This project is a follow-up to the now unmaintained (and closed-source) [MessagE
 ## User Guide
 
 - **Tap**, or **swipe** to type a letter.
-- **Swipe up** or **down** on `A` to capitalize. (If you changed the layout, the button next to `#`)  
+- **Swipe up** or **down** on `A` to capitalize. (If you changed the layout, the button next to `#`)
   <img width=60px height=60px src="https://i.postimg.cc/Znt2Ft9G/thumbkey-1-1.png">
 - **Double tap** the space bar to type a comma, triple tap to type a period. More taps have more punctuation.
 - **Swipe left** or **long press** on the backspace key to delete whole words to the left of the cursor.
@@ -99,7 +107,7 @@ This project is a follow-up to the now unmaintained (and closed-source) [MessagE
 - **Swipe right** to change keyboard position.
 - **Swipe down** to access IME switcher (switch between Thumb-key and other keyboards).
 - **Swipe left** to cycle between selected layouts (languages).
-- **Swipe to bottom-left** to toggle voice input. Requires [FUTO Voice Input](https://play.google.com/store/apps/details?id=org.futo.voiceinput).
+- **Swipe to bottom-left** to toggle voice input. Requires [FUTO Voice Input](https://play.google.com/store/apps/details?id=org.futo.voiceinput), [Transcribro](https://github.com/soupslurpr/Transcribro), or [Whisper IME](https://github.com/woheller69/whisperIME).
 
 ### Symbols / Letters Key
 
@@ -122,7 +130,6 @@ Enabling `Slide gestures` in keyboard settings will enable the following continu
 Enabling `Spacebar: Allow normal swipes to work with slide gestures`, in keyboard settings will enable the following:
 
 - Swipe left and right to move the cursor by a single character.
-- Swipe up and down to move the cursor up or down a line.
 - Allow us to use the other characters on the spacebars in the typesplit layouts.
 
 Enabling `Backspace: Allow normal swipes to work with slide gestures`, in keyboard settings will enable the following:
@@ -142,6 +149,188 @@ Enabling `Ghost keys` in keyboard settings will enable swiping hidden symbol key
 ### Coming from MessagEase Keyboard Tips
 
 - For those use to tapping on the hand key to hide the MessagEase Keyboard and make more screen real estate available, this can be done by using the Android back key or on Android 10 and higher using the guesture navigation for back.
+- You can use `Modify keys` and `HideKeyboard` action to achieve MessagEase experience
+
+### Modify keys
+
+Keyboard keys can be customized using YAML.
+
+#### Example 1
+
+```yaml
+ENThumbKey:
+  main:
+    key1_0:
+      center:
+        text: ñ
+```
+
+![](fastlane/metadata/android/en-US/images/userGuideImages/modify_keys_example_1.png)
+This YAML configuration modifies the key in the second row, first column, center letter from 'n' to 'ñ'.
+
+- `ENThumbKey` specifies which keyboard to change. In this case, it's the 'english thumbkey' layout.
+  - [Here](./app/src/main/java/com/dessalines/thumbkey/utils/KeyboardLayout.kt) is a list of all keyboard layouts.
+- `main` specifies the main keyboard layout. Possible values are:
+  - `main`
+  - `shifted`
+  - `numeric`
+  - `ctrled`
+  - `alted`
+- `key1_0` specifies the key to modify. The first number is the row, and the second number is the column. The top row is 0, and the left column is 0.
+- `center` specifies which slide/touch direction of the key to modify. Possible values are:
+  - `center`
+  - `left`
+  - `topLeft`
+  - `top`
+  - `topRight`
+  - `right`
+  - `bottomRight`
+  - `bottom`
+  - `bottomLeft`
+- `text` specifies the text of the key
+
+#### Example 2
+
+```yaml
+ENThumbKey:
+  main:
+    key0_0:
+      right: { text: ê }
+      topRight: { text: è }
+      top: { text: ę }
+  shifted:
+    key0_0:
+      right: { text: Ê }
+      topRight: { text: È }
+      top: { text: Ę }
+
+ESCAMessagEase:
+  main:
+    key0_0:
+      bottom: { text: "( ͡° ͜ʖ ͡°)", size: SMALLEST }
+    key0_1:
+      # Unicode escape sequence can be optionally used for convenience or readability.
+      bottomLeft: { text: "\U000121EB", size: SMALL }
+      # this is equivalent to:
+      # bottomLeft: {text: "𒇫", size: SMALL}
+    key2_2:
+      swipeType: FOUR_WAY_CROSS
+      center: { text: "𓀒", size: LARGE }
+      topLeft: { remove: true }
+      topRight: { remove: true }
+      bottomRight: { remove: true }
+      bottomLeft: { remove: true }
+```
+
+![](fastlane/metadata/android/en-US/images/userGuideImages/modify_keys_example_2.png)
+
+- Two keyboards are modified: `ENThumbKey (english thumbkey)` and `ESCAMessagEase (español català messagease)`.
+- The first keyboard has both `main` and `shifted` modes modified.
+- The second keyboard uses the `size` property to specify the display size of the text. Possible values are:
+  - `LARGE`
+  - `SMALL`
+  - `SMALLEST`
+- The `remove` property is used to remove key-sides.
+- The `swipeType` property is used to modify the directionality of a key. Possible values are:
+  - `EIGHT_WAY`
+  - `FOUR_WAY_CROSS`
+  - `FOUR_WAY_DIAGONAL`
+  - `TWO_WAY_VERTICAL`
+  - `TWO_WAY_HORIZONTAL`
+
+#### Example 3
+
+```yaml
+ENThumbKey:
+  main:
+    key0_3:
+      center:
+        keyAction: SwitchLanguage
+      left:
+        keyAction: ToggleEmojiMode
+```
+
+![](fastlane/metadata/android/en-US/images/userGuideImages/modify_keys_example_3.png)
+
+This swaps the 'switch language' and 'toggle emoji' actions on the top-right key. Possible values for `keyAction` are:
+
+- `ToggleNumericMode`
+- `ToggleEmojiMode`
+- `Left`
+- `Right`
+- `Top`
+- `Bottom`
+- `GotoSettings`
+- `SelectAll`
+- `Cut`
+- `Copy`
+- `Paste`
+- `Undo`
+- `Redo`
+- `SwitchLanguage`
+- `SwitchIME`
+- `SwitchIMEVoice`
+- `HideKeyboard`
+
+`keyAction` and `text` cannot be used together.
+
+#### Example 4
+
+```yaml
+ENThumbKey:
+  main:
+    key0_0: { longPress: { text: "1" } }
+    key0_1: { longPress: { text: "2" } }
+    key0_2: { longPress: { text: "3" } }
+    key1_0: { longPress: { text: "4" } }
+    key1_1: { longPress: { text: "5" } }
+    key1_2: { longPress: { text: "6" } }
+    key2_0: { longPress: { text: "7" } }
+    key2_1: { longPress: { text: "8" } }
+    key2_2: { longPress: { text: "9" } }
+    key3_0: { longPress: { text: "0" } }
+```
+
+This enables long pressing to type digits. `longPress` properties are: `text`, `keyAction`, `remove`. These are used the same way as for `center`, `left`, `topLeft`, etc.
+
+#### Example 5
+
+This example shows one way to declare combining diacritics:
+
+```yaml
+ENMessagEase:
+  main:
+    key0_0:
+      topLeft:
+        text: "\u0301" # unicode sequence for Combining Acute Accent
+        displayText: "◌́" # Dotted Circle + Combining Acute Accent
+      top:
+        text: "\u0302" # Combining Circumflex Accent
+        displayText: "◌̂"
+      topRight:
+        text: "\u030b" # Combining Double Acute Accent
+        displayText: "◌̋"
+```
+
+Note that the `text` field contains only one character: the combining diacritic, while the `displayText` field contains two characters: the dotted circle and the combining diacritic.
+
+#### Example 6
+
+```yaml
+ENThumbKey:
+  main:
+    key0_1:
+      right:
+        text: "!"
+        swipeReturnText: "¡" # upside-down exclamation mark, used commonly in Spanish
+      key1_3:
+        bottomLeft:
+          swipeReturnAction: Redo
+        bottomRight:
+          swipeReturnAction: Undo
+```
+
+The attributes `swipeReturnText` and `swipeReturnAction` allow defining swipe-return behaviour. Possible values for `swipeReturnAction` are the same as the ones for `keyAction`.
 
 ### Other
 
@@ -195,9 +384,21 @@ MessagEase is unfortunately unmaintained, and Thumb-Key uses a better alternatin
 - [F-Droid](https://f-droid.org/en/packages/com.dessalines.thumbkey/)
 - [Google Play](https://play.google.com/store/apps/details?id=com.dessalines.thumbkey)
 
+### Verifying Fingerprints
+
+You can use [the following tool](https://developer.android.com/tools/apksigner#usage-verify) to verify the certificate before installation:
+
+`apksigner verify -v --print-certs <path-to-apk>`
+
+`SHA256: EA:71:95:CF:CE:63:8A:E6:B1:A8:00:2D:DC:0D:48:63:36:60:95:EA:5B:8D:95:C1:CD:5E:25:DB:0F:E2:E7:C3`
+
 ## Contributing
 
 See [Contributing.md](CONTRIBUTING.md) for how to add keyboard layouts, and themes.
+
+Translations via [Weblate](https://hosted.weblate.org/engage/thumb-key/):
+
+[![Translation status](https://hosted.weblate.org/widget/thumb-key/thumb-key/multi-auto.svg)](https://hosted.weblate.org/engage/thumb-key/)
 
 ## Support / Donate
 
@@ -210,14 +411,14 @@ Your donations directly support full-time development, and help keep this mainta
 
 ### Crypto
 
-- bitcoin: `1Hefs7miXS5ff5Ck5xvmjKjXf5242KzRtK`
-- ethereum: `0x400c96c96acbC6E7B3B43B1dc1BB446540a88A01`
-- monero: `41taVyY6e1xApqKyMVDRVxJ76sPkfZhALLTjRvVKpaAh2pBd4wv9RgYj1tSPrx8wc6iE1uWUfjtQdTmTy2FGMeChGVKPQuV`
+- Bitcoin: `1Hefs7miXS5ff5Ck5xvmjKjXf5242KzRtK`
+- Ethereum: `0x400c96c96acbC6E7B3B43B1dc1BB446540a88A01`
+- Monero: `41taVyY6e1xApqKyMVDRVxJ76sPkfZhALLTjRvVKpaAh2pBd4wv9RgYj1tSPrx8wc6iE1uWUfjtQdTmTy2FGMeChGVKPQuV`
 
 ## Social / Contact
 
 - [lemmy.ml/c/thumbkey](https://lemmy.ml/c/thumbkey)
-- [Thumbkey dev chat](https://matrix.to/#/#thumbkey-dev:matrix.org)
+- [Thumb-Key dev chat](https://matrix.to/#/#thumbkey-dev:matrix.org)
 - [Mastodon](https://mastodon.social/@dessalines)
 
 ## Android IME Resources

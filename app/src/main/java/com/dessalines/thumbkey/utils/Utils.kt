@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.Resources
-import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -34,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
+import androidx.core.net.toUri
 import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.IMEService
@@ -46,6 +46,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import java.util.regex.Pattern
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -254,6 +255,7 @@ fun keyboardPositionToAlignment(position: KeyboardPosition): Alignment =
         KeyboardPosition.Right -> Alignment.BottomEnd
         KeyboardPosition.Center -> Alignment.BottomCenter
         KeyboardPosition.Left -> Alignment.BottomStart
+        KeyboardPosition.Dual -> Alignment.BottomStart
     }
 
 /**
@@ -327,12 +329,15 @@ fun performKeyAction(
     autoCapitalize: Boolean,
     keyboardSettings: KeyboardDefinitionSettings,
     onToggleShiftMode: (enable: Boolean) -> Unit,
+    onToggleCtrlMode: (enable: Boolean) -> Unit,
+    onToggleAltMode: (enable: Boolean) -> Unit,
     onToggleNumericMode: (enable: Boolean) -> Unit,
     onToggleEmojiMode: (enable: Boolean) -> Unit,
     onToggleCapsLock: () -> Unit,
     onAutoCapitalize: (enable: Boolean) -> Unit,
     onSwitchLanguage: () -> Unit,
     onChangePosition: ((old: KeyboardPosition) -> KeyboardPosition) -> Unit,
+    onKeyEvent: () -> Unit,
 ) {
     when (action) {
         is KeyAction.CommitText -> {
@@ -354,16 +359,19 @@ fun performKeyAction(
                         // Insert the expansion and a space
                         ime.currentInputConnection.commitText(expandedText + " ", 1)
                     } else {
-                        ime.currentInputConnection.commitText(" ", 1)
+                        keyboardSettings.textProcessor?.handleCommitText(ime, text)
+                            ?: ime.currentInputConnection.commitText(" ", 1)
                     }
                 } else {
-                    ime.currentInputConnection.commitText(" ", 1)
+                    keyboardSettings.textProcessor?.handleCommitText(ime, text)
+                        ?: ime.currentInputConnection.commitText(" ", 1)
                 }
             } else {
-                ime.currentInputConnection.commitText(text, 1)
+                keyboardSettings.textProcessor?.handleCommitText(ime, text)
+                    ?: ime.currentInputConnection.commitText(text, 1)
             }
 
-            if (autoCapitalize) {
+            if (autoCapitalize && keyboardSettings.autoShift) {
                 autoCapitalize(
                     ime = ime,
                     onAutoCapitalize = onAutoCapitalize,
@@ -377,23 +385,28 @@ fun performKeyAction(
         is KeyAction.SendEvent -> {
             val ev = action.event
             Log.d(TAG, "sending key event: $ev")
-            ime.currentInputConnection.sendKeyEvent(ev)
+            keyboardSettings.textProcessor?.handleKeyEvent(ime, ev)
+                ?: ime.currentInputConnection.sendKeyEvent(ev)
+            onKeyEvent()
         }
 
         // Some apps are having problems with delete key events, and issues need to be opened up
         // on their repos.
         is KeyAction.DeleteKeyAction -> {
             val ev = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)
-            ime.currentInputConnection.sendKeyEvent(ev)
+            keyboardSettings.textProcessor?.handleKeyEvent(ime, ev)
+                ?: ime.currentInputConnection.sendKeyEvent(ev)
         }
 
         is KeyAction.DeleteWordBeforeCursor -> {
             Log.d(TAG, "deleting last word")
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             deleteWordBeforeCursor(ime)
         }
 
         is KeyAction.DeleteWordAfterCursor -> {
             Log.d(TAG, "deleting next word")
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             deleteWordAfterCursor(ime)
         }
 
@@ -407,13 +420,36 @@ fun performKeyAction(
                 text,
                 1,
             )
-            if (autoCapitalize) {
+            if (autoCapitalize && !keyboardSettings.autoShift) {
                 autoCapitalize(
                     ime = ime,
                     onAutoCapitalize = onAutoCapitalize,
                     autocapitalizers = keyboardSettings.autoCapitalizers,
                 )
             }
+        }
+
+        is KeyAction.ReplaceTrailingWhitespace -> {
+            Log.d(TAG, "replacing trailing whitespace")
+            val distanceBack = action.distanceBack
+            val text = action.text
+            val ic = ime.currentInputConnection
+
+            val textBeforeCursor = ic.getTextBeforeCursor(distanceBack, 0)?.toString() ?: ""
+
+            val trailingWhitespacePattern = Pattern.compile("\\s+$")
+            val matcher = trailingWhitespacePattern.matcher(textBeforeCursor)
+
+            if (matcher.find()) {
+                ic.deleteSurroundingText(matcher.end() - matcher.start(), 0)
+            }
+            ic.commitText(text, 1)
+        }
+
+        is KeyAction.SmartQuotes -> {
+            val textBeforeCursor = ime.currentInputConnection.getTextBeforeCursor(1, 0)?.toString() ?: ""
+            val textNew = if (textBeforeCursor.matches(Regex("\\S"))) action.end else action.start
+            ime.currentInputConnection.commitText(textNew, 1)
         }
 
         is KeyAction.ComposeLastKey -> {
@@ -446,6 +482,13 @@ fun performKeyAction(
                             "Y" -> "Ÿ"
                             " " -> "\""
                             "'" -> "\""
+                            // Greek
+                            "υ" -> "ϋ"
+                            "ύ" -> "ΰ"
+                            "Υ" -> "Ϋ"
+                            "ι" -> "ϊ"
+                            "ί" -> "ΐ"
+                            "Ι" -> "Ϊ"
                             else -> textBefore
                         }
 
@@ -502,6 +545,22 @@ fun performKeyAction(
                             "'" -> "”"
                             " " -> "'"
                             "\"" -> "'"
+                            // Greek
+                            "α" -> "ά"
+                            "Α" -> "Ά"
+                            "ε" -> "έ"
+                            "Ε" -> "Έ"
+                            "η" -> "ή"
+                            "Η" -> "Ή"
+                            "ι" -> "ί"
+                            "ϊ" -> "ΐ"
+                            "Ι" -> "Ί"
+                            "ο" -> "ό"
+                            "Ο" -> "Ό"
+                            "υ" -> "ύ"
+                            "ϋ" -> "ΰ"
+                            "ω" -> "ώ"
+                            "Ω" -> "Ώ"
                             else -> textBefore
                         }
 
@@ -539,6 +598,22 @@ fun performKeyAction(
                             "Y" -> "Ỳ"
                             "`" -> " “"
                             " " -> "`"
+                            // Greek
+                            "α" -> "ά"
+                            "Α" -> "Ά"
+                            "ε" -> "έ"
+                            "Ε" -> "Έ"
+                            "η" -> "ή"
+                            "Η" -> "Ή"
+                            "ι" -> "ί"
+                            "ϊ" -> "ΐ"
+                            "Ι" -> "Ί"
+                            "ο" -> "ό"
+                            "Ο" -> "Ό"
+                            "υ" -> "ύ"
+                            "ϋ" -> "ΰ"
+                            "ω" -> "ώ"
+                            "Ω" -> "Ώ"
                             else -> textBefore
                         }
 
@@ -799,6 +874,9 @@ fun performKeyAction(
                             "E" -> "Ẻ"
                             "ê" -> "ể"
                             "Ê" -> "Ể"
+                            "y" -> "ỷ"
+                            "Y" -> "Ỷ"
+                            " " -> "?"
                             else -> textBefore
                         }
 
@@ -826,6 +904,9 @@ fun performKeyAction(
                             "E" -> "Ẹ"
                             "ê" -> "ệ"
                             "Ê" -> "Ệ"
+                            "y" -> "ỵ"
+                            "Y" -> "Ỵ"
+                            " " -> "*"
                             else -> textBefore
                         }
 
@@ -868,6 +949,18 @@ fun performKeyAction(
             onToggleShiftMode(enable)
         }
 
+        is KeyAction.ToggleCtrlMode -> {
+            val enable = action.enable
+            Log.d(TAG, "Toggling Ctrled: $enable")
+            onToggleCtrlMode(enable)
+        }
+
+        is KeyAction.ToggleAltMode -> {
+            val enable = action.enable
+            Log.d(TAG, "Toggling Alted: $enable")
+            onToggleAltMode(enable)
+        }
+
         is KeyAction.ToggleNumericMode -> {
             val enable = action.enable
             Log.d(TAG, "Toggling Numeric: $enable")
@@ -877,6 +970,7 @@ fun performKeyAction(
         is KeyAction.ToggleEmojiMode -> {
             val enable = action.enable
             Log.d(TAG, "Toggling Emoji: $enable")
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             onToggleEmojiMode(enable)
         }
 
@@ -896,12 +990,13 @@ fun performKeyAction(
                 }
 
                 EditorInfo.IME_ACTION_NONE -> {
-                    ime.currentInputConnection.sendKeyEvent(
+                    val ev =
                         KeyEvent(
                             KeyEvent.ACTION_DOWN,
                             KeyEvent.KEYCODE_ENTER,
-                        ),
-                    )
+                        )
+                    keyboardSettings.textProcessor?.handleKeyEvent(ime, ev)
+                        ?: ime.currentInputConnection.sendKeyEvent(ev)
                 }
 
                 else -> {
@@ -920,10 +1015,12 @@ fun performKeyAction(
         KeyAction.SelectAll -> {
             // Check here for the action #s:
             // https://developer.android.com/reference/android/R.id
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             ime.currentInputConnection.performContextMenuAction(android.R.id.selectAll)
         }
 
         KeyAction.Cut -> {
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             if (ime.currentInputConnection.getSelectedText(0).isNullOrEmpty()) {
                 // Nothing selected, so cut all the text
                 ime.currentInputConnection.performContextMenuAction(android.R.id.selectAll)
@@ -938,6 +1035,7 @@ fun performKeyAction(
         }
 
         KeyAction.Copy -> {
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             if (ime.currentInputConnection.getSelectedText(0).isNullOrEmpty()) {
                 // Nothing selected, so copy all the text
                 ime.currentInputConnection.performContextMenuAction(android.R.id.selectAll)
@@ -955,16 +1053,19 @@ fun performKeyAction(
         }
 
         KeyAction.Paste -> {
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             ime.currentInputConnection.performContextMenuAction(android.R.id.paste)
         }
 
         KeyAction.Undo -> {
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             ime.currentInputConnection.sendKeyEvent(
                 KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Z, 0, KeyEvent.META_CTRL_ON),
             )
         }
 
         KeyAction.Redo -> {
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
             ime.currentInputConnection.sendKeyEvent(
                 KeyEvent(
                     0,
@@ -995,17 +1096,19 @@ fun performKeyAction(
         KeyAction.MoveKeyboard.CycleLeft ->
             onChangePosition {
                 when (it) {
-                    KeyboardPosition.Right -> KeyboardPosition.Center
+                    KeyboardPosition.Right -> KeyboardPosition.Dual
                     KeyboardPosition.Center -> KeyboardPosition.Left
                     KeyboardPosition.Left -> KeyboardPosition.Right
+                    KeyboardPosition.Dual -> KeyboardPosition.Center
                 }
             }
         KeyAction.MoveKeyboard.CycleRight ->
             onChangePosition {
                 when (it) {
-                    KeyboardPosition.Left -> KeyboardPosition.Center
+                    KeyboardPosition.Left -> KeyboardPosition.Dual
                     KeyboardPosition.Center -> KeyboardPosition.Right
                     KeyboardPosition.Right -> KeyboardPosition.Left
+                    KeyboardPosition.Dual -> KeyboardPosition.Center
                 }
             }
 
@@ -1039,6 +1142,12 @@ fun performKeyAction(
             val text = action.text
             ime.currentInputConnection.commitText(text, 1)
         }
+
+        KeyAction.HideKeyboard -> {
+            ime.requestHideSelf(0)
+        }
+
+        KeyAction.Noop -> {}
 
         is KeyAction.ToggleCurrentWordCapitalization -> {
             val maxLength = 100
@@ -1122,6 +1231,36 @@ fun getKeyboardMode(
     }
 }
 
+fun getCurrentLayoutColumnCount(keyboardLayout: Int): Int {
+    val currentLayout = KeyboardLayout.entries[keyboardLayout]
+    val keyboardDefinition = currentLayout.keyboardDefinition
+    val mainKeyboard = keyboardDefinition.modes.main
+    val columnCount = mainKeyboard.arr.maxOf { it.size }
+    return columnCount.toInt()
+}
+
+fun getCurrentDisplayWidth(ctx: Context): Int {
+    val displayMetrics = ctx.resources.displayMetrics
+    return (displayMetrics.widthPixels / displayMetrics.density).toInt()
+}
+
+fun getAutoKeyWidth(
+    keyboardLayout: Int,
+    keyPadding: Int,
+    position: KeyboardPosition,
+    ctx: Context,
+): Int {
+    val screenWidth = getCurrentDisplayWidth(ctx)
+    val availableWidth = screenWidth - (keyPadding * 2)
+    val multiplier =
+        when (position) {
+            KeyboardPosition.Dual -> 2
+            else -> 1
+        }
+    val columns = getCurrentLayoutColumnCount(keyboardLayout) * multiplier
+    return (availableWidth / columns).toInt()
+}
+
 private fun autoCapitalize(
     ime: IMEService,
     onAutoCapitalize: (enable: Boolean) -> Unit,
@@ -1170,8 +1309,7 @@ fun isPasswordField(ime: IMEService): Boolean {
         InputType.TYPE_TEXT_VARIATION_PASSWORD,
         InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
         InputType.TYPE_NUMBER_VARIATION_PASSWORD,
-    ).contains(inputType) ||
-        ime.currentInputEditorInfo.inputType == EditorInfo.TYPE_NULL
+    ).contains(inputType)
 }
 
 fun deleteWordBeforeCursor(ime: IMEService) {
@@ -1239,7 +1377,7 @@ fun SimpleTopAppBar(
         },
         navigationIcon = {
             if (showBack) {
-                IconButton(onClick = { navController.navigate("settings") }) {
+                IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
                         Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = stringResource(R.string.settings),
@@ -1254,7 +1392,7 @@ fun openLink(
     url: String,
     ctx: Context,
 ) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
     ctx.startActivity(intent)
 }
 
@@ -1344,6 +1482,7 @@ inline fun <T> List<T>.dropWhileIndexed(predicate: (index: Int, T) -> Boolean): 
 fun circularDirection(
     positions: List<Offset>,
     circleCompletionTolerance: Float,
+    minSwipeLength: Int,
 ): CircularDirection? {
     // first filter out all run-ups to the start of the circle:
     // throw away all positions that consecutively get closer to the endpoint of the circle
@@ -1353,41 +1492,43 @@ fun circularDirection(
         positions.dropWhileIndexed { index, position ->
             index == 0 || position.getDistanceTo(positions.last()) <= positions[index - 1].getDistanceTo(positions.last())
         }
-    val center = filteredPositions.reduce(Offset::plus) / filteredPositions.count().toFloat()
-    val radii = filteredPositions.map { it.getDistanceTo(center) }
-    val maxRadius = radii.reduce { acc, it -> if (it > acc) it else acc }
-    // This is similar to accepting an ellipse with aspect ratio 3:1
-    val minRadius = maxRadius / 3
-    val similarRadii =
-        radii.all {
-            it in minRadius..maxRadius
+
+    return if (filteredPositions.isNotEmpty()) {
+        val center = filteredPositions.reduce(Offset::plus) / filteredPositions.count().toFloat()
+        val radii = filteredPositions.map { it.getDistanceTo(center) }
+        val maxRadius = radii.reduce { acc, it -> if (it > acc) it else acc }
+        val minRadius = radii.reduce { acc, it -> if (it < acc) it else acc }
+
+        val isValidCircle = minRadius > (minSwipeLength / 2)
+
+        if (isValidCircle) {
+            val spannedAngle =
+                filteredPositions
+                    .asSequence()
+                    .map { it - center }
+                    .windowed(2)
+                    .map { (a, b) ->
+                        val (xa, ya) = a
+                        val (xb, yb) = b
+                        atan2(
+                            xa * yb - ya * xb,
+                            xa * xb + ya * yb,
+                        )
+                    }.sum()
+
+            val averageRadius = (minRadius + maxRadius) / 2
+            val angleThreshold = 2 * PI * (1 - circleCompletionTolerance / averageRadius)
+
+            when {
+                spannedAngle >= angleThreshold -> CircularDirection.Clockwise
+                spannedAngle <= -angleThreshold -> CircularDirection.Counterclockwise
+                else -> null
+            }
+        } else {
+            null
         }
-
-    if (!similarRadii) {
-        return null
-    }
-    val spannedAngle =
-        filteredPositions
-            .asSequence()
-            .map { it - center } // transform center into origin
-            .windowed(2)
-            .map { (a, b) ->
-                val (xa, ya) = a
-                val (xb, yb) = b
-                // angle between two vectors
-                atan2(
-                    xa * yb - ya * xb,
-                    xa * xb + ya * yb,
-                )
-            }.sum()
-
-    val averageRadius = (minRadius + maxRadius) / 2
-    // The threshold is a full circumference minus the arc with length equal to the tolerance
-    val angleThreshold = 2 * PI * (1 - circleCompletionTolerance / averageRadius)
-    return when {
-        spannedAngle >= angleThreshold -> CircularDirection.Clockwise
-        spannedAngle <= -angleThreshold -> CircularDirection.Counterclockwise
-        else -> null
+    } else {
+        null
     }
 }
 

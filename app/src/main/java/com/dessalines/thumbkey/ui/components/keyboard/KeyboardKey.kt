@@ -114,12 +114,15 @@ fun KeyboardKey(
     slideSpacebarDeadzoneEnabled: Boolean,
     slideBackspaceDeadzoneEnabled: Boolean,
     onToggleShiftMode: (enable: Boolean) -> Unit,
+    onToggleCtrlMode: (enable: Boolean) -> Unit,
+    onToggleAltMode: (enable: Boolean) -> Unit,
     onToggleNumericMode: (enable: Boolean) -> Unit,
     onToggleEmojiMode: (enable: Boolean) -> Unit,
     onToggleCapsLock: () -> Unit,
     onAutoCapitalize: (enable: Boolean) -> Unit,
     onSwitchLanguage: () -> Unit,
     onChangePosition: ((old: KeyboardPosition) -> KeyboardPosition) -> Unit,
+    onKeyEvent: () -> Unit,
     oppositeCaseKey: KeyItemC? = null,
     numericKey: KeyItemC? = null,
     dragReturnEnabled: Boolean,
@@ -231,12 +234,15 @@ fun KeyboardKey(
                         autoCapitalize = autoCapitalize,
                         keyboardSettings = keyboardSettings,
                         onToggleShiftMode = onToggleShiftMode,
+                        onToggleCtrlMode = onToggleCtrlMode,
+                        onToggleAltMode = onToggleAltMode,
                         onToggleNumericMode = onToggleNumericMode,
                         onToggleEmojiMode = onToggleEmojiMode,
                         onToggleCapsLock = onToggleCapsLock,
                         onAutoCapitalize = onAutoCapitalize,
                         onSwitchLanguage = onSwitchLanguage,
                         onChangePosition = onChangePosition,
+                        onKeyEvent = onKeyEvent,
                     )
                     doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
                 },
@@ -248,12 +254,15 @@ fun KeyboardKey(
                             autoCapitalize = autoCapitalize,
                             keyboardSettings = keyboardSettings,
                             onToggleShiftMode = onToggleShiftMode,
+                            onToggleCtrlMode = onToggleCtrlMode,
+                            onToggleAltMode = onToggleAltMode,
                             onToggleNumericMode = onToggleNumericMode,
                             onToggleEmojiMode = onToggleEmojiMode,
                             onToggleCapsLock = onToggleCapsLock,
                             onAutoCapitalize = onAutoCapitalize,
                             onSwitchLanguage = onSwitchLanguage,
                             onChangePosition = onChangePosition,
+                            onKeyEvent = onKeyEvent,
                         )
                         doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
                         if (vibrateOnTap) {
@@ -439,8 +448,14 @@ fun KeyboardKey(
                         ) {
                             hasSlideMoveCursorTriggered = false
 
-                            val finalOffsetThreshold = keySize.dp.toPx() * 0.71f // magic number found from trial and error
-                            val maxOffsetThreshold = 1.5 * finalOffsetThreshold
+                            // offset where we recognize if the swipe is back to the initial key
+                            // this offset needs to take the minSwipeLength into consideration. Otherwise
+                            // just a little (1px) swipe back would trigger the DragReturn action
+                            val finalOffsetThreshold = minSwipeLength * 0.71f // magic number found from trial and error
+
+                            // offset needed, at which the swipe qualifies for DragReturn or Circular
+                            // depending on minSwipeLength setting to have consistent swipe lengths or circle sizes
+                            val maxOffsetThreshold = minSwipeLength
 
                             val finalOffset = positions.last()
                             // we also consider the final offset small enough if it's kinda big, but
@@ -466,7 +481,7 @@ fun KeyboardKey(
                                                         CircularDragAction.OppositeCase to oppositeCaseKey?.center?.action,
                                                         CircularDragAction.Numeric to numericKey?.center?.action,
                                                     )
-                                                circularDirection(positions, finalOffsetThreshold)?.let {
+                                                circularDirection(positions, finalOffsetThreshold, minSwipeLength)?.let {
                                                     when (it) {
                                                         CircularDirection.Clockwise -> circularDragActions[clockwiseDragAction]
                                                         CircularDirection.Counterclockwise ->
@@ -512,12 +527,15 @@ fun KeyboardKey(
                                 autoCapitalize = autoCapitalize,
                                 keyboardSettings = keyboardSettings,
                                 onToggleShiftMode = onToggleShiftMode,
+                                onToggleCtrlMode = onToggleCtrlMode,
+                                onToggleAltMode = onToggleAltMode,
                                 onToggleNumericMode = onToggleNumericMode,
                                 onToggleEmojiMode = onToggleEmojiMode,
                                 onToggleCapsLock = onToggleCapsLock,
                                 onAutoCapitalize = onAutoCapitalize,
                                 onSwitchLanguage = onSwitchLanguage,
                                 onChangePosition = onChangePosition,
+                                onKeyEvent = onKeyEvent,
                             )
                             doneKeyAction(
                                 scope,
@@ -545,12 +563,15 @@ fun KeyboardKey(
                                         autoCapitalize = autoCapitalize,
                                         keyboardSettings = keyboardSettings,
                                         onToggleShiftMode = onToggleShiftMode,
+                                        onToggleCtrlMode = onToggleCtrlMode,
+                                        onToggleAltMode = onToggleAltMode,
                                         onToggleNumericMode = onToggleNumericMode,
                                         onToggleCapsLock = onToggleCapsLock,
                                         onAutoCapitalize = onAutoCapitalize,
                                         onSwitchLanguage = onSwitchLanguage,
                                         onChangePosition = onChangePosition,
                                         onToggleEmojiMode = onToggleEmojiMode,
+                                        onKeyEvent = onKeyEvent,
                                     )
                                 }
                             }
@@ -797,7 +818,7 @@ fun KeyText(
             is KeyDisplay.TextDisplay ->
                 key.display.text
                     .firstOrNull()
-                    ?.isUpperCase() ?: false
+                    ?.isUpperCase() == true
             else -> {
                 false
             }
@@ -846,6 +867,7 @@ fun KeyText(
                 Text(
                     text = display.text,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = display.fontFamily,
                     fontSize = spSize,
                     lineHeight = spSize,
                     color = color,

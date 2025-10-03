@@ -3,16 +3,27 @@ package com.dessalines.thumbkey.utils
 import android.view.KeyEvent
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
+import arrow.optics.optics
 import com.dessalines.thumbkey.R
+import com.dessalines.thumbkey.textprocessors.TextProcessor
 
+@optics
 data class KeyboardDefinitionModes(
     val main: KeyboardC,
     val shifted: KeyboardC,
     val numeric: KeyboardC,
-)
+    val ctrled: KeyboardC? = null,
+    val alted: KeyboardC? = null,
+) {
+    companion object
+}
 
+@optics
 data class KeyboardDefinitionSettings(
     val autoCapitalizers: AutoCapitalizers = arrayOf(),
+    val autoShift: Boolean = true,
+    val textProcessor: TextProcessor? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -24,19 +35,28 @@ data class KeyboardDefinitionSettings(
     }
 
     override fun hashCode(): Int = autoCapitalizers.contentHashCode()
+
+    companion object
 }
 
+@optics
 data class KeyboardDefinition(
     val title: String,
     val modes: KeyboardDefinitionModes,
     val settings: KeyboardDefinitionSettings = KeyboardDefinitionSettings(),
-)
+) {
+    companion object
+}
 
+@optics
 // Almost a 4x4 grid, but the bottom is mostly spacebar
 data class KeyboardC(
     val arr: List<List<KeyItemC>>,
-)
+) {
+    companion object
+}
 
+@optics
 data class KeyItemC(
     val center: KeyC,
     val left: KeyC? = null,
@@ -54,6 +74,8 @@ data class KeyItemC(
     val slideType: SlideType = SlideType.NONE,
     val longPress: KeyAction? = null,
 ) {
+    companion object
+
     fun getSwipe(dir: SwipeDirection?) =
         when (dir) {
             null -> null
@@ -68,6 +90,34 @@ data class KeyItemC(
         }
 }
 
+fun KeyboardC.alterKey(
+    row: Int,
+    col: Int,
+    modifier: (KeyItemC) -> KeyItemC,
+): KeyboardC =
+    this.copy(
+        arr =
+            this.arr.toMutableList().apply {
+                if (row < this.size) {
+                    this[row] =
+                        this[row].toMutableList().apply {
+                            if (col < this.size) {
+                                this[col] = modifier(this[col])
+                            }
+                        }
+                }
+            },
+    )
+
+fun KeyboardC.alterKeys(vararg modifications: Triple<Int, Int, (KeyItemC) -> KeyItemC>): KeyboardC {
+    var result = this
+    for ((row, col, modifier) in modifications) {
+        result = result.alterKey(row, col, modifier)
+    }
+    return result
+}
+
+@optics
 data class KeyC(
     val action: KeyAction,
     val swipeReturnAction: KeyAction? = null,
@@ -87,8 +137,9 @@ data class KeyC(
     constructor(
         text: String,
         displayText: String = text,
+        displayFont: FontFamily? = null,
         swipeReturnAction: KeyAction? = null,
-        display: KeyDisplay = KeyDisplay.TextDisplay(displayText),
+        display: KeyDisplay = KeyDisplay.TextDisplay(displayText, fontFamily = displayFont),
         capsModeDisplay: KeyDisplay? = null,
         size: FontSizeVariant = FontSizeVariant.SMALL,
         color: ColorVariant =
@@ -104,11 +155,14 @@ data class KeyC(
         size,
         color,
     )
+
+    companion object
 }
 
 sealed class KeyDisplay {
     class TextDisplay(
         val text: String,
+        val fontFamily: FontFamily? = null,
     ) : KeyDisplay()
 
     class IconDisplay(
@@ -130,7 +184,20 @@ sealed class KeyAction {
         val trimCount: Int = 2,
     ) : KeyAction()
 
+    class ReplaceTrailingWhitespace(
+        val text: String,
+        val distanceBack: Int,
+    ) : KeyAction()
+
     class ToggleShiftMode(
+        val enable: Boolean,
+    ) : KeyAction()
+
+    class ToggleCtrlMode(
+        val enable: Boolean,
+    ) : KeyAction()
+
+    class ToggleAltMode(
         val enable: Boolean,
     ) : KeyAction()
 
@@ -152,6 +219,11 @@ sealed class KeyAction {
 
     class ComposeLastKey(
         val text: String,
+    ) : KeyAction()
+
+    class SmartQuotes(
+        val start: String,
+        val end: String,
     ) : KeyAction()
 
     sealed class MoveKeyboard : KeyAction() {
@@ -201,10 +273,14 @@ sealed class KeyAction {
     class ExpandAbbreviation(
         val text: String,
     ) : KeyAction()
+
+    data object HideKeyboard : KeyAction()
+
+    data object Noop : KeyAction()
 }
 
 enum class CursorAccelerationMode(
-    @StringRes val resId: Int,
+    @param:StringRes val resId: Int,
 ) {
     LINEAR(R.string.slide_cursor_acceleration_linear),
     QUADRATIC(R.string.slide_cursor_acceleration_quadratic),
@@ -217,6 +293,8 @@ enum class KeyboardMode {
     SHIFTED,
     NUMERIC,
     EMOJI,
+    CTRLED,
+    ALTED,
 }
 
 enum class SwipeDirection {
@@ -245,7 +323,7 @@ enum class FontSizeVariant {
 }
 
 enum class ThemeMode(
-    @StringRes val resId: Int,
+    @param:StringRes val resId: Int,
 ) {
     System(R.string.system),
     Light(R.string.light),
@@ -253,7 +331,7 @@ enum class ThemeMode(
 }
 
 enum class ThemeColor(
-    @StringRes val resId: Int,
+    @param:StringRes val resId: Int,
 ) {
     Dynamic(R.string.dynamic),
     Green(R.string.green),
@@ -266,14 +344,16 @@ enum class ThemeColor(
     HighContrastColorful(R.string.high_contrast_colorful),
     Ancom(R.string.ancom),
     Matrix(R.string.matrix),
+    Neon(R.string.neon),
 }
 
 enum class KeyboardPosition(
-    @StringRes val resId: Int,
+    @param:StringRes val resId: Int,
 ) {
     Center(R.string.center),
     Right(R.string.right),
     Left(R.string.left),
+    Dual(R.string.dual),
 }
 
 enum class SwipeNWay {
@@ -295,7 +375,7 @@ data class Selection(
     var end: Int,
     var active: Boolean,
 ) {
-    constructor() : this (0, 0, false)
+    constructor() : this(0, 0, false)
 
     fun left() {
         end -= 1
@@ -320,7 +400,7 @@ enum class CircularDirection {
 }
 
 enum class CircularDragAction(
-    @StringRes val resId: Int,
+    @param:StringRes val resId: Int,
 ) {
     OppositeCase(R.string.send_oppsite_case),
     Numeric(R.string.send_numeric),

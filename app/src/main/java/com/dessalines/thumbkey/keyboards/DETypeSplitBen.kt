@@ -2,13 +2,13 @@
 
 package com.dessalines.thumbkey.keyboards
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
 import com.dessalines.thumbkey.utils.*
 import com.dessalines.thumbkey.utils.ColorVariant.*
 import com.dessalines.thumbkey.utils.FontSizeVariant.*
 import com.dessalines.thumbkey.utils.KeyAction.*
 import com.dessalines.thumbkey.utils.SwipeNWay.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
 
 val KB_DE_TYPESPLITBEN_MAIN =
     KeyboardC(
@@ -118,7 +118,7 @@ val KB_DE_TYPESPLITBEN_MAIN =
                     bottom = KeyC("v"),
                 ),
                 SPACEBAR_TYPESPLIT_BOTTOM_KEY_ITEM.copy(
-                    center=
+                    center =
                         KeyC(
                             display = KeyDisplay.IconDisplay(Icons.Outlined.Mic),
                             action = SwitchIMEVoice,
@@ -281,7 +281,7 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                     bottom = KeyC("V"),
                 ),
                 SPACEBAR_TYPESPLIT_BOTTOM_KEY_ITEM.copy(
-                    center=
+                    center =
                         KeyC(
                             display = KeyDisplay.IconDisplay(Icons.Outlined.Mic),
                             action = SwitchIMEVoice,

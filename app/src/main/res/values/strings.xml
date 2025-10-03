@@ -8,6 +8,7 @@
     <string name="green">Green</string>
     <string name="pink">Pink</string>
     <string name="matrix">Matrix-AMOLED</string>
+    <string name="neon" translatable="false">Neon</string>
     <string name="srcery">Srcery</string>
     <string name="blue">Blue</string>
     <string name="dracula">Dracula</string>
@@ -18,6 +19,7 @@
     <string name="center">Center</string>
     <string name="right">Right</string>
     <string name="left">Left</string>
+    <string name="dual">Dual</string>
     <string name="about">About</string>
     <string name="whats_new">What\'s new</string>
     <string name="version">Version %1$s</string>
@@ -42,6 +44,7 @@
     <string name="vibrate_warning">Requires touch feedback to be enabled in system settings</string>
     <string name="play_sound_on_tap">Play sound on tap</string>
     <string name="auto_capitalize">Auto-capitalize</string>
+    <string name="auto_size_keys">Maximize to fit screen width</string>
     <string name="key_size">Key size: %1$s</string>
     <string name="key_non_square">Use non-square keys</string>
     <string name="key_height">Key height: %1$s</string>
@@ -93,7 +96,7 @@
     <string name="database_restored">Database Restored.</string>
     <string name="database_backed_up">Database Backed up.</string>
     <string name="backup_and_restore">Backup and restore</string>
-    
+
     <!-- Abbreviations -->
     <string name="abbreviations">Abbreviations</string>
     <string name="abbreviations_description">Add and manage text abbreviations that will be automatically expanded when you type them followed by a space.</string>
@@ -102,4 +105,10 @@
     <string name="abbreviation">Abbreviation</string>
     <string name="expansion">Expansion</string>
     <string name="save">Save</string>
+    <string name="modify_keys">Modify keys</string>
+    <string name="key_modification_placeholder">Enter YAML</string>
+    <string name="how_to_modify_keys">How to modify keys</string>
+    <string name="ignore_bottom_padding">Ignore bottom padding</string>
+    <string name="show_toast_on_layout_switch">Show toast on layout switch</string>
+    <string name="disable_fullscreen_editor">Disable fullscreen text editor</string>
 </resources>
