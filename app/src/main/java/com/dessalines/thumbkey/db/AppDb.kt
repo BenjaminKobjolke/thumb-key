@@ -63,6 +63,7 @@ const val DEFAULT_KEY_MODIFICATIONS = ""
 const val DEFAULT_IGNORE_BOTTOM_PADDING = 0
 const val DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH = 1
 const val DEFAULT_DISABLE_FULLSCREEN_EDITOR = 0
+const val DEFAULT_ABBREVIATION_BUFFER_ENABLED = 1
 
 @Entity
 data class AppSettings(
@@ -280,6 +281,11 @@ data class AppSettings(
         defaultValue = DEFAULT_DISABLE_FULLSCREEN_EDITOR.toString(),
     )
     val disableFullscreenEditor: Int,
+    @ColumnInfo(
+        name = "abbreviation_buffer_enabled",
+        defaultValue = DEFAULT_ABBREVIATION_BUFFER_ENABLED.toString(),
+    )
+    val abbreviationBufferEnabled: Int,
 )
 
 data class LayoutsUpdate(
@@ -470,6 +476,9 @@ interface AppSettingsDao {
 
     @Query("UPDATE AppSettings SET last_version_code_viewed = :versionCode")
     suspend fun updateLastVersionCode(versionCode: Int)
+
+    @Query("UPDATE AppSettings SET abbreviation_buffer_enabled = :enabled WHERE id = 1")
+    fun updateAbbreviationBufferEnabled(enabled: Int)
 }
 
 // Declares the DAO as a private property in the constructor. Pass in the DAO
@@ -515,6 +524,11 @@ class AppSettingsRepository(
     }
 
     @WorkerThread
+    fun updateAbbreviationBufferEnabled(enabled: Int) {
+        appSettingsDao.updateAbbreviationBufferEnabled(enabled)
+    }
+
+    @WorkerThread
     suspend fun updateChangelog(ctx: Context) {
         withContext(Dispatchers.IO) {
             try {
@@ -539,7 +553,7 @@ data class Abbreviation(
 )
 
 @Database(
-    version = 21,
+    version = 22,
     entities = [AppSettings::class, Abbreviation::class],
     exportSchema = true,
 )
@@ -584,6 +598,7 @@ abstract class AppDB : RoomDatabase() {
                             MIGRATION_18_19,
                             MIGRATION_19_20,
                             MIGRATION_20_21,
+                            MIGRATION_21_22,
                         )
                         // Necessary because it can't insert data on creation
                         .addCallback(
@@ -645,6 +660,11 @@ class AppSettingsViewModel(
     fun updateLastVersionCodeViewed(versionCode: Int) =
         viewModelScope.launch {
             repository.updateLastVersionCodeViewed(versionCode)
+        }
+
+    fun updateAbbreviationBufferEnabled(enabled: Int) =
+        viewModelScope.launch {
+            repository.updateAbbreviationBufferEnabled(enabled)
         }
 
     fun updateChangelog(ctx: Context) =

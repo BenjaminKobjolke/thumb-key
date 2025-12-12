@@ -44,12 +44,19 @@ import com.dessalines.thumbkey.db.AbbreviationRepository
 import com.dessalines.thumbkey.db.AbbreviationViewModel
 import com.dessalines.thumbkey.db.AbbreviationViewModelFactory
 import com.dessalines.thumbkey.db.AppDB
+import com.dessalines.thumbkey.db.AppSettingsViewModel
+import com.dessalines.thumbkey.db.DEFAULT_ABBREVIATION_BUFFER_ENABLED
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
+import com.dessalines.thumbkey.utils.toBool
+import com.dessalines.thumbkey.utils.toInt
+import me.zhanghai.compose.preference.ProvidePreferenceTheme
+import me.zhanghai.compose.preference.SwitchPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AbbreviationsScreen(
     navController: NavController,
+    appSettingsViewModel: AppSettingsViewModel,
     abbreviationViewModel: AbbreviationViewModel =
         viewModel(
             factory =
@@ -62,6 +69,11 @@ fun AbbreviationsScreen(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var abbreviationToEdit by remember { mutableStateOf<Abbreviation?>(null) }
+
+    val settings by appSettingsViewModel.appSettings.observeAsState()
+    var bufferEnabledState by remember {
+        mutableStateOf((settings?.abbreviationBufferEnabled ?: DEFAULT_ABBREVIATION_BUFFER_ENABLED).toBool())
+    }
 
     Scaffold(
         topBar = {
@@ -88,6 +100,17 @@ fun AbbreviationsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(bottom = 16.dp),
             )
+
+            ProvidePreferenceTheme {
+                SwitchPreference(
+                    value = bufferEnabledState,
+                    onValueChange = {
+                        bufferEnabledState = it
+                        appSettingsViewModel.updateAbbreviationBufferEnabled(it.toInt())
+                    },
+                    title = { Text("Use buffer tracking") },
+                )
+            }
 
             val abbreviations by abbreviationViewModel.allAbbreviations.observeAsState(initial = emptyList())
             LazyColumn(

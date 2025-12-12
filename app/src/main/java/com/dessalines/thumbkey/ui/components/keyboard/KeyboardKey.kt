@@ -129,6 +129,7 @@ fun KeyboardKey(
     circularDragEnabled: Boolean,
     clockwiseDragAction: CircularDragAction,
     counterclockwiseDragAction: CircularDragAction,
+    abbreviationBufferEnabled: Boolean,
 ) {
     // Necessary for swipe settings to get updated correctly
     val id =
@@ -243,6 +244,7 @@ fun KeyboardKey(
                         onSwitchLanguage = onSwitchLanguage,
                         onChangePosition = onChangePosition,
                         onKeyEvent = onKeyEvent,
+                        abbreviationBufferEnabled = abbreviationBufferEnabled,
                     )
                     doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
                 },
@@ -263,6 +265,7 @@ fun KeyboardKey(
                             onSwitchLanguage = onSwitchLanguage,
                             onChangePosition = onChangePosition,
                             onKeyEvent = onKeyEvent,
+                            abbreviationBufferEnabled = abbreviationBufferEnabled,
                         )
                         doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
                         if (vibrateOnTap) {
@@ -542,6 +545,7 @@ fun KeyboardKey(
                                 onSwitchLanguage = onSwitchLanguage,
                                 onChangePosition = onChangePosition,
                                 onKeyEvent = onKeyEvent,
+                                abbreviationBufferEnabled = abbreviationBufferEnabled,
                             )
                             doneKeyAction(
                                 scope,
@@ -578,6 +582,7 @@ fun KeyboardKey(
                                         onChangePosition = onChangePosition,
                                         onToggleEmojiMode = onToggleEmojiMode,
                                         onKeyEvent = onKeyEvent,
+                                        abbreviationBufferEnabled = abbreviationBufferEnabled,
                                     )
                                 }
                             }

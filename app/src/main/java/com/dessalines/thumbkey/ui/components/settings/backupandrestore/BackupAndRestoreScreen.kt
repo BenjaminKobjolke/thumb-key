@@ -34,6 +34,7 @@ import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppDB
 import com.dessalines.thumbkey.db.AppSettings
 import com.dessalines.thumbkey.db.AppSettingsViewModel
+import com.dessalines.thumbkey.db.DEFAULT_ABBREVIATION_BUFFER_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_ANIMATION_HELPER_SPEED
 import com.dessalines.thumbkey.db.DEFAULT_ANIMATION_SPEED
 import com.dessalines.thumbkey.db.DEFAULT_AUTO_CAPITALIZE
@@ -262,6 +263,7 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             ignoreBottomPadding = DEFAULT_IGNORE_BOTTOM_PADDING,
             showToastOnLayoutSwitch = DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH,
             disableFullscreenEditor = DEFAULT_DISABLE_FULLSCREEN_EDITOR,
+            abbreviationBufferEnabled = DEFAULT_ABBREVIATION_BUFFER_ENABLED,
         ),
     )
 }

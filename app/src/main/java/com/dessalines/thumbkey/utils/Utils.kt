@@ -344,37 +344,60 @@ fun performKeyAction(
     onSwitchLanguage: () -> Unit,
     onChangePosition: ((old: KeyboardPosition) -> KeyboardPosition) -> Unit,
     onKeyEvent: () -> Unit,
+    abbreviationBufferEnabled: Boolean,
 ) {
     when (action) {
         is KeyAction.CommitText -> {
             val text = action.text
             Log.d(TAG, "committing key text: $text")
             ime.ignoreNextCursorMove()
+            val abbrManager = AbbreviationManager.getInstance(ime.applicationContext)
 
             if (text == " ") {
-                val currentText = ime.currentInputConnection.getTextBeforeCursor(1000, 0)?.toString()
-                if (currentText != null) {
-                    val abbreviationManager = AbbreviationManager(ime.applicationContext)
-                    val (shouldExpand, expandedText) = abbreviationManager.checkAndExpand(currentText)
-
-                    if (shouldExpand) {
-                        // Delete the abbreviation
-                        val lastWord = currentText.split(Regex("[ \n]")).last()
-                        ime.currentInputConnection.deleteSurroundingText(lastWord.length, 0)
-
-                        // Insert the expansion and a space
-                        ime.currentInputConnection.commitText(expandedText + " ", 1)
+                // Check for abbreviation expansion based on buffer mode setting
+                val result =
+                    if (abbreviationBufferEnabled) {
+                        // Buffer approach: check typed buffer (only expands if typed consecutively)
+                        abbrManager.checkAndExpand()
                     } else {
-                        keyboardSettings.textProcessor?.handleCommitText(ime, text)
-                            ?: ime.currentInputConnection.commitText(" ", 1)
+                        // Direct approach: read from input connection
+                        val textBeforeCursor = ime.currentInputConnection.getTextBeforeCursor(1000, 0)?.toString() ?: ""
+                        abbrManager.checkAndExpandText(textBeforeCursor)
                     }
+
+                if (result.shouldExpand) {
+                    // Delete the abbreviation
+                    ime.currentInputConnection.deleteSurroundingText(result.abbreviationLength, 0)
+
+                    // Insert the expansion
+                    ime.currentInputConnection.commitText(result.expandedText, 1)
+
+                    // Position cursor if $0 placeholder was used
+                    if (result.cursorOffset != null) {
+                        // Move cursor back from end to the placeholder position
+                        val moveBack = result.expandedText.length - result.cursorOffset
+                        ime.currentInputConnection.commitText("", -moveBack)
+                    } else {
+                        // No placeholder - add space after expansion (cursor at end)
+                        ime.currentInputConnection.commitText(" ", 1)
+                    }
+
+                    abbrManager.clearBuffer()
                 } else {
+                    // Normal space handling
                     keyboardSettings.textProcessor?.handleCommitText(ime, text)
                         ?: ime.currentInputConnection.commitText(" ", 1)
+                    if (abbreviationBufferEnabled) {
+                        abbrManager.onCharacterTyped(text)
+                    }
                 }
             } else {
+                // Normal character - commit and add to buffer
                 keyboardSettings.textProcessor?.handleCommitText(ime, text)
                     ?: ime.currentInputConnection.commitText(text, 1)
+                if (abbreviationBufferEnabled) {
+                    abbrManager.onCharacterTyped(text)
+                }
             }
 
             if (autoCapitalize && keyboardSettings.autoShift) {
@@ -402,6 +425,8 @@ fun performKeyAction(
             val ev = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)
             keyboardSettings.textProcessor?.handleKeyEvent(ime, ev)
                 ?: ime.currentInputConnection.sendKeyEvent(ev)
+            // Update abbreviation buffer
+            AbbreviationManager.getInstance(ime.applicationContext).onBackspace()
         }
 
         is KeyAction.DeleteWordBeforeCursor -> {

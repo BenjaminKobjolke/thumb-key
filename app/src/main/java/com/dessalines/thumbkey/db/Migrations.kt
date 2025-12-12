@@ -236,3 +236,12 @@ val MIGRATION_20_21 =
             )
         }
     }
+
+val MIGRATION_21_22 =
+    object : Migration(21, 22) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "alter table AppSettings add column abbreviation_buffer_enabled INTEGER NOT NULL default $DEFAULT_ABBREVIATION_BUFFER_ENABLED",
+            )
+        }
+    }

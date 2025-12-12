@@ -33,6 +33,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.emoji2.emojipicker.EmojiPickerView
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.db.AppSettings
+import com.dessalines.thumbkey.db.DEFAULT_ABBREVIATION_BUFFER_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_ANIMATION_HELPER_SPEED
 import com.dessalines.thumbkey.db.DEFAULT_ANIMATION_SPEED
 import com.dessalines.thumbkey.db.DEFAULT_AUTO_CAPITALIZE
@@ -69,7 +70,6 @@ import com.dessalines.thumbkey.keyboards.EMOJI_BACK_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.KB_EN_THUMBKEY_MAIN
 import com.dessalines.thumbkey.keyboards.NUMERIC_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.RETURN_KEY_ITEM
-import com.dessalines.thumbkey.utils.AbbreviationManager
 import com.dessalines.thumbkey.utils.CircularDragAction
 import com.dessalines.thumbkey.utils.KeyAction
 import com.dessalines.thumbkey.utils.KeyboardLayout
@@ -91,7 +91,7 @@ fun KeyboardScreen(
     onChangePosition: ((old: KeyboardPosition) -> KeyboardPosition) -> Unit,
 ) {
     val ctx = LocalContext.current as IMEService
-    val abbreviationManager = remember { AbbreviationManager(ctx.applicationContext) }
+    // AbbreviationManager is now a singleton, accessed via getInstance() in Utils.kt
 
     val layout =
         KeyboardLayout.entries.sortedBy { it.ordinal }[
@@ -181,6 +181,7 @@ fun KeyboardScreen(
     val counterclockwiseDragAction =
         CircularDragAction.entries[settings?.counterclockwiseDragAction ?: DEFAULT_COUNTERCLOCKWISE_DRAG_ACTION]
     val ghostKeysEnabled = (settings?.ghostKeysEnabled ?: DEFAULT_GHOST_KEYS_ENABLED).toBool()
+    val abbreviationBufferEnabled = (settings?.abbreviationBufferEnabled ?: DEFAULT_ABBREVIATION_BUFFER_ENABLED).toBool()
 
     val keyBorderWidthFloat = keyBorderWidth / 10.0f
     val keyBorderColour = MaterialTheme.colorScheme.outline
@@ -323,6 +324,7 @@ fun KeyboardScreen(
                                     onSwitchLanguage = onSwitchLanguage,
                                     onChangePosition = onChangePosition,
                                     onKeyEvent = {},
+                                    abbreviationBufferEnabled = abbreviationBufferEnabled,
                                 )
                             }
                             emojiPicker
@@ -444,6 +446,7 @@ fun KeyboardScreen(
                                 circularDragEnabled = circularDragEnabled,
                                 clockwiseDragAction = clockwiseDragAction,
                                 counterclockwiseDragAction = counterclockwiseDragAction,
+                                abbreviationBufferEnabled = abbreviationBufferEnabled,
                             )
                         }
                     }
@@ -633,6 +636,7 @@ fun KeyboardScreen(
                                         circularDragEnabled = circularDragEnabled,
                                         clockwiseDragAction = clockwiseDragAction,
                                         counterclockwiseDragAction = counterclockwiseDragAction,
+                                        abbreviationBufferEnabled = abbreviationBufferEnabled,
                                     )
                                 }
                             }

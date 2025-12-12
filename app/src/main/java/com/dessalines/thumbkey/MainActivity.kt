@@ -167,6 +167,7 @@ class MainActivity : AppCompatActivity() {
                     ) {
                         AbbreviationsScreen(
                             navController = navController,
+                            appSettingsViewModel = appSettingsViewModel,
                         )
                     }
                 }

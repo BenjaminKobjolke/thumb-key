@@ -2,7 +2,9 @@
 
 package com.dessalines.thumbkey.keyboards
 
+import android.view.KeyEvent
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.outlined.*
 import com.dessalines.thumbkey.utils.*
 import com.dessalines.thumbkey.utils.ColorVariant.*
@@ -75,7 +77,33 @@ val KB_DE_TYPESPLITBEN_MAIN =
                             action = CommitText("ß"),
                         ),
                 ),
-                SPACEBAR_TYPESPLIT_MIDDLE_KEY_ITEM,
+                KeyItemC(
+                    center = KeyC(" "),
+                    swipeType = FOUR_WAY_CROSS,
+                    slideType = SlideType.DELETE,
+                    left =
+                        KeyC(
+                            DeleteWordBeforeCursor,
+                            display = KeyDisplay.TextDisplay("←×"),
+                        ),
+                    right =
+                        KeyC(
+                            DeleteWordAfterCursor,
+                            display = KeyDisplay.TextDisplay("×→"),
+                        ),
+                    top = KeyC("'", color = MUTED),
+                    bottom = KeyC(",", color = MUTED),
+                    nextTapActions =
+                        listOf(
+                            ReplaceLastText(", ", trimCount = 1),
+                            ReplaceLastText(". "),
+                            ReplaceLastText("? "),
+                            ReplaceLastText("! "),
+                            ReplaceLastText(": "),
+                            ReplaceLastText("; "),
+                        ),
+                    backgroundColor = SURFACE_VARIANT,
+                ),
                 KeyItemC(
                     center = KeyC("d", size = LARGE),
                     swipeType = FOUR_WAY_CROSS,
@@ -167,7 +195,50 @@ val KB_DE_TYPESPLITBEN_MAIN =
                             color = MUTED,
                         ),
                 ),
-                BACKSPACE_TYPESPLIT_KEY_ITEM,
+                KeyItemC(
+                    center =
+                        KeyC(
+                            display = KeyDisplay.IconDisplay(Icons.AutoMirrored.Outlined.KeyboardBackspace),
+                            action = DeleteKeyAction,
+                            size = LARGE,
+                            color = SECONDARY,
+                        ),
+                    swipeType = FOUR_WAY_CROSS,
+                    slideType = SlideType.MOVE_CURSOR,
+                    left =
+                        KeyC(
+                            display = KeyDisplay.TextDisplay("←"),
+                            action =
+                                SendEvent(
+                                    KeyEvent(
+                                        KeyEvent.ACTION_DOWN,
+                                        KeyEvent.KEYCODE_DPAD_LEFT,
+                                    ),
+                                ),
+                            color = MUTED,
+                        ),
+                    right =
+                        KeyC(
+                            display = KeyDisplay.TextDisplay("→"),
+                            action =
+                                SendEvent(
+                                    KeyEvent(
+                                        KeyEvent.ACTION_DOWN,
+                                        KeyEvent.KEYCODE_DPAD_RIGHT,
+                                    ),
+                                ),
+                            color = MUTED,
+                        ),
+                    top =
+                        KeyC(
+                            display = KeyDisplay.IconDisplay(Icons.Outlined.KeyboardCapslock),
+                            action = ToggleShiftMode(true),
+                            color = MUTED,
+                        ),
+                    backgroundColor = SURFACE_VARIANT,
+                    widthMultiplier = 3,
+                    longPress = DeleteWordBeforeCursor,
+                ),
                 RETURN_KEY_ITEM,
             ),
         ),
@@ -238,7 +309,33 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                             action = CommitText("ẞ"),
                         ),
                 ),
-                SPACEBAR_TYPESPLIT_MIDDLE_KEY_ITEM,
+                KeyItemC(
+                    center = KeyC(" "),
+                    swipeType = FOUR_WAY_CROSS,
+                    slideType = SlideType.DELETE,
+                    left =
+                        KeyC(
+                            DeleteWordBeforeCursor,
+                            display = KeyDisplay.TextDisplay("←×"),
+                        ),
+                    right =
+                        KeyC(
+                            DeleteWordAfterCursor,
+                            display = KeyDisplay.TextDisplay("×→"),
+                        ),
+                    top = KeyC("'", color = MUTED),
+                    bottom = KeyC(",", color = MUTED),
+                    nextTapActions =
+                        listOf(
+                            ReplaceLastText(", ", trimCount = 1),
+                            ReplaceLastText(". "),
+                            ReplaceLastText("? "),
+                            ReplaceLastText("! "),
+                            ReplaceLastText(": "),
+                            ReplaceLastText("; "),
+                        ),
+                    backgroundColor = SURFACE_VARIANT,
+                ),
                 KeyItemC(
                     center = KeyC("D", size = LARGE),
                     swipeType = FOUR_WAY_CROSS,
@@ -330,7 +427,50 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                             color = MUTED,
                         ),
                 ),
-                BACKSPACE_TYPESPLIT_SHIFTED_KEY_ITEM,
+                KeyItemC(
+                    center =
+                        KeyC(
+                            display = KeyDisplay.IconDisplay(Icons.AutoMirrored.Outlined.KeyboardBackspace),
+                            action = DeleteKeyAction,
+                            size = LARGE,
+                            color = SECONDARY,
+                        ),
+                    swipeType = FOUR_WAY_CROSS,
+                    slideType = SlideType.MOVE_CURSOR,
+                    left =
+                        KeyC(
+                            display = KeyDisplay.TextDisplay("←"),
+                            action =
+                                SendEvent(
+                                    KeyEvent(
+                                        KeyEvent.ACTION_DOWN,
+                                        KeyEvent.KEYCODE_DPAD_LEFT,
+                                    ),
+                                ),
+                            color = MUTED,
+                        ),
+                    right =
+                        KeyC(
+                            display = KeyDisplay.TextDisplay("→"),
+                            action =
+                                SendEvent(
+                                    KeyEvent(
+                                        KeyEvent.ACTION_DOWN,
+                                        KeyEvent.KEYCODE_DPAD_RIGHT,
+                                    ),
+                                ),
+                            color = MUTED,
+                        ),
+                    top =
+                        KeyC(
+                            display = KeyDisplay.IconDisplay(Icons.Outlined.KeyboardCapslock),
+                            action = ToggleShiftMode(true),
+                            color = MUTED,
+                        ),
+                    backgroundColor = SURFACE_VARIANT,
+                    widthMultiplier = 3,
+                    longPress = DeleteWordBeforeCursor,
+                ),
                 RETURN_KEY_ITEM,
             ),
         ),
