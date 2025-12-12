@@ -433,7 +433,10 @@ fun KeyboardScreen(
                                 onChangePosition = onChangePosition,
                                 onKeyEvent = {
                                     when (mode) {
-                                        KeyboardMode.CTRLED, KeyboardMode.ALTED -> mode = KeyboardMode.MAIN
+                                        KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
+                                            mode = KeyboardMode.MAIN
+                                        }
+
                                         else -> {}
                                     }
                                 },
@@ -497,7 +500,9 @@ fun KeyboardScreen(
                                                     keyboardDefinition.modes.numeric
                                                 }
 
-                                                else -> null
+                                                else -> {
+                                                    null
+                                                }
                                             }?.arr?.getOrNull(i)?.getOrNull(j)
                                         } else {
                                             null
@@ -584,9 +589,10 @@ fun KeyboardScreen(
                                         },
                                         onKeyEvent = {
                                             when (mode) {
-                                                KeyboardMode.CTRLED, KeyboardMode.ALTED ->
+                                                KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
                                                     mode =
                                                         KeyboardMode.MAIN
+                                                }
 
                                                 else -> {}
                                             }
@@ -613,12 +619,15 @@ fun KeyboardScreen(
                                             }?.arr?.getOrNull(i)?.getOrNull(j),
                                         numericKey =
                                             when (mode) {
-                                                KeyboardMode.MAIN, KeyboardMode.SHIFTED, KeyboardMode.CTRLED, KeyboardMode.ALTED ->
+                                                KeyboardMode.MAIN, KeyboardMode.SHIFTED, KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
                                                     keyboardDefinition.modes.numeric.arr
                                                         .getOrNull(i)
                                                         ?.getOrNull(j)
+                                                }
 
-                                                else -> null
+                                                else -> {
+                                                    null
+                                                }
                                             },
                                         dragReturnEnabled = dragReturnEnabled,
                                         circularDragEnabled = circularDragEnabled,

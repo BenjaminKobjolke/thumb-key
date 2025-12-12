@@ -144,6 +144,7 @@ import com.dessalines.thumbkey.keyboards.KB_IT_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_IT_TYPESPLIT
 import com.dessalines.thumbkey.keyboards.KB_JA_HIRAGANA_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_JA_HIRAGANA_TYPESPLIT
+import com.dessalines.thumbkey.keyboards.KB_JA_KANA_STANDARD
 import com.dessalines.thumbkey.keyboards.KB_JA_KANA_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_JA_KATAKANA_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_JA_KATAKANA_TYPESPLIT
@@ -154,6 +155,7 @@ import com.dessalines.thumbkey.keyboards.KB_KZ_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_LT_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_LV_LTG_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_MATH_THUMBKEY
+import com.dessalines.thumbkey.keyboards.KB_MY_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_NL_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_NL_TYPESPLIT
 import com.dessalines.thumbkey.keyboards.KB_NO_THUMBKEY
@@ -168,6 +170,7 @@ import com.dessalines.thumbkey.keyboards.KB_PT_EN_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_PT_THUMBKEY
 import com.dessalines.thumbkey.keyboards.KB_PT_TYPESPLIT
 import com.dessalines.thumbkey.keyboards.KB_RU_ARTI
+import com.dessalines.thumbkey.keyboards.KB_RU_HYPER
 import com.dessalines.thumbkey.keyboards.KB_RU_MESSAGEASE
 import com.dessalines.thumbkey.keyboards.KB_RU_MESSAGEASE_SYMBOLS
 import com.dessalines.thumbkey.keyboards.KB_RU_MESSAGEASE_WRITER
@@ -396,4 +399,7 @@ enum class KeyboardLayout(
     ENLVThumbKey(KB_ENLV_THUMBKEY),
     KRTypeSplit(KB_KR_TYPESPLIT),
     KRThumbKey(KB_KR_THUMBKEY),
+    RUHyper(KB_RU_HYPER),
+    MYThumbKey(KB_MY_THUMBKEY),
+    JAKanaStandard(KB_JA_KANA_STANDARD),
 }

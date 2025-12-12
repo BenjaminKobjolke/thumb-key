@@ -98,6 +98,7 @@ This project is a follow-up to the now unmaintained (and closed-source) [MessagE
 - **Swipe left** or **long press** on the backspace key to delete whole words to the left of the cursor.
 - **Swipe right** on the backspace key to delete whole words to the right of the cursor.
 - **Swipe left** or **right** on the spacebar to move the cursor by 1 character.
+- **Swipe to the bottom left** or **bottom right** on the spacebar to move the cursor by 1 word.
 - **Long press** the return key to insert a line break
 
 ### Emoji Key
@@ -255,6 +256,7 @@ ENThumbKey:
 This swaps the 'switch language' and 'toggle emoji' actions on the top-right key. Possible values for `keyAction` are:
 
 - `ToggleNumericMode`
+- `ToggleABCMode`
 - `ToggleEmojiMode`
 - `Left`
 - `Right`
@@ -427,3 +429,7 @@ Your donations directly support full-time development, and help keep this mainta
 - https://stackoverflow.com/questions/65570024/build-software-keyboard-with-jetpack-compose-ime-input-method-with-jetpack-com
 - https://developer.android.com/develop/ui/views/touch-and-input/creating-input-method
 - https://www.answertopia.com/jetpack-compose/a-jetpack-compose-in-app-purchasing-tutorial/
+
+## Related Projects
+
+- Alternative solution for iOS : [Wurstfinger](https://github.com/cl445/wurstfinger)

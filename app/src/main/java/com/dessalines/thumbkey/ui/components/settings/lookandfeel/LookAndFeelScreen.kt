@@ -41,7 +41,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.navigation.NavController
@@ -92,6 +92,7 @@ fun LookAndFeelScreen(
 ) {
     Log.d(TAG, "Got to lookAndFeel activity")
 
+    val resources = LocalResources.current
     val settings by appSettingsViewModel.appSettings.observeAsState()
     var themeState = ThemeMode.entries[settings?.theme ?: DEFAULT_THEME]
     var themeColorState = ThemeColor.entries[settings?.themeColor ?: DEFAULT_THEME_COLOR]
@@ -162,8 +163,6 @@ fun LookAndFeelScreen(
         )
     }
 
-    val ctx = LocalContext.current
-
     val snackbarHostState = remember { SnackbarHostState() }
 
     val scrollState = rememberScrollState()
@@ -192,7 +191,7 @@ fun LookAndFeelScreen(
                         },
                         values = ThemeMode.entries,
                         valueToText = {
-                            AnnotatedString(ctx.getString(it.resId))
+                            AnnotatedString(resources.getString(it.resId))
                         },
                         title = {
                             Text(stringResource(R.string.theme))
@@ -217,7 +216,7 @@ fun LookAndFeelScreen(
                         },
                         values = ThemeColor.entries,
                         valueToText = {
-                            AnnotatedString(ctx.getString(it.resId))
+                            AnnotatedString(resources.getString(it.resId))
                         },
                         title = {
                             Text(stringResource(R.string.theme_color))
@@ -242,7 +241,7 @@ fun LookAndFeelScreen(
                         },
                         values = KeyboardPosition.entries,
                         valueToText = {
-                            AnnotatedString(ctx.getString(it.resId))
+                            AnnotatedString(resources.getString(it.resId))
                         },
                         summary = {
                             Text(stringResource(positionState.resId))

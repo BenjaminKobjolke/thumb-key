@@ -67,6 +67,7 @@ val KB_FR_EN_FRAPPE_FLUIDE_V1_MAIN =
                     center = KeyC("u", size = LARGE),
                     topLeft = KeyC("<", color = MUTED),
                     top = KeyC("[", color = MUTED),
+                    topRight = KeyC("#", color = MUTED),
                     left = KeyC("^", color = MUTED),
                     right = KeyC("û", color = MUTED),
                     bottomLeft = KeyC("ll", color = MUTED),
@@ -75,8 +76,9 @@ val KB_FR_EN_FRAPPE_FLUIDE_V1_MAIN =
                 ),
                 KeyItemC(
                     center = KeyC("n", size = LARGE),
+                    topLeft = KeyC("ff", color = MUTED),
                     top = KeyC("\u0308", displayText = "¨", color = MUTED),
-                    topRight = KeyC("@", color = MUTED),
+                    topRight = KeyC("`", color = MUTED),
                     left = KeyC("mm", size = SMALLEST, color = MUTED),
                     right = KeyC("ù", color = MUTED),
                     bottomLeft = KeyC("d"),
@@ -85,11 +87,11 @@ val KB_FR_EN_FRAPPE_FLUIDE_V1_MAIN =
                 ),
                 KeyItemC(
                     center = KeyC("i", size = LARGE),
-                    topLeft = KeyC("æ", color = MUTED),
+                    topLeft = KeyC("@", color = MUTED),
                     top = KeyC("]", color = MUTED),
                     topRight = KeyC(">", color = MUTED),
                     left = KeyC("+", color = MUTED),
-                    right = KeyC("|", color = MUTED),
+                    right = KeyC("gh", color = MUTED),
                     bottomLeft = KeyC("c"),
                     bottom = KeyC("î", color = MUTED),
                     bottomRight = KeyC("ô", color = MUTED),
@@ -193,6 +195,7 @@ val KB_FR_EN_FRAPPE_FLUIDE_V1_SHIFTED =
                     center = KeyC("U", size = LARGE),
                     topLeft = KeyC("<", color = MUTED),
                     top = KeyC("[", color = MUTED),
+                    topRight = KeyC("#", color = MUTED),
                     left = KeyC("^", color = MUTED),
                     right = KeyC("Û", color = MUTED),
                     bottomLeft = KeyC("LL", size = SMALLEST, color = MUTED),
@@ -201,8 +204,9 @@ val KB_FR_EN_FRAPPE_FLUIDE_V1_SHIFTED =
                 ),
                 KeyItemC(
                     center = KeyC("N", size = LARGE),
+                    topLeft = KeyC("FF", color = MUTED),
                     top = KeyC("\u0308", displayText = "¨", color = MUTED),
-                    topRight = KeyC("@", color = MUTED),
+                    topRight = KeyC("`", color = MUTED),
                     left = KeyC("MM", size = SMALLEST, color = MUTED),
                     right = KeyC("Ù", color = MUTED),
                     bottomLeft = KeyC("D"),
@@ -211,11 +215,11 @@ val KB_FR_EN_FRAPPE_FLUIDE_V1_SHIFTED =
                 ),
                 KeyItemC(
                     center = KeyC("I", size = LARGE),
-                    topLeft = KeyC("Æ", color = MUTED),
+                    topLeft = KeyC("@", color = MUTED),
                     top = KeyC("]", color = MUTED),
                     topRight = KeyC(">", color = MUTED),
                     left = KeyC("+", color = MUTED),
-                    right = KeyC("|", color = MUTED),
+                    right = KeyC("GH", color = MUTED),
                     bottomLeft = KeyC("C"),
                     bottom = KeyC("Î", color = MUTED),
                     bottomRight = KeyC("Ô", color = MUTED),
@@ -321,7 +325,7 @@ val FRENCH_FLUID_NUMERIC_KEYBOARD =
                     center = KeyC("7", size = LARGE),
                     topLeft = KeyC("<"),
                     top = KeyC("["),
-                    topRight = KeyC("`"),
+                    topRight = KeyC("#"),
                     left = KeyC("^"),
                     right = KeyC("±"),
                     bottomLeft = KeyC("≤"),
@@ -331,7 +335,7 @@ val FRENCH_FLUID_NUMERIC_KEYBOARD =
                 KeyItemC(
                     center = KeyC("8", size = LARGE),
                     top = KeyC("≈"),
-                    topRight = KeyC("@"),
+                    topRight = KeyC("`"),
                     left = KeyC("×"),
                     bottomLeft = KeyC("÷"),
                     bottom = KeyC("m"),
@@ -339,14 +343,13 @@ val FRENCH_FLUID_NUMERIC_KEYBOARD =
                 ),
                 KeyItemC(
                     center = KeyC("9", size = LARGE),
-                    topLeft = KeyC("´"),
+                    topLeft = KeyC("@"),
                     top = KeyC("]"),
                     topRight = KeyC(">"),
                     left = KeyC("+"),
                     right = KeyC("|"),
                     bottomLeft = KeyC("~"),
                     bottom = KeyC("&"),
-                    bottomRight = KeyC("#"),
                 ),
                 EMOJI_KEY_ITEM_CUSTOM,
             ),
@@ -422,7 +425,7 @@ val FRENCH_FLUID_NUMERIC_KEYBOARD =
 
 val KB_FR_EN_FRAPPE_FLUIDE_V1: KeyboardDefinition =
     KeyboardDefinition(
-        title = "français frappefluide (optim fr+en+text_emojis) v1",
+        title = "français frappefluide (fr+en) v1",
         modes =
             KeyboardDefinitionModes(
                 main = KB_FR_EN_FRAPPE_FLUIDE_V1_MAIN,

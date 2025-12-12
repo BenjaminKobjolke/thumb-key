@@ -1,9 +1,54 @@
+## What's Changed in 5.0.11
+
+- Use jauderho prettier image. by @dessalines in [#1672](https://github.com/dessalines/thumb-key/pull/1672)
+- Add spacebar bottom left and right swipes for previous and next word. by @dessalines in [#1670](https://github.com/dessalines/thumb-key/pull/1670)
+- Fixing autocapitalize after multi-tap bug. by @dessalines in [#1671](https://github.com/dessalines/thumb-key/pull/1671)
+- Don't bother writing fastlane changelog. by @dessalines in [#1669](https://github.com/dessalines/thumb-key/pull/1669)
+- fix: follow title format for FAThumbKey.kt by @pxeemo in [#1667](https://github.com/dessalines/thumb-key/pull/1667)
+- Fix fastlane changelog by @dessalines in [#1664](https://github.com/dessalines/thumb-key/pull/1664)
+- Update RUHyper.kt by @bjarjfff in [#1646](https://github.com/dessalines/thumb-key/pull/1646)
+
+**Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.10...5.0.11
+
+## What's Changed in 5.0.10
+
+- Fixed kana cycle: tsu -> sokuon -> zu by @DeBestTrap in [#1640](https://github.com/dessalines/thumb-key/pull/1640)
+- fix: korean composition breaking when switching layouts by @uranium-boy in [#1636](https://github.com/dessalines/thumb-key/pull/1636)
+- Add back `gh` to français frappefluide by @jiquiame in [#1639](https://github.com/dessalines/thumb-key/pull/1639)
+- Updates English Thumb-Key Programmer Expanded to use default special keys; adds custom numeric layout by @Hate9 in [#1634](https://github.com/dessalines/thumb-key/pull/1634)
+- Standard japanese keyboard by @K0baU in [#1630](https://github.com/dessalines/thumb-key/pull/1630)
+- add Wurstfinger as related project by @cl445 in [#1632](https://github.com/dessalines/thumb-key/pull/1632)
+- Fixed incorrect swipetype in center key on KRThumbKey by @Hate9 in [#1621](https://github.com/dessalines/thumb-key/pull/1621)
+- Update RUHyper.kt by @bjarjfff in [#1616](https://github.com/dessalines/thumb-key/pull/1616)
+
+## New Contributors
+
+- @DeBestTrap made their first contribution in [#1640](https://github.com/dessalines/thumb-key/pull/1640)
+- @cl445 made their first contribution in [#1632](https://github.com/dessalines/thumb-key/pull/1632)
+- @bjarjfff made their first contribution in [#1616](https://github.com/dessalines/thumb-key/pull/1616)
+
+**Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.9...5.0.10
+
+## What's Changed in 5.0.9
+
+- Adding a few keyboards. by @dessalines in [#1611](https://github.com/dessalines/thumb-key/pull/1611)
+- Update FRENFrappeFluideV1: Better spot for backtick, on main layer by @jiquiame in [#1598](https://github.com/dessalines/thumb-key/pull/1598)
+- Update FRENFrappeFluideV1: Add ff and gh by @jiquiame in [#1594](https://github.com/dessalines/thumb-key/pull/1594)
+- Update FRENFrappeFluideV1: Add # to principal layer in [#1590](https://github.com/dessalines/thumb-key/pull/1590)
+- switch language resets to main by @Toldry in [#1586](https://github.com/dessalines/thumb-key/pull/1586)
+
+## New Contributors
+
+- @jiquiame made their first contribution in [#1598](https://github.com/dessalines/thumb-key/pull/1598)
+
+**Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.8...5.0.9
+
 ## What's Changed in 5.0.8
 
-- Add `ch` to frenfrappefluidev1 by @antoinepouille in [#1584](https://github.com/dessalines/thumb-key/pull/1584)
+- Add `ch` to frenfrappefluidev1 in [#1584](https://github.com/dessalines/thumb-key/pull/1584)
 - Adds Korean Thumb-Key layout by @Hate9 in [#1575](https://github.com/dessalines/thumb-key/pull/1575)
-- Update fren frappefluide v1 : move delete_word by @antoinepouille in [#1570](https://github.com/dessalines/thumb-key/pull/1570)
-- Update FREN_frappefluide_v1 by @antoinepouille in [#1550](https://github.com/dessalines/thumb-key/pull/1550)
+- Update fren frappefluide v1 : move delete_word in [#1570](https://github.com/dessalines/thumb-key/pull/1570)
+- Update FREN_frappefluide_v1 in [#1550](https://github.com/dessalines/thumb-key/pull/1550)
 - ENMessagEaseSymbolsModifiers: Add "up" and "down" keys by @federvieh in [#1560](https://github.com/dessalines/thumb-key/pull/1560)
 - CommonKeys: Add return programming key item by @federvieh in [#1561](https://github.com/dessalines/thumb-key/pull/1561)
 - Key modifications: Fix NPE if ctrled/alted are empty by @federvieh in [#1552](https://github.com/dessalines/thumb-key/pull/1552)
@@ -17,7 +62,7 @@
 ## What's Changed in 5.0.7
 
 - Add Korean layout and custom input processor implementation by @uranium-boy in [#1534](https://github.com/dessalines/thumb-key/pull/1534)
-- Update README.md by @jwkwshjsjsj in [#1531](https://github.com/dessalines/thumb-key/pull/1531)
+- Update README.md by @jwkwshjsjsj
 - Verify apk fingerprint. by @dessalines in [#1528](https://github.com/dessalines/thumb-key/pull/1528)
 - English based Latvian keyboard by @HX3A in [#1522](https://github.com/dessalines/thumb-key/pull/1522)
 - downgrade agp version (closes #1514) by @pohmelie in [#1521](https://github.com/dessalines/thumb-key/pull/1521)
@@ -26,7 +71,7 @@
 ## New Contributors
 
 - @uranium-boy made their first contribution in [#1534](https://github.com/dessalines/thumb-key/pull/1534)
-- @jwkwshjsjsj made their first contribution in [#1531](https://github.com/dessalines/thumb-key/pull/1531)
+- @jwkwshjsjsj made their first contribution
 - @HX3A made their first contribution in [#1522](https://github.com/dessalines/thumb-key/pull/1522)
 
 **Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.6...5.0.7
@@ -101,12 +146,11 @@
 - Address CoPilot review issues, improve function signatures by @alerque
 - Overhaul migrations to avoid SQLite & Room limitations by @alerque
 - Fix long press numeric key yaml by @jm355 in [#1453](https://github.com/dessalines/thumb-key/pull/1453)
-- Add FRENFrappeFluideV1 by @antoinepouille in [#1450](https://github.com/dessalines/thumb-key/pull/1450)
+- Add FRENFrappeFluideV1 in [#1450](https://github.com/dessalines/thumb-key/pull/1450)
 
 ## New Contributors
 
 - @pohmelie made their first contribution in [#1456](https://github.com/dessalines/thumb-key/pull/1456)
-- @antoinepouille made their first contribution in [#1450](https://github.com/dessalines/thumb-key/pull/1450)
 
 **Full Changelog**: https://github.com/dessalines/thumb-key/compare/4.0.36...5.0.0
 
@@ -225,13 +269,14 @@
 - Added translation using Weblate (Arabic) by @williampiti
 - Translated using Weblate (Japanese) by @williampiti
 - Translated using Weblate (Japanese) by @williampiti
-- Translated using Weblate (Polish)
+- Translated using Weblate (Polish) by @e-michalak
 - Translated using Weblate (Japanese) by @williampiti
 
 ## New Contributors
 
 - @owl-from-hogvarts made their first contribution in [#1337](https://github.com/dessalines/thumb-key/pull/1337)
 - @williampiti made their first contribution
+- @e-michalak made their first contribution
 
 **Full Changelog**: https://github.com/dessalines/thumb-key/compare/4.0.26...4.0.27
 
@@ -1227,13 +1272,13 @@
 ## What's Changed in 2.6.10
 
 - Update ITMessageEase.kt by @flauta in [#637](https://github.com/dessalines/thumb-key/pull/637)
-- Fix 'å' shadowing 'unshift' in 'english dansk symbols thumb-key' by @maximbaz in [#634](https://github.com/dessalines/thumb-key/pull/634)
-- Add 'english dansk symbols thumb-key' by @maximbaz in [#633](https://github.com/dessalines/thumb-key/pull/633)
+- Fix 'å' shadowing 'unshift' in 'english dansk symbols thumb-key' by @max-baz in [#634](https://github.com/dessalines/thumb-key/pull/634)
+- Add 'english dansk symbols thumb-key' by @max-baz in [#633](https://github.com/dessalines/thumb-key/pull/633)
 - Adding release notes. by @dessalines
 
 ## New Contributors
 
-- @maximbaz made their first contribution in [#634](https://github.com/dessalines/thumb-key/pull/634)
+- @max-baz made their first contribution in [#634](https://github.com/dessalines/thumb-key/pull/634)
 
 **Full Changelog**: https://github.com/dessalines/thumb-key/compare/2.6.9...2.6.10
 
@@ -1818,7 +1863,7 @@
 - MessageEaseENSymbols corrected in [#239](https://github.com/dessalines/thumb-key/pull/239)
 - Modified symbols so that they match messageEase
 - Finishing adding georgian keyboard. by @dessalines
-- Add Georgian keyboard layout by @gvalson in [#240](https://github.com/dessalines/thumb-key/pull/240)
+- Add Georgian keyboard layout in [#240](https://github.com/dessalines/thumb-key/pull/240)
 - Update ThumbKeyFRv2.kt by @breversa
 - Update ThumbKeyFRv2.kt by @breversa
 - Create ThumbKeyFRv2.kt by @breversa
@@ -1827,7 +1872,6 @@
 ## New Contributors
 
 - @breversa made their first contribution
-- @gvalson made their first contribution in [#240](https://github.com/dessalines/thumb-key/pull/240)
 
 **Full Changelog**: https://github.com/dessalines/thumb-key/compare/1.3.0...1.4.0
 

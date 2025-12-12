@@ -2,6 +2,7 @@ package com.dessalines.thumbkey.textprocessors
 
 import android.util.Log
 import android.view.KeyEvent
+import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.utils.TAG
@@ -195,7 +196,10 @@ class KoreanTextProcessor : TextProcessor {
         }
 
         when (ev.keyCode) {
-            KeyEvent.KEYCODE_DEL -> deleteKeyAction(ime, ev)
+            KeyEvent.KEYCODE_DEL -> {
+                deleteKeyAction(ime, ev)
+            }
+
             else -> {
                 // in any other case (ENTER, DEL, DPAD movement) it just needs to finish job
                 handleFinishInput(ime)
@@ -236,6 +240,12 @@ class KoreanTextProcessor : TextProcessor {
         }
     }
 
+    override fun updateCursorPosition(ime: IMEService) {
+        val extracted = ime.currentInputConnection.getExtractedText(ExtractedTextRequest(), 0)
+        selectionStart = extracted.selectionStart
+        selectionEnd = extracted.selectionEnd
+    }
+
     private fun resetState() {
         state = CompositionState.EMPTY
         leading = ""
@@ -255,9 +265,11 @@ class KoreanTextProcessor : TextProcessor {
             CompositionState.EMPTY -> {
                 ic.sendKeyEvent(ev)
             }
+
             CompositionState.LEADING_CONSONANT -> {
                 resetState()
             }
+
             CompositionState.MEDIAL_VOWEL -> {
                 if (medialVowel.length == 2) {
                     medialVowel = medialVowel.dropLast(1)
@@ -268,17 +280,20 @@ class KoreanTextProcessor : TextProcessor {
                     composedText = leading
                 }
             }
+
             CompositionState.TRAILING_CONSONANT -> {
                 state = CompositionState.MEDIAL_VOWEL
                 val unicode = calculateBlockUnicode(leading, medialVowel)
                 composedText = unicode.toChar().toString()
             }
+
             CompositionState.TRAILING_COMPLEX_CONSONANT -> {
                 state = CompositionState.TRAILING_CONSONANT
                 trailing = trailing.dropLast(1)
                 val unicode = calculateBlockUnicode(leading, medialVowel, trailing)
                 composedText = unicode.toChar().toString()
             }
+
             CompositionState.STANDALONE_VOWEL -> {
                 if (standaloneVowel.length > 1) {
                     standaloneVowel = standaloneVowel.dropLast(1)
@@ -287,6 +302,7 @@ class KoreanTextProcessor : TextProcessor {
                     resetState()
                 }
             }
+
             CompositionState.STANDALONE_COMPLEX_CONSONANT -> {
                 leading = leading.dropLast(1)
                 composedText = leading
@@ -309,6 +325,7 @@ class KoreanTextProcessor : TextProcessor {
                 selectionStart += 1
                 selectionEnd += 1
             }
+
             CompositionState.LEADING_CONSONANT -> {
                 if (KoreanLetters.isComplexConsonant(leading[0], consonant)) {
                     state = CompositionState.STANDALONE_COMPLEX_CONSONANT
@@ -321,6 +338,7 @@ class KoreanTextProcessor : TextProcessor {
                     composedText = leading
                 }
             }
+
             CompositionState.MEDIAL_VOWEL -> {
                 if (KoreanLetters.isTrailing(consonant)) {
                     state = CompositionState.TRAILING_CONSONANT
@@ -335,6 +353,7 @@ class KoreanTextProcessor : TextProcessor {
                     composedText = leading
                 }
             }
+
             CompositionState.TRAILING_CONSONANT -> {
                 if (KoreanLetters.isComplexConsonant(trailing[0], consonant)) {
                     state = CompositionState.TRAILING_COMPLEX_CONSONANT
@@ -349,6 +368,7 @@ class KoreanTextProcessor : TextProcessor {
                     composedText = leading
                 }
             }
+
             CompositionState.TRAILING_COMPLEX_CONSONANT,
             CompositionState.STANDALONE_COMPLEX_CONSONANT,
             CompositionState.STANDALONE_VOWEL,
@@ -377,12 +397,14 @@ class KoreanTextProcessor : TextProcessor {
                 selectionStart += 1
                 selectionEnd += 1
             }
+
             CompositionState.LEADING_CONSONANT -> {
                 state = CompositionState.MEDIAL_VOWEL
                 medialVowel = vowel.toString()
                 val unicode = calculateBlockUnicode(leading, medialVowel)
                 composedText = unicode.toChar().toString()
             }
+
             CompositionState.MEDIAL_VOWEL -> {
                 if (KoreanLetters.isDiphthong(medialVowel[0], vowel) && medialVowel.length < 2) {
                     // state is the same
@@ -397,6 +419,7 @@ class KoreanTextProcessor : TextProcessor {
                     composedText = standaloneVowel
                 }
             }
+
             CompositionState.TRAILING_CONSONANT,
             CompositionState.TRAILING_COMPLEX_CONSONANT,
             -> {
@@ -417,6 +440,7 @@ class KoreanTextProcessor : TextProcessor {
                 unicode = calculateBlockUnicode(leading, medialVowel)
                 composedText = unicode.toChar().toString()
             }
+
             CompositionState.STANDALONE_COMPLEX_CONSONANT -> {
                 val lastConsonant = leading.last().toString()
                 composedText = leading.dropLast(1)
@@ -428,6 +452,7 @@ class KoreanTextProcessor : TextProcessor {
                 val unicode = calculateBlockUnicode(leading, medialVowel)
                 composedText = unicode.toChar().toString()
             }
+
             CompositionState.STANDALONE_VOWEL -> {
                 if (standaloneVowel.length == 1 && KoreanLetters.isDiphthong(standaloneVowel[0], vowel)) {
                     standaloneVowel += vowel
