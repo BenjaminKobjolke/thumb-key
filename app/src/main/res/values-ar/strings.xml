@@ -3,7 +3,6 @@
     <string name="counterclockwise_drag_action">إجراء السحب عكس اتجاه عقارب الساعة</string>
     <string name="whats_new">ما الجديد</string>
     <string name="copy">تم نسخ النص المحدد</string>
-    <string name="app_name">مفتاح الإبهام</string>
     <string name="dynamic">ديناميكي</string>
     <string name="green">أخضر</string>
     <string name="pink">وردي</string>
@@ -102,4 +101,7 @@
     <string name="ignore_bottom_padding">تجاهل الحشوة السفلية</string>
     <string name="show_toast_on_layout_switch">أظهر إشعار على تبديل التخطيط</string>
     <string name="disable_fullscreen_editor">عطّل محرِّر النصوص بملء الشاشة</string>
+    <string name="vibrate_on_slide">الاهتزاز لإيماءات الانزلاق</string>
+    <string name="vibrate_slide_note">يطبق عند الانزلاق عبر مفتاح المسافة أو مفتاح المسافة الخلفية</string>
+    <string name="vibrate_slide_warning">يتطلب تفعيل إيماءات الانزلاق في إعدادات السلوك</string>
 </resources>

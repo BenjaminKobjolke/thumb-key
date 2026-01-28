@@ -2,6 +2,7 @@ package com.dessalines.thumbkey
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -12,17 +13,20 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.lifecycleScope
 import com.dessalines.thumbkey.db.AppSettingsRepository
+import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.ui.components.keyboard.KeyboardScreen
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
 import com.dessalines.thumbkey.utils.toBool
+import com.dessalines.thumbkey.utils.toInt
 import kotlinx.coroutines.launch
 
 @SuppressLint("ViewConstructor")
 class ComposeKeyboardView(
     context: Context,
     private val settingsRepo: AppSettingsRepository,
+    private val clipboardRepo: ClipboardRepository,
 ) : AbstractComposeView(context) {
     @Composable
     override fun Content() {
@@ -36,6 +40,7 @@ class ComposeKeyboardView(
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 KeyboardScreen(
                     settings = settings,
+                    clipboardRepository = clipboardRepo,
                     onSwitchLanguage = {
                         ctx.lifecycleScope.launch {
                             // Cycle to the next keyboard
@@ -82,6 +87,24 @@ class ComposeKeyboardView(
                                 settingsRepo.update(s2)
                             }
                         }
+                    },
+                    onToggleHideLetters = {
+                        ctx.lifecycleScope.launch {
+                            val state = settingsState.value
+                            state?.let { s ->
+                                val newHideLetters = (!s.hideLetters.toBool()).toInt()
+                                val s2 = s.copy(hideLetters = newHideLetters)
+                                settingsRepo.update(s2)
+                            }
+                        }
+                    },
+                    onGoToClipboardSettings = {
+                        val intent =
+                            Intent(context, MainActivity::class.java).apply {
+                                putExtra("startRoute", "clipboardSettings")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        context.startActivity(intent)
                     },
                 )
             }

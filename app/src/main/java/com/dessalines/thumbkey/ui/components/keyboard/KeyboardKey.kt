@@ -1,6 +1,7 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Context
 import android.media.AudioManager
+import android.os.Build
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import androidx.compose.animation.AnimatedVisibility
@@ -96,6 +97,7 @@ fun KeyboardKey(
     keyboardSettings: KeyboardDefinitionSettings,
     spacebarMultiTaps: Boolean,
     vibrateOnTap: Boolean,
+    vibrateOnSlide: Boolean,
     soundOnTap: Boolean,
     hideLetters: Boolean,
     hideSymbols: Boolean,
@@ -118,7 +120,9 @@ fun KeyboardKey(
     onToggleAltMode: (enable: Boolean) -> Unit,
     onToggleNumericMode: (enable: Boolean) -> Unit,
     onToggleEmojiMode: (enable: Boolean) -> Unit,
+    onToggleClipboardMode: (enable: Boolean) -> Unit,
     onToggleCapsLock: () -> Unit,
+    onToggleHideLetters: () -> Unit,
     onAutoCapitalize: (enable: Boolean) -> Unit,
     onSwitchLanguage: () -> Unit,
     onChangePosition: ((old: KeyboardPosition) -> KeyboardPosition) -> Unit,
@@ -134,8 +138,8 @@ fun KeyboardKey(
     // Necessary for swipe settings to get updated correctly
     val id =
         key.toString() + ghostKey.toString() + animationHelperSpeed + animationSpeed + autoCapitalize +
-            vibrateOnTap + soundOnTap + legendHeight + legendWidth + minSwipeLength + slideSensitivity +
-            slideEnabled + slideCursorMovementMode + slideSpacebarDeadzoneEnabled +
+            vibrateOnTap + vibrateOnSlide + soundOnTap + legendHeight + legendWidth + minSwipeLength +
+            slideSensitivity + slideEnabled + slideCursorMovementMode + slideSpacebarDeadzoneEnabled +
             slideBackspaceDeadzoneEnabled + dragReturnEnabled + circularDragEnabled +
             clockwiseDragAction.ordinal + counterclockwiseDragAction.ordinal
 
@@ -239,7 +243,9 @@ fun KeyboardKey(
                         onToggleAltMode = onToggleAltMode,
                         onToggleNumericMode = onToggleNumericMode,
                         onToggleEmojiMode = onToggleEmojiMode,
+                        onToggleClipboardMode = onToggleClipboardMode,
                         onToggleCapsLock = onToggleCapsLock,
+                        onToggleHideLetters = onToggleHideLetters,
                         onAutoCapitalize = onAutoCapitalize,
                         onSwitchLanguage = onSwitchLanguage,
                         onChangePosition = onChangePosition,
@@ -260,7 +266,9 @@ fun KeyboardKey(
                             onToggleAltMode = onToggleAltMode,
                             onToggleNumericMode = onToggleNumericMode,
                             onToggleEmojiMode = onToggleEmojiMode,
+                            onToggleClipboardMode = onToggleClipboardMode,
                             onToggleCapsLock = onToggleCapsLock,
+                            onToggleHideLetters = onToggleHideLetters,
                             onAutoCapitalize = onAutoCapitalize,
                             onSwitchLanguage = onSwitchLanguage,
                             onChangePosition = onChangePosition,
@@ -294,6 +302,18 @@ fun KeyboardKey(
 
                         // First detection is large enough to preserve swipe actions.
                         val slideOffsetTrigger = (keySize.dp.toPx() * 0.75) + minSwipeLength
+
+                        /**
+                         * The type of haptic feedback to use when moving the cursor with slide
+                         * gestures, based on the device's supported API.
+                         */
+                        val slideHapticConstant =
+                            if (Build.VERSION.SDK_INT >= 27) {
+                                HapticFeedbackConstants.TEXT_HANDLE_MOVE
+                            } else {
+                                // Compatible with API 24, but vibration will not distinguish between tap and slide
+                                HapticFeedbackConstants.KEYBOARD_TAP
+                            }
 
                         // These keys have a lot of functionality.
                         // We can tap; swipe; slide the cursor left/right; select and delete text
@@ -333,6 +353,8 @@ fun KeyboardKey(
                                     )
                                     // reset offsetX, do not reset offsetY when sliding, it will break selecting
                                     offsetX = 0f
+                                    // selection has changed; give feedback
+                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
                                 }
                             } else if ((
                                     slideSpacebarDeadzoneEnabled &&
@@ -407,6 +429,8 @@ fun KeyboardKey(
                                     ime.currentInputConnection.commitText("", cursorMovement)
                                     // reset offsetX, do not reset offsetY when sliding, it will break selecting
                                     offsetX = 0f
+                                    // selection has changed; give feedback
+                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
                                 }
                             }
                         } else if (key.slideType == SlideType.DELETE && slideEnabled) {
@@ -439,6 +463,8 @@ fun KeyboardKey(
                                     )
                                     // reset offsetX, do not reset offsetY when sliding, it will break selecting
                                     offsetX = 0f
+                                    // selection has changed; give feedback
+                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
                                 }
                             }
                         }
@@ -540,7 +566,9 @@ fun KeyboardKey(
                                 onToggleAltMode = onToggleAltMode,
                                 onToggleNumericMode = onToggleNumericMode,
                                 onToggleEmojiMode = onToggleEmojiMode,
+                                onToggleClipboardMode = onToggleClipboardMode,
                                 onToggleCapsLock = onToggleCapsLock,
+                                onToggleHideLetters = onToggleHideLetters,
                                 onAutoCapitalize = onAutoCapitalize,
                                 onSwitchLanguage = onSwitchLanguage,
                                 onChangePosition = onChangePosition,
@@ -576,14 +604,20 @@ fun KeyboardKey(
                                         onToggleCtrlMode = onToggleCtrlMode,
                                         onToggleAltMode = onToggleAltMode,
                                         onToggleNumericMode = onToggleNumericMode,
+                                        onToggleEmojiMode = onToggleEmojiMode,
+                                        onToggleClipboardMode = onToggleClipboardMode,
                                         onToggleCapsLock = onToggleCapsLock,
+                                        onToggleHideLetters = onToggleHideLetters,
                                         onAutoCapitalize = onAutoCapitalize,
                                         onSwitchLanguage = onSwitchLanguage,
                                         onChangePosition = onChangePosition,
-                                        onToggleEmojiMode = onToggleEmojiMode,
                                         onKeyEvent = onKeyEvent,
                                         abbreviationBufferEnabled = abbreviationBufferEnabled,
                                     )
+                                }
+                                // Play an extra haptic effect on supported devices when slide deleting text
+                                if (vibrateOnSlide && Build.VERSION.SDK_INT >= 30) {
+                                    view.performHapticFeedback(HapticFeedbackConstants.REJECT)
                                 }
                             }
                             doneKeyAction(

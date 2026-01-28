@@ -1,3 +1,61 @@
+## What's Changed in 5.1.0
+
+- Add clipboard history feature by @Toldry in [#1737](https://github.com/dessalines/thumb-key/pull/1737)
+- Fix ToggleCapsLock key doing nothing in non-shifted mode by @emallery in [#1738](https://github.com/dessalines/thumb-key/pull/1738)
+- Add hungarian-optimized engram layout by @dwat3r in [#1732](https://github.com/dessalines/thumb-key/pull/1732)
+- Correct a mistake in JAKanaStandard.kt by @K0baU in [#1734](https://github.com/dessalines/thumb-key/pull/1734)
+- add NOOP action by @Toldry in [#1731](https://github.com/dessalines/thumb-key/pull/1731)
+
+## New Contributors
+
+- @dwat3r made their first contribution in [#1732](https://github.com/dessalines/thumb-key/pull/1732)
+
+**Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.14...5.1.0
+
+## What's Changed in 5.0.14
+
+- Update FRENFrappeFluideV1: move voice to avoid misentering delete word by @jiquiame in [#1730](https://github.com/dessalines/thumb-key/pull/1730)
+- Update FRENFrappeFluideV1: add left handed and left control variants by @jiquiame in [#1728](https://github.com/dessalines/thumb-key/pull/1728)
+- Add Haptic Feedback to Cursor Slide Gestures by @emallery in [#1727](https://github.com/dessalines/thumb-key/pull/1727)
+- Fix some spelling in the German fastlane metadata by @JSchmerling in [#1724](https://github.com/dessalines/thumb-key/pull/1724)
+
+## New Contributors
+
+- @emallery made their first contribution in [#1727](https://github.com/dessalines/thumb-key/pull/1727)
+- @JSchmerling made their first contribution in [#1724](https://github.com/dessalines/thumb-key/pull/1724)
+
+**Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.13...5.0.14
+
+## What's Changed in 5.0.13
+
+- Add MessagEase "German + ÅØÆ" layout as "scandinavian" by @RolKau in [#1721](https://github.com/dessalines/thumb-key/pull/1721)
+- Changed Korean thumb-key layout with optimization. by @neXyon in [#1717](https://github.com/dessalines/thumb-key/pull/1717)
+
+## New Contributors
+
+- @neXyon made their first contribution in [#1717](https://github.com/dessalines/thumb-key/pull/1717)
+
+**Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.12...5.0.13
+
+## What's Changed in 5.0.12
+
+- Adding a fast toggle for hiding letters. by @dessalines in [#1706](https://github.com/dessalines/thumb-key/pull/1706)
+- Adding norsk data driven layout. by @dessalines in [#1705](https://github.com/dessalines/thumb-key/pull/1705)
+- add keyboard name comments by @Toldry in [#1693](https://github.com/dessalines/thumb-key/pull/1693)
+- Add Thai language by @sarchar in [#1700](https://github.com/dessalines/thumb-key/pull/1700)
+- add more key actions by @Toldry in [#1692](https://github.com/dessalines/thumb-key/pull/1692)
+- Add kannada language. by @dessalines in [#1691](https://github.com/dessalines/thumb-key/pull/1691)
+- fix numeric wide underscore by @Toldry in [#1690](https://github.com/dessalines/thumb-key/pull/1690)
+- Add instructions on spacebar word swiping to readme. by @dessalines in [#1689](https://github.com/dessalines/thumb-key/pull/1689)
+- Using resources.getString by @dessalines in [#1688](https://github.com/dessalines/thumb-key/pull/1688)
+- add ToggleABCMode key action by @Toldry in [#1677](https://github.com/dessalines/thumb-key/pull/1677)
+
+## New Contributors
+
+- @sarchar made their first contribution in [#1700](https://github.com/dessalines/thumb-key/pull/1700)
+
+**Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.11...5.0.12
+
 ## What's Changed in 5.0.11
 
 - Use jauderho prettier image. by @dessalines in [#1672](https://github.com/dessalines/thumb-key/pull/1672)
@@ -62,7 +120,7 @@
 ## What's Changed in 5.0.7
 
 - Add Korean layout and custom input processor implementation by @uranium-boy in [#1534](https://github.com/dessalines/thumb-key/pull/1534)
-- Update README.md by @jwkwshjsjsj
+- Update README.md by @jwkwshjsjsj in [#1531](https://github.com/dessalines/thumb-key/pull/1531)
 - Verify apk fingerprint. by @dessalines in [#1528](https://github.com/dessalines/thumb-key/pull/1528)
 - English based Latvian keyboard by @HX3A in [#1522](https://github.com/dessalines/thumb-key/pull/1522)
 - downgrade agp version (closes #1514) by @pohmelie in [#1521](https://github.com/dessalines/thumb-key/pull/1521)
@@ -71,7 +129,7 @@
 ## New Contributors
 
 - @uranium-boy made their first contribution in [#1534](https://github.com/dessalines/thumb-key/pull/1534)
-- @jwkwshjsjsj made their first contribution
+- @jwkwshjsjsj made their first contribution in [#1531](https://github.com/dessalines/thumb-key/pull/1531)
 - @HX3A made their first contribution in [#1522](https://github.com/dessalines/thumb-key/pull/1522)
 
 **Full Changelog**: https://github.com/dessalines/thumb-key/compare/5.0.6...5.0.7
@@ -451,12 +509,12 @@
 ## What's Changed in 4.0.9
 
 - Fix keyboard overlapping navigation bar on Android 15 by @juschmitt in [#1190](https://github.com/dessalines/thumb-key/pull/1190)
-- Fix Layout deutsch english + Æ (#1064) by @jackie-jackie in [#1189](https://github.com/dessalines/thumb-key/pull/1189)
+- Fix Layout deutsch english + Æ (#1064) by @havky in [#1189](https://github.com/dessalines/thumb-key/pull/1189)
 
 ## New Contributors
 
 - @juschmitt made their first contribution in [#1190](https://github.com/dessalines/thumb-key/pull/1190)
-- @jackie-jackie made their first contribution in [#1189](https://github.com/dessalines/thumb-key/pull/1189)
+- @havky made their first contribution in [#1189](https://github.com/dessalines/thumb-key/pull/1189)
 
 **Full Changelog**: https://github.com/dessalines/thumb-key/compare/4.0.8...4.0.9
 
@@ -1327,14 +1385,10 @@
 - Scaling down uppercase letters. Fixes #109 by @dessalines in [#611](https://github.com/dessalines/thumb-key/pull/611)
 - Added Italian translation by @flauta in [#610](https://github.com/dessalines/thumb-key/pull/610)
 - Upgrading compose to 1.5.7 by @dessalines in [#609](https://github.com/dessalines/thumb-key/pull/609)
-- double symbols prototype by @alensiljak in [#608](https://github.com/dessalines/thumb-key/pull/608)
+- double symbols prototype in [#608](https://github.com/dessalines/thumb-key/pull/608)
 - Adding svenska messageease. Fixes #601 by @dessalines in [#605](https://github.com/dessalines/thumb-key/pull/605)
 - Update ITThumbKey.kt by @flauta in [#603](https://github.com/dessalines/thumb-key/pull/603)
 - Adding release notes. by @dessalines
-
-## New Contributors
-
-- @alensiljak made their first contribution in [#608](https://github.com/dessalines/thumb-key/pull/608)
 
 **Full Changelog**: https://github.com/dessalines/thumb-key/compare/2.6.5...2.6.6
 

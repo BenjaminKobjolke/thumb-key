@@ -41,6 +41,11 @@ import com.dessalines.thumbkey.db.DEFAULT_AUTO_CAPITALIZE
 import com.dessalines.thumbkey.db.DEFAULT_AUTO_SIZE_KEYS
 import com.dessalines.thumbkey.db.DEFAULT_BACKDROP_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_CIRCULAR_DRAG_ENABLED
+import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED
+import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES
+import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_HISTORY_ENABLED
+import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_MAX_SIZE
+import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_CLOCKWISE_DRAG_ACTION
 import com.dessalines.thumbkey.db.DEFAULT_COUNTERCLOCKWISE_DRAG_ACTION
 import com.dessalines.thumbkey.db.DEFAULT_DISABLE_FULLSCREEN_EDITOR
@@ -71,6 +76,7 @@ import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
 import com.dessalines.thumbkey.db.DEFAULT_SPACEBAR_MULTITAPS
 import com.dessalines.thumbkey.db.DEFAULT_THEME
 import com.dessalines.thumbkey.db.DEFAULT_THEME_COLOR
+import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
@@ -244,6 +250,7 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             theme = DEFAULT_THEME,
             themeColor = DEFAULT_THEME_COLOR,
             vibrateOnTap = DEFAULT_VIBRATE_ON_TAP,
+            vibrateOnSlide = DEFAULT_VIBRATE_ON_SLIDE,
             lastVersionCodeViewed = appSettingsViewModel.appSettings.value?.lastVersionCodeViewed ?: 0,
             viewedChangelog = appSettingsViewModel.appSettings.value?.viewedChangelog ?: 1,
             backdropEnabled = DEFAULT_BACKDROP_ENABLED,
@@ -264,6 +271,12 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             showToastOnLayoutSwitch = DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH,
             disableFullscreenEditor = DEFAULT_DISABLE_FULLSCREEN_EDITOR,
             abbreviationBufferEnabled = DEFAULT_ABBREVIATION_BUFFER_ENABLED,
+            vibrateOnSlide = DEFAULT_VIBRATE_ON_SLIDE,
+            clipboardHistoryEnabled = DEFAULT_CLIPBOARD_HISTORY_ENABLED,
+            clipboardAutoCleanupEnabled = DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED,
+            clipboardCleanupAfterMinutes = DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES,
+            clipboardSizeLimitEnabled = DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED,
+            clipboardMaxSize = DEFAULT_CLIPBOARD_MAX_SIZE,
         ),
     )
 }

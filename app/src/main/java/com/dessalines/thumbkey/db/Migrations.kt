@@ -228,6 +228,7 @@ val MIGRATION_19_20 =
             )
         }
     }
+
 val MIGRATION_20_21 =
     object : Migration(20, 21) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -242,6 +243,47 @@ val MIGRATION_21_22 =
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
                 "alter table AppSettings add column abbreviation_buffer_enabled INTEGER NOT NULL default $DEFAULT_ABBREVIATION_BUFFER_ENABLED",
+            )
+            // Create the Abbreviation table
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS Abbreviation (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    abbreviation TEXT NOT NULL,
+                    expansion TEXT NOT NULL
+                )
+                """.trimIndent(),
+            )
+        }
+    }
+
+val MIGRATION_22_23 =
+    object : Migration(22, 23) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "alter table AppSettings add column vibrate_on_slide INTEGER NOT NULL default $DEFAULT_VIBRATE_ON_SLIDE",
+            )
+        }
+    }
+
+val MIGRATION_23_24 =
+    object : Migration(23, 24) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Add clipboard settings columns (ClipboardItem table is in separate database)
+            db.execSQL(
+                "ALTER TABLE AppSettings ADD COLUMN clipboard_history_enabled INTEGER NOT NULL DEFAULT $DEFAULT_CLIPBOARD_HISTORY_ENABLED",
+            )
+            db.execSQL(
+                "ALTER TABLE AppSettings ADD COLUMN clipboard_auto_cleanup_enabled INTEGER NOT NULL DEFAULT $DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED",
+            )
+            db.execSQL(
+                "ALTER TABLE AppSettings ADD COLUMN clipboard_cleanup_after_minutes INTEGER NOT NULL DEFAULT $DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES",
+            )
+            db.execSQL(
+                "ALTER TABLE AppSettings ADD COLUMN clipboard_size_limit_enabled INTEGER NOT NULL DEFAULT $DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED",
+            )
+            db.execSQL(
+                "ALTER TABLE AppSettings ADD COLUMN clipboard_max_size INTEGER NOT NULL DEFAULT $DEFAULT_CLIPBOARD_MAX_SIZE",
             )
         }
     }

@@ -38,6 +38,7 @@ const val DEFAULT_KEYBOARD_LAYOUT = 0
 const val DEFAULT_THEME = 0
 const val DEFAULT_THEME_COLOR = 0
 const val DEFAULT_VIBRATE_ON_TAP = 1
+const val DEFAULT_VIBRATE_ON_SLIDE = 1
 const val DEFAULT_SOUND_ON_TAP = 0
 const val DEFAULT_MIN_SWIPE_LENGTH = 40
 const val DEFAULT_PUSHUP_SIZE = 0
@@ -64,6 +65,13 @@ const val DEFAULT_IGNORE_BOTTOM_PADDING = 0
 const val DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH = 1
 const val DEFAULT_DISABLE_FULLSCREEN_EDITOR = 0
 const val DEFAULT_ABBREVIATION_BUFFER_ENABLED = 1
+const val DEFAULT_CLIPBOARD_HISTORY_ENABLED = 0
+const val DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED = 1
+const val DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES = 120
+const val DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED = 1
+const val DEFAULT_CLIPBOARD_MAX_SIZE = 20
+const val MIN_CLIPBOARD_MAX_SIZE = 2
+const val MAX_CLIPBOARD_MAX_SIZE = 100
 
 @Entity
 data class AppSettings(
@@ -286,6 +294,36 @@ data class AppSettings(
         defaultValue = DEFAULT_ABBREVIATION_BUFFER_ENABLED.toString(),
     )
     val abbreviationBufferEnabled: Int,
+    @ColumnInfo(
+        name = "vibrate_on_slide",
+        defaultValue = DEFAULT_VIBRATE_ON_SLIDE.toString(),
+    )
+    val vibrateOnSlide: Int,
+    @ColumnInfo(
+        name = "clipboard_history_enabled",
+        defaultValue = DEFAULT_CLIPBOARD_HISTORY_ENABLED.toString(),
+    )
+    val clipboardHistoryEnabled: Int,
+    @ColumnInfo(
+        name = "clipboard_auto_cleanup_enabled",
+        defaultValue = DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED.toString(),
+    )
+    val clipboardAutoCleanupEnabled: Int,
+    @ColumnInfo(
+        name = "clipboard_cleanup_after_minutes",
+        defaultValue = DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES.toString(),
+    )
+    val clipboardCleanupAfterMinutes: Int,
+    @ColumnInfo(
+        name = "clipboard_size_limit_enabled",
+        defaultValue = DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED.toString(),
+    )
+    val clipboardSizeLimitEnabled: Int,
+    @ColumnInfo(
+        name = "clipboard_max_size",
+        defaultValue = DEFAULT_CLIPBOARD_MAX_SIZE.toString(),
+    )
+    val clipboardMaxSize: Int,
 )
 
 data class LayoutsUpdate(
@@ -386,6 +424,10 @@ data class LookAndFeelUpdate(
         name = "disable_fullscreen_editor",
     )
     val disableFullscreenEditor: Int,
+    @ColumnInfo(
+        name = "vibrate_on_slide",
+    )
+    val vibrateOnSlide: Int,
 )
 
 data class BehaviorUpdate(
@@ -426,6 +468,20 @@ data class KeyModificationsUpdate(
     val keyModifications: String,
 )
 
+data class ClipboardSettingsUpdate(
+    val id: Int,
+    @ColumnInfo(name = "clipboard_history_enabled")
+    val clipboardHistoryEnabled: Int,
+    @ColumnInfo(name = "clipboard_auto_cleanup_enabled")
+    val clipboardAutoCleanupEnabled: Int,
+    @ColumnInfo(name = "clipboard_cleanup_after_minutes")
+    val clipboardCleanupAfterMinutes: Int,
+    @ColumnInfo(name = "clipboard_size_limit_enabled")
+    val clipboardSizeLimitEnabled: Int,
+    @ColumnInfo(name = "clipboard_max_size")
+    val clipboardMaxSize: Int,
+)
+
 @Dao
 interface AbbreviationDao {
     @Query("SELECT * FROM Abbreviation")
@@ -459,6 +515,9 @@ interface AppSettingsDao {
     @Query("SELECT * FROM AppSettings limit 1")
     fun getSettings(): LiveData<AppSettings>
 
+    @Query("SELECT * FROM AppSettings limit 1")
+    fun getSettingsSync(): AppSettings?
+
     @Update
     suspend fun updateAppSettings(appSettings: AppSettings)
 
@@ -473,6 +532,9 @@ interface AppSettingsDao {
 
     @Update(entity = AppSettings::class)
     fun updateKeyModifications(behavior: KeyModificationsUpdate)
+
+    @Update(entity = AppSettings::class)
+    fun updateClipboardSettings(clipboardSettings: ClipboardSettingsUpdate)
 
     @Query("UPDATE AppSettings SET last_version_code_viewed = :versionCode")
     suspend fun updateLastVersionCode(versionCode: Int)
@@ -519,6 +581,11 @@ class AppSettingsRepository(
     }
 
     @WorkerThread
+    fun updateClipboardSettings(clipboardSettings: ClipboardSettingsUpdate) {
+        appSettingsDao.updateClipboardSettings(clipboardSettings)
+    }
+
+    @WorkerThread
     suspend fun updateLastVersionCodeViewed(versionCode: Int) {
         appSettingsDao.updateLastVersionCode(versionCode)
     }
@@ -553,7 +620,7 @@ data class Abbreviation(
 )
 
 @Database(
-    version = 22,
+    version = 24,
     entities = [AppSettings::class, Abbreviation::class],
     exportSchema = true,
 )
@@ -599,6 +666,8 @@ abstract class AppDB : RoomDatabase() {
                             MIGRATION_19_20,
                             MIGRATION_20_21,
                             MIGRATION_21_22,
+                            MIGRATION_22_23,
+                            MIGRATION_23_24,
                         )
                         // Necessary because it can't insert data on creation
                         .addCallback(
@@ -655,6 +724,11 @@ class AppSettingsViewModel(
     fun updateKeyModifications(behavior: KeyModificationsUpdate) =
         viewModelScope.launch {
             repository.updateKeyModifications(behavior)
+        }
+
+    fun updateClipboardSettings(clipboardSettings: ClipboardSettingsUpdate) =
+        viewModelScope.launch {
+            repository.updateClipboardSettings(clipboardSettings)
         }
 
     fun updateLastVersionCodeViewed(versionCode: Int) =

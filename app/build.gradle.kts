@@ -1,9 +1,17 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
-    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("plugin.serialization") version "2.3.0"
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.fromTarget("17")
+        freeCompilerArgs = listOf("-Xjvm-default=all-compatibility", "-opt-in=kotlin.RequiresOptIn")
+    }
 }
 
 android {
@@ -13,8 +21,8 @@ android {
         applicationId = "com.dessalines.thumbkey"
         minSdk = 24
         targetSdk = 36
-        versionCode = 166
-        versionName = "5.0.11"
+        versionCode = 170
+        versionName = "5.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -79,10 +87,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs = listOf("-Xjvm-default=all-compatibility", "-opt-in=kotlin.RequiresOptIn")
-    }
+
     buildFeatures {
         compose = true
     }
@@ -94,17 +99,17 @@ dependencies {
     implementation("com.github.dessalines:room-db-export-import:0.1.0")
 
     // Compose BOM
-    implementation(platform("androidx.compose:compose-bom:2025.12.00"))
+    implementation(platform("androidx.compose:compose-bom:2026.01.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.runtime:runtime-livedata:1.10.0")
+    implementation("androidx.compose.runtime:runtime-livedata:1.10.1")
 
     // Activities
-    implementation("androidx.activity:activity-compose:1.12.1")
-    implementation("androidx.activity:activity-ktx:1.12.1")
+    implementation("androidx.activity:activity-compose:1.12.2")
+    implementation("androidx.activity:activity-ktx:1.12.2")
 
     // LiveData
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
@@ -141,9 +146,9 @@ dependencies {
     implementation("com.charleskorn.kaml:kaml:0.104.0")
 
     // Kotlin Reflect
-    implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.0")
 
     // Arrow-kt for mutating deeply nested data classes
-    implementation("io.arrow-kt:arrow-optics:2.2.0")
-    ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.2.0")
+    implementation("io.arrow-kt:arrow-optics:2.2.1.1")
+    ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.2.1.1")
 }
