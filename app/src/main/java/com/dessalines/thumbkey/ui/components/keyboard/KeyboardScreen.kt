@@ -370,6 +370,10 @@ fun KeyboardScreen(
                                             }
                                         }
                                     },
+                                    onToggleClipboardMode = { enable ->
+                                        mode = if (enable) KeyboardMode.CLIPBOARD else KeyboardMode.MAIN
+                                    },
+                                    onToggleHideLetters = onToggleHideLetters,
                                     onSwitchLanguage = onSwitchLanguage,
                                     onChangePosition = onChangePosition,
                                     onKeyEvent = {},
