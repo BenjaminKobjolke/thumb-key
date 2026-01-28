@@ -271,7 +271,6 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             showToastOnLayoutSwitch = DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH,
             disableFullscreenEditor = DEFAULT_DISABLE_FULLSCREEN_EDITOR,
             abbreviationBufferEnabled = DEFAULT_ABBREVIATION_BUFFER_ENABLED,
-            vibrateOnSlide = DEFAULT_VIBRATE_ON_SLIDE,
             clipboardHistoryEnabled = DEFAULT_CLIPBOARD_HISTORY_ENABLED,
             clipboardAutoCleanupEnabled = DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED,
             clipboardCleanupAfterMinutes = DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES,
