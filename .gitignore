@@ -18,3 +18,4 @@ app/schemas
 .kotlin
 build.sh
 .claude
+claude-plans
