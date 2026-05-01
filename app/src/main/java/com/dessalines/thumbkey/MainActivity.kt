@@ -9,7 +9,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -32,11 +31,14 @@ import com.dessalines.thumbkey.ui.components.settings.behavior.BehaviorScreen
 import com.dessalines.thumbkey.ui.components.settings.clipboard.ClipboardSettingsScreen
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.LookAndFeelScreen
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.ModifyKeysScreen
+import com.dessalines.thumbkey.ui.components.settings.other.OtherSettingsScreen
 import com.dessalines.thumbkey.ui.components.setup.SetupScreen
 import com.dessalines.thumbkey.ui.screens.AbbreviationsScreen
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
 import com.dessalines.thumbkey.utils.ANIMATION_SPEED
 import com.dessalines.thumbkey.utils.getImeNames
+import com.dessalines.thumbkey.utils.getVersionCode
+import org.woheller69.freeDroidWarn.FreeDroidWarn
 import splitties.systemservices.inputMethodManager
 
 class ThumbkeyApplication : Application() {
@@ -57,6 +59,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        FreeDroidWarn.showWarningOnUpgrade(this, getVersionCode())
+
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
@@ -184,6 +188,12 @@ class MainActivity : AppCompatActivity() {
                         route = "abbreviations",
                     ) {
                         AbbreviationsScreen(
+                            navController = navController,
+                            appSettingsViewModel = appSettingsViewModel,
+                        )
+                    }
+                    composable(route = "otherSettings") {
+                        OtherSettingsScreen(
                             navController = navController,
                             appSettingsViewModel = appSettingsViewModel,
                         )

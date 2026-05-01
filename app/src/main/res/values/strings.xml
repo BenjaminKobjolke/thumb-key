@@ -40,6 +40,7 @@
     <string name="theme">Theme</string>
     <string name="theme_color">Theme color</string>
     <string name="position">Position</string>
+    <string name="position_padding">Position padding: %1$s</string>
     <string name="vibrate_on_tap">Vibrate on tap</string>
     <string name="vibrate_warning">Requires touch feedback to be enabled in system settings</string>
     <string name="vibrate_on_slide">Vibrate for slide gestures</string>
@@ -93,6 +94,8 @@
     <string name="circular_drag_enable">Circular drag</string>
     <string name="ghost_keys_enable">Ghost keys</string>
     <string name="ghost_keys_description">Access hidden symbol keys without switching to numeric view</string>
+    <string name="slide_hold_enable">Slide-hold cursor movement</string>
+    <string name="slide_hold_description">Slide and hold to repeat cursor movement, slide-return-hold for word movement. Backspace: slide-hold to repeat delete, slide-return-hold for word delete.</string>
     <string name="backup_database">Backup database</string>
     <string name="restore_database">Restore database</string>
     <string name="restore_database_warning">Warning: This will clear out your current database</string>
@@ -146,4 +149,10 @@
     <string name="clipboard_disabled">Clipboard history is disabled</string>
     <string name="clipboard_go_to_settings">Go to clipboard settings</string>
     <string name="clipboard_characters">%1$d characters</string>
+    <string name="use_private_clipboard">Use private clipboard</string>
+    <string name="use_private_clipboard_description">Copy into internal clipboard instead of system clipboard"</string>
+    <!-- Other -->
+    <string name="other">Other</string>
+    <string name="show_on_screen_keyboard">Show on-screen keyboard</string>
+    <string name="show_on_screen_keyboard_description">Show on-screen keyboard while using physical keyboard</string>
 </resources>

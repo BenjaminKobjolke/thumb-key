@@ -37,7 +37,6 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppSettings
-import com.dessalines.thumbkey.db.ClipboardItem
 import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.db.DEFAULT_ABBREVIATION_BUFFER_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_ANIMATION_HELPER_SPEED
@@ -63,10 +62,12 @@ import com.dessalines.thumbkey.db.DEFAULT_KEY_WIDTH
 import com.dessalines.thumbkey.db.DEFAULT_MIN_SWIPE_LENGTH
 import com.dessalines.thumbkey.db.DEFAULT_NON_SQUARE_KEYS
 import com.dessalines.thumbkey.db.DEFAULT_POSITION
+import com.dessalines.thumbkey.db.DEFAULT_POSITION_PADDING
 import com.dessalines.thumbkey.db.DEFAULT_PUSHUP_SIZE
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_BACKSPACE_DEADZONE_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_CURSOR_MOVEMENT_MODE
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_ENABLED
+import com.dessalines.thumbkey.db.DEFAULT_SLIDE_HOLD_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_SENSITIVITY
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_SPACEBAR_DEADZONE_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
@@ -189,6 +190,8 @@ fun KeyboardScreen(
                 ?: DEFAULT_POSITION,
         ]
 
+    val positionPadding = settings?.positionPadding ?: DEFAULT_POSITION_PADDING
+
     val pushupSizeDp = (settings?.pushupSize ?: DEFAULT_PUSHUP_SIZE).dp
     val ignoreBottomPadding = (settings?.ignoreBottomPadding ?: DEFAULT_IGNORE_BOTTOM_PADDING).toBool()
 
@@ -231,6 +234,7 @@ fun KeyboardScreen(
         CircularDragAction.entries[settings?.counterclockwiseDragAction ?: DEFAULT_COUNTERCLOCKWISE_DRAG_ACTION]
     val ghostKeysEnabled = (settings?.ghostKeysEnabled ?: DEFAULT_GHOST_KEYS_ENABLED).toBool()
     val abbreviationBufferEnabled = (settings?.abbreviationBufferEnabled ?: DEFAULT_ABBREVIATION_BUFFER_ENABLED).toBool()
+    val slideHoldEnabled = (settings?.slideHoldEnabled ?: DEFAULT_SLIDE_HOLD_ENABLED).toBool()
 
     val keyBorderWidthFloat = keyBorderWidth / 10.0f
     val keyBorderColour = MaterialTheme.colorScheme.outline
@@ -515,6 +519,7 @@ fun KeyboardScreen(
                                 clockwiseDragAction = clockwiseDragAction,
                                 counterclockwiseDragAction = counterclockwiseDragAction,
                                 abbreviationBufferEnabled = abbreviationBufferEnabled,
+                                slideHoldEnabled = slideHoldEnabled,
                             )
                         }
                     }
@@ -607,13 +612,11 @@ fun KeyboardScreen(
                             clipboardRepository?.clearUnpinned()
                         }
                     },
-                    onGoToClipboardSettings = {
-                        mode = KeyboardMode.MAIN
-                        onGoToClipboardSettings()
-                    },
+                    onGoToClipboardSettings = onGoToClipboardSettings,
                     keyHeight = keyHeight,
                     keyPadding = keyPadding,
                     cornerRadius = cornerRadius,
+                    vibrateOnTap = vibrateOnTap,
                 )
             }
         }
@@ -628,7 +631,13 @@ fun KeyboardScreen(
             Log.d(TAG, "request for cursor updates failed, cursor updates will not be provided")
         }
 
-        val drawKeyboard = @Composable { alignment: Alignment, drawBackdrop: Boolean ->
+        val drawKeyboard = @Composable { alignment: Alignment, drawBackdrop: Boolean, positionPadding: Int ->
+            val modifierPositionPadding =
+                if (positionPadding > 0) {
+                    Modifier.padding(start = positionPadding.dp)
+                } else {
+                    Modifier.padding(end = -positionPadding.dp)
+                }
             Box(
                 contentAlignment = alignment,
                 modifier =
@@ -655,7 +664,7 @@ fun KeyboardScreen(
                                 .background(color = MaterialTheme.colorScheme.surfaceVariant),
                     )
                 }
-                Column {
+                Column(modifier = modifierPositionPadding) {
                     keyboard.arr.forEachIndexed { i, row ->
                         Row {
                             row.forEachIndexed { j, key ->
@@ -816,6 +825,7 @@ fun KeyboardScreen(
                                         clockwiseDragAction = clockwiseDragAction,
                                         counterclockwiseDragAction = counterclockwiseDragAction,
                                         abbreviationBufferEnabled = abbreviationBufferEnabled,
+                                        slideHoldEnabled = slideHoldEnabled,
                                     )
                                 }
                             }
@@ -825,9 +835,9 @@ fun KeyboardScreen(
             }
         }
 
-        drawKeyboard(keyboardPositionToAlignment(position), backdropEnabled)
+        drawKeyboard(keyboardPositionToAlignment(position), backdropEnabled, positionPadding)
         if (position == KeyboardPosition.Dual) {
-            drawKeyboard(keyboardPositionToAlignment(KeyboardPosition.Right), false)
+            drawKeyboard(keyboardPositionToAlignment(KeyboardPosition.Right), false, positionPadding)
         }
     }
 }

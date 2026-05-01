@@ -19,6 +19,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.dessalines.thumbkey.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +34,7 @@ const val DEFAULT_KEY_HEIGHT = DEFAULT_KEY_WIDTH
 const val DEFAULT_ANIMATION_SPEED = 250
 const val DEFAULT_ANIMATION_HELPER_SPEED = 250
 const val DEFAULT_POSITION = 0
+const val DEFAULT_POSITION_PADDING = 0
 const val DEFAULT_AUTO_CAPITALIZE = 1
 const val DEFAULT_KEYBOARD_LAYOUT = 0
 const val DEFAULT_THEME = 0
@@ -60,6 +62,7 @@ const val DEFAULT_CIRCULAR_DRAG_ENABLED = 1
 const val DEFAULT_CLOCKWISE_DRAG_ACTION = 0
 const val DEFAULT_COUNTERCLOCKWISE_DRAG_ACTION = 1
 const val DEFAULT_GHOST_KEYS_ENABLED = 0
+const val DEFAULT_SLIDE_HOLD_ENABLED = 0
 const val DEFAULT_KEY_MODIFICATIONS = ""
 const val DEFAULT_IGNORE_BOTTOM_PADDING = 0
 const val DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH = 1
@@ -72,6 +75,8 @@ const val DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED = 1
 const val DEFAULT_CLIPBOARD_MAX_SIZE = 20
 const val MIN_CLIPBOARD_MAX_SIZE = 2
 const val MAX_CLIPBOARD_MAX_SIZE = 100
+const val DEFAULT_USE_PRIVATE_CLIPBOARD = 0
+const val DEFAULT_SHOW_ON_SCREEN_KEYBOARD = 0
 
 @Entity
 data class AppSettings(
@@ -250,6 +255,11 @@ data class AppSettings(
     )
     val ghostKeysEnabled: Int,
     @ColumnInfo(
+        name = "slide_hold_enabled",
+        defaultValue = DEFAULT_SLIDE_HOLD_ENABLED.toString(),
+    )
+    val slideHoldEnabled: Int,
+    @ColumnInfo(
         name = "key_modifications",
         defaultValue = "",
     )
@@ -324,6 +334,21 @@ data class AppSettings(
         defaultValue = DEFAULT_CLIPBOARD_MAX_SIZE.toString(),
     )
     val clipboardMaxSize: Int,
+    @ColumnInfo(
+        name = "position_padding",
+        defaultValue = DEFAULT_POSITION_PADDING.toString(),
+    )
+    val positionPadding: Int,
+    @ColumnInfo(
+        name = "use_private_clipboard",
+        defaultValue = DEFAULT_USE_PRIVATE_CLIPBOARD.toString(),
+    )
+    val usePrivateClipboard: Int,
+    @ColumnInfo(
+        name = "show_on_screen_keyboard",
+        defaultValue = DEFAULT_SHOW_ON_SCREEN_KEYBOARD.toString(),
+    )
+    val showOnScreenKeyboard: Int,
 )
 
 data class LayoutsUpdate(
@@ -428,6 +453,10 @@ data class LookAndFeelUpdate(
         name = "vibrate_on_slide",
     )
     val vibrateOnSlide: Int,
+    @ColumnInfo(
+        name = "position_padding",
+    )
+    val positionPadding: Int,
 )
 
 data class BehaviorUpdate(
@@ -458,6 +487,8 @@ data class BehaviorUpdate(
     val counterclockwiseDragAction: Int,
     @ColumnInfo(name = "ghost_keys_enabled")
     val ghostKeysEnabled: Int,
+    @ColumnInfo(name = "slide_hold_enabled")
+    val slideHoldEnabled: Int,
 )
 
 data class KeyModificationsUpdate(
@@ -480,6 +511,16 @@ data class ClipboardSettingsUpdate(
     val clipboardSizeLimitEnabled: Int,
     @ColumnInfo(name = "clipboard_max_size")
     val clipboardMaxSize: Int,
+    @ColumnInfo(
+        name = "use_private_clipboard",
+    )
+    val usePrivateClipboard: Int,
+)
+
+data class OtherSettingsUpdate(
+    val id: Int,
+    @ColumnInfo(name = "show_on_screen_keyboard")
+    val showOnScreenKeyboard: Int,
 )
 
 @Dao
@@ -536,6 +577,9 @@ interface AppSettingsDao {
     @Update(entity = AppSettings::class)
     fun updateClipboardSettings(clipboardSettings: ClipboardSettingsUpdate)
 
+    @Update(entity = AppSettings::class)
+    fun updateOtherSettings(otherSettings: OtherSettingsUpdate)
+
     @Query("UPDATE AppSettings SET last_version_code_viewed = :versionCode")
     suspend fun updateLastVersionCode(versionCode: Int)
 
@@ -586,6 +630,11 @@ class AppSettingsRepository(
     }
 
     @WorkerThread
+    fun updateOtherSettings(otherSettings: OtherSettingsUpdate) {
+        appSettingsDao.updateOtherSettings(otherSettings)
+    }
+
+    @WorkerThread
     suspend fun updateLastVersionCodeViewed(versionCode: Int) {
         appSettingsDao.updateLastVersionCode(versionCode)
     }
@@ -620,7 +669,7 @@ data class Abbreviation(
 )
 
 @Database(
-    version = 24,
+    version = 28,
     entities = [AppSettings::class, Abbreviation::class],
     exportSchema = true,
 )
@@ -668,6 +717,10 @@ abstract class AppDB : RoomDatabase() {
                             MIGRATION_21_22,
                             MIGRATION_22_23,
                             MIGRATION_23_24,
+                            MIGRATION_24_25,
+                            MIGRATION_25_26,
+                            MIGRATION_26_27,
+                            MIGRATION_27_28,
                         )
                         // Necessary because it can't insert data on creation
                         .addCallback(
@@ -681,6 +734,10 @@ abstract class AppDB : RoomDatabase() {
                                             CONFLICT_IGNORE,
                                             ContentValues(2).apply {
                                                 put("id", 1)
+                                                put(
+                                                    "show_on_screen_keyboard",
+                                                    if (BuildConfig.DEBUG) 1 else DEFAULT_SHOW_ON_SCREEN_KEYBOARD,
+                                                )
                                             },
                                         )
                                     }
@@ -729,6 +786,11 @@ class AppSettingsViewModel(
     fun updateClipboardSettings(clipboardSettings: ClipboardSettingsUpdate) =
         viewModelScope.launch {
             repository.updateClipboardSettings(clipboardSettings)
+        }
+
+    fun updateOtherSettings(otherSettings: OtherSettingsUpdate) =
+        viewModelScope.launch {
+            repository.updateOtherSettings(otherSettings)
         }
 
     fun updateLastVersionCodeViewed(versionCode: Int) =

@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.utils
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
@@ -15,6 +16,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +31,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -431,6 +434,42 @@ fun performKeyAction(
             AbbreviationManager.getInstance(ime.applicationContext).onBackspace()
         }
 
+        // Alternative delete that uses deleteSurroundingText instead of KEYCODE_DEL.
+        // Some apps (like Google Chat) ignore key events from soft keyboards but respond
+        // to text manipulation. Users can assign this via YAML key modifications.
+        // Falls back to sendKeyEvent for TYPE_NULL editors (Termux, terminals).
+        // See: https://github.com/dessalines/thumb-key/issues/1065
+        is KeyAction.DeleteViaTextManipulation -> {
+            val ic = ime.currentInputConnection
+            val editorInfo = ime.currentInputEditorInfo
+            val inputType = editorInfo?.inputType ?: 0
+
+            if (inputType == EditorInfo.TYPE_NULL) {
+                // Raw editor (like Termux) - use key event
+                ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
+            } else {
+                val selectedText = ic.getSelectedText(0)
+                if (!selectedText.isNullOrEmpty()) {
+                    ic.commitText("", 1)
+                } else {
+                    val textBefore = ic.getTextBeforeCursor(50, 0)
+                    if (!textBefore.isNullOrEmpty()) {
+                        val bi = java.text.BreakIterator.getCharacterInstance()
+                        bi.setText(textBefore.toString())
+                        val end = bi.last()
+                        val start = bi.previous()
+                        val deleteCount =
+                            if (start == java.text.BreakIterator.DONE) {
+                                textBefore.length
+                            } else {
+                                end - start
+                            }
+                        ic.deleteSurroundingText(deleteCount, 0)
+                    }
+                }
+            }
+        }
+
         is KeyAction.DeleteWordBeforeCursor -> {
             Log.d(TAG, "deleting last word")
             keyboardSettings.textProcessor?.handleFinishInput(ime)
@@ -459,6 +498,26 @@ fun performKeyAction(
             Log.d(TAG, "Select Line")
             keyboardSettings.textProcessor?.handleFinishInput(ime)
             selectLineWithCursor(ime)
+        }
+
+        is KeyAction.CursorToLineStart -> {
+            Log.d(TAG, "Cursor to line start")
+            cursorToLineStart(ime)
+        }
+
+        is KeyAction.CursorToLineEnd -> {
+            Log.d(TAG, "Cursor to line end")
+            cursorToLineEnd(ime)
+        }
+
+        is KeyAction.CursorToTextStart -> {
+            Log.d(TAG, "Cursor to text start")
+            cursorToTextStart(ime)
+        }
+
+        is KeyAction.CursorToTextEnd -> {
+            Log.d(TAG, "Cursor to text end")
+            cursorToTextEnd(ime)
         }
 
         is KeyAction.ReplaceLastText -> {
@@ -1138,6 +1197,51 @@ fun performKeyAction(
                         }
                     }
 
+                    "-" -> {
+                        when (textBefore) {
+                            "a" -> "ā"
+                            "A" -> "Ā"
+                            "ä" -> "ǟ"
+                            "Ä" -> "Ǟ"
+                            "e" -> "ē"
+                            "E" -> "Ē"
+                            "ė" -> "ė̄"
+                            "Ė" -> "Ė̄"
+                            "g" -> "ḡ"
+                            "G" -> "Ḡ"
+                            "i" -> "ī"
+                            "I" -> "Ī"
+                            "ḷ" -> "ḹ"
+                            "Ḷ" -> "Ḹ"
+                            "m" -> "m̄"
+                            "M" -> "M̄"
+                            "n" -> "n̄"
+                            "N" -> "N̄"
+                            "o" -> "ō"
+                            "O" -> "Ō"
+                            "õ" -> "ȭ"
+                            "Õ" -> "Ȭ"
+                            "ȯ" -> "ȱ"
+                            "Ȯ" -> "Ȱ"
+                            "o͘" -> "ō͘"
+                            "O͘" -> "Ō͘"
+                            "p" -> "p̄"
+                            "P" -> "P̄"
+                            "r" -> "r̄"
+                            "R" -> "R̄"
+                            "ṛ" -> "ṝ"
+                            "Ṛ" -> "Ṝ"
+                            "u" -> "ū"
+                            "U" -> "Ū"
+                            "ü" -> "ǖ"
+                            "Ü" -> "Ǖ"
+                            "y" -> "ȳ"
+                            "Y" -> "Ȳ"
+                            " " -> "-"
+                            else -> textBefore
+                        }
+                    }
+
                     else -> {
                         throw IllegalStateException("Invalid key modifier")
                     }
@@ -1243,6 +1347,17 @@ fun performKeyAction(
         }
 
         KeyAction.Cut -> {
+            fun performCut() {
+                if (ime.clipboardUsePrivate()) {
+                    val text = ime.currentInputConnection.getSelectedText(0).toString()
+                    ime.clipboardAddPrivateClip(text)?.let {
+                        ime.currentInputConnection.commitText("", 1)
+                    }
+                } else {
+                    ime.currentInputConnection.performContextMenuAction(android.R.id.cut)
+                }
+            }
+
             keyboardSettings.textProcessor?.handleFinishInput(ime)
             if (ime.currentInputConnection.getSelectedText(0).isNullOrEmpty()) {
                 // Nothing selected, so cut all the text
@@ -1250,14 +1365,30 @@ fun performKeyAction(
                 // Wait a bit for the select all to complete.
                 val delayInMillis = 100L
                 Handler(Looper.getMainLooper()).postDelayed({
-                    ime.currentInputConnection.performContextMenuAction(android.R.id.cut)
+                    performCut()
                 }, delayInMillis)
             } else {
-                ime.currentInputConnection.performContextMenuAction(android.R.id.cut)
+                performCut()
             }
         }
 
         KeyAction.Copy -> {
+            fun performCopy() {
+                if (ime.clipboardUsePrivate()) {
+                    val text = ime.currentInputConnection.getSelectedText(0)
+                    if (text != null) {
+                        ime.clipboardAddPrivateClip(text.toString())?.let {
+                            // Text successfully added to clipboard history
+                            val message = ime.getString(R.string.copy)
+                            Toast.makeText(ime, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    ime.currentInputConnection.performContextMenuAction(android.R.id.copy)
+                    val message = ime.getString(R.string.copy)
+                    Toast.makeText(ime, message, Toast.LENGTH_SHORT).show()
+                }
+            }
             keyboardSettings.textProcessor?.handleFinishInput(ime)
             if (ime.currentInputConnection.getSelectedText(0).isNullOrEmpty()) {
                 // Nothing selected, so copy all the text
@@ -1265,19 +1396,33 @@ fun performKeyAction(
                 // Wait a bit for the select all to complete.
                 val delayInMillis = 100L
                 Handler(Looper.getMainLooper()).postDelayed({
-                    ime.currentInputConnection.performContextMenuAction(android.R.id.copy)
+                    performCopy()
                 }, delayInMillis)
             } else {
-                ime.currentInputConnection.performContextMenuAction(android.R.id.copy)
+                performCopy()
             }
-
-            val message = ime.getString(R.string.copy)
-            Toast.makeText(ime, message, Toast.LENGTH_SHORT).show()
         }
 
         KeyAction.Paste -> {
             keyboardSettings.textProcessor?.handleFinishInput(ime)
-            ime.currentInputConnection.performContextMenuAction(android.R.id.paste)
+            if (!ime.clipboardUsePrivate()) {
+                // Standard clipboard behavior
+                ime.currentInputConnection.performContextMenuAction(android.R.id.paste)
+            } else { // Private clipboard
+                // Here, `clipboardWasLastCopyDoneViaSystem` is used to manage data with a non-text MEME type.
+                // When copying data with a MEME type different than a text, e.g. a picture, it is not added to the history, as it’s not a text. With standard paste it’s not an issue as the paste will still paste it.
+                // However if we paste from the internal clipboard, it will paste the latest string in the history, and not the picture that was only in the system clipboard.
+                if (ime.clipboardWasLastCopyDoneViaSystem()) {
+                    // Latest clip is present in the system clipboard, might be absent from internal clipboard
+                    ime.currentInputConnection.performContextMenuAction(android.R.id.paste)
+                } else {
+                    // Latest clip is in the internal clipboard
+                    val text = ime.clipboardGetLastClip()
+                    if (!text.isNullOrEmpty()) {
+                        ime.currentInputConnection.commitText(text, 1)
+                    }
+                }
+            }
         }
 
         KeyAction.Undo -> {
@@ -1575,6 +1720,31 @@ fun moveCursor(
     ime.currentInputConnection.setSelection(selection.end, selection.end)
 }
 
+fun cursorToLineStart(ime: IMEService) {
+    ime.currentInputConnection.sendKeyEvent(
+        KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MOVE_HOME),
+    )
+}
+
+fun cursorToLineEnd(ime: IMEService) {
+    ime.currentInputConnection.sendKeyEvent(
+        KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MOVE_END),
+    )
+}
+
+fun cursorToTextStart(ime: IMEService) {
+    ime.currentInputConnection.setSelection(0, 0)
+}
+
+fun cursorToTextEnd(ime: IMEService) {
+    val ic = ime.currentInputConnection
+    // Sum text before and after the cursor to find the absolute end position.
+    // Using large limits to handle long documents; typical mobile content is well within range.
+    val before = ic.getTextBeforeCursor(1_000_000, 0)?.length ?: return
+    val after = ic.getTextAfterCursor(1_000_000, 0)?.length ?: return
+    ic.setSelection(before + after, before + after)
+}
+
 fun previousWordBeforeCursor(ime: IMEService) {
     val wordsBeforeCursor = ime.currentInputConnection.getTextBeforeCursor(9999, 0)
 
@@ -1596,13 +1766,16 @@ fun nextWordAfterCursor(ime: IMEService) {
 fun selectLineWithCursor(ime: IMEService) {
     // Find line start
     val wordsBeforeCursor = ime.currentInputConnection.getTextBeforeCursor(9999, 0)
-    val lastChar = wordsBeforeCursor?.last() ?: ' '
-    if (!(lastChar == '\n' || lastChar == '\r')) {
-        val patternStart = Regex("^[^\\n\\r]*\\Z", RegexOption.MULTILINE)
-        val previousLineStart = wordsBeforeCursor?.let { patternStart.find(it)?.value?.length } ?: 0
+    if (wordsBeforeCursor?.length ?: 0 != 0) {
+        // If we are at the beginning of a line nothing to do, else
+        val lastChar = wordsBeforeCursor?.last() ?: ' '
+        if (!(lastChar == '\n' || lastChar == '\r')) {
+            val patternStart = Regex("^[^\\n\\r]*\\Z", RegexOption.MULTILINE)
+            val previousLineStart = wordsBeforeCursor?.let { patternStart.find(it)?.value?.length } ?: 0
 
-        // Move to line start
-        moveCursor(ime, -previousLineStart)
+            // Move to line start
+            moveCursor(ime, -previousLineStart)
+        }
     }
 
     // Find length of line, with endline if present
@@ -1653,6 +1826,7 @@ fun SimpleTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     showBack: Boolean = true,
 ) {
+    val activity = LocalActivity.current
     TopAppBar(
         scrollBehavior = scrollBehavior,
         title = {
@@ -1662,7 +1836,15 @@ fun SimpleTopAppBar(
         },
         navigationIcon = {
             if (showBack) {
-                IconButton(onClick = { navController.popBackStack() }) {
+                IconButton(onClick = {
+                    // If there's no previous destination, finish the activity
+                    // This handles the case when navigating directly to a screen via intent
+                    if (navController.previousBackStackEntry == null) {
+                        activity?.finish()
+                    } else {
+                        navController.popBackStack()
+                    }
+                }) {
                     Icon(
                         Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = stringResource(R.string.settings),

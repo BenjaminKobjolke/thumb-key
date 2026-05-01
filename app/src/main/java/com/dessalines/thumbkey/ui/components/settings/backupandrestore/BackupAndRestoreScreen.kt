@@ -65,18 +65,21 @@ import com.dessalines.thumbkey.db.DEFAULT_KEY_WIDTH
 import com.dessalines.thumbkey.db.DEFAULT_MIN_SWIPE_LENGTH
 import com.dessalines.thumbkey.db.DEFAULT_NON_SQUARE_KEYS
 import com.dessalines.thumbkey.db.DEFAULT_POSITION
+import com.dessalines.thumbkey.db.DEFAULT_POSITION_PADDING
 import com.dessalines.thumbkey.db.DEFAULT_PUSHUP_SIZE
+import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_BACKSPACE_DEADZONE_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_CURSOR_MOVEMENT_MODE
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_ENABLED
+import com.dessalines.thumbkey.db.DEFAULT_SLIDE_HOLD_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_SENSITIVITY
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_SPACEBAR_DEADZONE_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
 import com.dessalines.thumbkey.db.DEFAULT_SPACEBAR_MULTITAPS
 import com.dessalines.thumbkey.db.DEFAULT_THEME
 import com.dessalines.thumbkey.db.DEFAULT_THEME_COLOR
-import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
+import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
@@ -239,6 +242,7 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             slideSensitivity = DEFAULT_SLIDE_SENSITIVITY,
             soundOnTap = DEFAULT_SOUND_ON_TAP,
             position = DEFAULT_POSITION,
+            positionPadding = DEFAULT_POSITION_PADDING,
             pushupSize = DEFAULT_PUSHUP_SIZE,
             minSwipeLength = DEFAULT_MIN_SWIPE_LENGTH,
             keyboardLayout = DEFAULT_KEYBOARD_LAYOUT,
@@ -250,7 +254,6 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             theme = DEFAULT_THEME,
             themeColor = DEFAULT_THEME_COLOR,
             vibrateOnTap = DEFAULT_VIBRATE_ON_TAP,
-            vibrateOnSlide = DEFAULT_VIBRATE_ON_SLIDE,
             lastVersionCodeViewed = appSettingsViewModel.appSettings.value?.lastVersionCodeViewed ?: 0,
             viewedChangelog = appSettingsViewModel.appSettings.value?.viewedChangelog ?: 1,
             backdropEnabled = DEFAULT_BACKDROP_ENABLED,
@@ -276,6 +279,9 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             clipboardCleanupAfterMinutes = DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES,
             clipboardSizeLimitEnabled = DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED,
             clipboardMaxSize = DEFAULT_CLIPBOARD_MAX_SIZE,
+            usePrivateClipboard = DEFAULT_USE_PRIVATE_CLIPBOARD,
+            showOnScreenKeyboard = DEFAULT_SHOW_ON_SCREEN_KEYBOARD,
+            slideHoldEnabled = DEFAULT_SLIDE_HOLD_ENABLED,
         ),
     )
 }
