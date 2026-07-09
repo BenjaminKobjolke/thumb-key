@@ -94,7 +94,6 @@
     <string name="how_to_modify_keys">Как модифицировать клавиши</string>
     <string name="backup_database">Создать резервную копию</string>
     <string name="restore_database">Восстановить из резервной копии</string>
-    <string name="database_restored">Восстановление завершено.</string>
     <string name="database_backed_up">Резервная копия создана.</string>
     <string name="backup_and_restore">Резервное копирование и восстановление</string>
     <string name="restore_database_warning">Предупреждение: Все данные в текущей базе данных будут стёрты</string>
@@ -143,4 +142,5 @@
     <string name="show_on_screen_keyboard_description">Отображение экранной клавиатуры при использовании физической клавиатуры</string>
     <string name="slide_hold_enable">Перемещение курсора свайпом с удержанием</string>
     <string name="slide_hold_description">Свайп с удержанием для непрерывного перемещения курсора, свайп с возвратом и удержанием — для перемещения по словам. Backspace: свайп с удержанием для непрерывного удаления, свайп с возвратом и удержанием — для удаления по словам.</string>
+    <string name="database_operation_failed">Ошибка операции: %1$s</string>
 </resources>

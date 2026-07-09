@@ -15,6 +15,7 @@ data class KeyboardDefinitionModes(
     val numeric: KeyboardC,
     val ctrled: KeyboardC? = null,
     val alted: KeyboardC? = null,
+    val emoji: KeyboardC? = null,
 ) {
     companion object
 }
@@ -223,6 +224,11 @@ sealed class KeyAction {
 
     class ComposeLastKey(
         val text: String,
+    ) : KeyAction()
+
+    class NormalizeLastKey(
+        val text: String,
+        val form: java.text.Normalizer.Form? = java.text.Normalizer.Form.NFC,
     ) : KeyAction()
 
     class SmartQuotes(

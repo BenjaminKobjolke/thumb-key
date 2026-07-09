@@ -4,7 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
-    kotlin("plugin.serialization") version "2.3.21"
+    kotlin("plugin.serialization") version "2.4.0"
 }
 
 kotlin {
@@ -21,8 +21,8 @@ android {
         applicationId = "com.dessalines.thumbkey"
         minSdk = 24
         targetSdk = 36
-        versionCode = 177
-        versionName = "5.1.7"
+        versionCode = 181
+        versionName = "5.1.11"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -97,19 +97,19 @@ android {
 
 dependencies {
     // Freedroidwarn
-    implementation("com.github.woheller69:FreeDroidWarn:V1.11")
+    implementation("com.github.woheller69:FreeDroidWarn:V1.13")
 
     // Exporting / importing DB helper
-    implementation("com.github.dessalines:room-db-export-import:0.1.0")
+    implementation("com.github.dessalines:room-db-export-import:0.1.1")
 
     // Compose BOM
-    implementation(platform("androidx.compose:compose-bom:2026.04.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.06.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.runtime:runtime-livedata:1.11.0")
+    implementation("androidx.compose.runtime:runtime-livedata:1.11.4")
 
     // Activities
     implementation("androidx.activity:activity-compose:1.13.0")
@@ -150,9 +150,9 @@ dependencies {
     implementation("com.charleskorn.kaml:kaml:0.104.0")
 
     // Kotlin Reflect
-    implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.21")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.0")
 
     // Arrow-kt for mutating deeply nested data classes
-    implementation("io.arrow-kt:arrow-optics:2.2.2.1")
-    ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.2.2.1")
+    implementation("io.arrow-kt:arrow-optics:2.2.3")
+    ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.2.3")
 }
