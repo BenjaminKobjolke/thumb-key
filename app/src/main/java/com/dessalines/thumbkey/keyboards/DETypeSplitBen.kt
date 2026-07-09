@@ -107,7 +107,7 @@ val KB_DE_TYPESPLITBEN_MAIN =
                             DeleteWordAfterCursor,
                             display = KeyDisplay.TextDisplay("×→"),
                         ),
-                    top = KeyC("'", color = MUTED),
+                    top = KeyC("\"", color = MUTED),
                     bottom = KeyC(",", color = MUTED),
                     nextTapActions =
                         listOf(
@@ -171,14 +171,14 @@ val KB_DE_TYPESPLITBEN_MAIN =
                 ),
                 KeyItemC(
                     center = KeyC("n", size = LARGE),
-                ),
-                KeyItemC(
-                    center = KeyC("m", size = LARGE),
                     swipeType = FOUR_WAY_CROSS,
                     right = KeyC("?", color = MUTED),
                     left = KeyC("!", color = MUTED),
                     bottom = KeyC(":", color = MUTED),
                     top = KeyC(";", color = MUTED),
+                ),
+                KeyItemC(
+                    center = KeyC("m", size = LARGE),
                 ),
             ),
             listOf(
@@ -372,7 +372,7 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                             DeleteWordAfterCursor,
                             display = KeyDisplay.TextDisplay("×→"),
                         ),
-                    top = KeyC("'", color = MUTED),
+                    top = KeyC("\"", color = MUTED),
                     bottom = KeyC(",", color = MUTED),
                     nextTapActions =
                         listOf(
@@ -436,14 +436,14 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                 ),
                 KeyItemC(
                     center = KeyC("N", size = LARGE),
-                ),
-                KeyItemC(
-                    center = KeyC("M", size = LARGE),
                     swipeType = FOUR_WAY_CROSS,
                     right = KeyC("?", color = MUTED),
                     left = KeyC("!", color = MUTED),
                     bottom = KeyC(":", color = MUTED),
                     top = KeyC(";", color = MUTED),
+                ),
+                KeyItemC(
+                    center = KeyC("M", size = LARGE),
                 ),
             ),
             listOf(
@@ -547,7 +547,13 @@ val KB_DE_TYPESPLITBEN_NUMERIC =
         listOf(
             listOf(
                 textEditKeyItem(
-                    center = KeyC(" "),
+                    center =
+                        KeyC(
+                            display = KeyDisplay.IconDisplay(Icons.Outlined.ContentPaste),
+                            action = ToggleClipboardMode(true),
+                            size = LARGE,
+                            color = SECONDARY,
+                        ),
                 ),
                 KeyItemC(
                     center = KeyC("1", size = LARGE),
@@ -576,8 +582,8 @@ val KB_DE_TYPESPLITBEN_NUMERIC =
                 KeyItemC(
                     center =
                         KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.Mood),
-                            action = ToggleEmojiMode(true),
+                            display = KeyDisplay.IconDisplay(Icons.Outlined.Mic),
+                            action = SwitchIMEVoice,
                             size = LARGE,
                             color = SECONDARY,
                         ),
@@ -609,6 +615,13 @@ val KB_DE_TYPESPLITBEN_NUMERIC =
                 ),
                 KeyItemC(
                     center = KeyC(",", size = LARGE),
+                    swipeType = TWO_WAY_VERTICAL,
+                    bottom =
+                        KeyC(
+                            display = KeyDisplay.IconDisplay(Icons.Outlined.Mood),
+                            action = ToggleEmojiMode(true),
+                            color = MUTED,
+                        ),
                 ),
             ),
             listOf(
@@ -638,7 +651,67 @@ val KB_DE_TYPESPLITBEN_NUMERIC =
             ),
             listOf(
                 ABC_KEY_ITEM_ALT,
-                BACKSPACE_WIDE_KEY_ITEM,
+                KeyItemC(
+                    center =
+                        KeyC(
+                            display = KeyDisplay.IconDisplay(Icons.AutoMirrored.Outlined.KeyboardBackspace),
+                            action = DeleteKeyAction,
+                            size = LARGE,
+                            color = SECONDARY,
+                        ),
+                    swipeType = FOUR_WAY_CROSS,
+                    slideType = SlideType.MOVE_CURSOR,
+                    left =
+                        KeyC(
+                            display = KeyDisplay.TextDisplay("←"),
+                            action =
+                                SendEvent(
+                                    KeyEvent(
+                                        KeyEvent.ACTION_DOWN,
+                                        KeyEvent.KEYCODE_DPAD_LEFT,
+                                    ),
+                                ),
+                            color = MUTED,
+                        ),
+                    right =
+                        KeyC(
+                            display = KeyDisplay.TextDisplay("→"),
+                            action =
+                                SendEvent(
+                                    KeyEvent(
+                                        KeyEvent.ACTION_DOWN,
+                                        KeyEvent.KEYCODE_DPAD_RIGHT,
+                                    ),
+                                ),
+                            color = MUTED,
+                        ),
+                    top =
+                        KeyC(
+                            display = KeyDisplay.IconDisplay(Icons.Outlined.KeyboardCapslock),
+                            action = ToggleShiftMode(true),
+                            color = MUTED,
+                        ),
+                    backgroundColor = SURFACE_VARIANT,
+                    widthMultiplier = 2,
+                    longPress = DeleteWordBeforeCursor,
+                ),
+                KeyItemC(
+                    center =
+                        KeyC(
+                            display = KeyDisplay.TextDisplay("Entf"),
+                            action =
+                                SendEvent(
+                                    KeyEvent(
+                                        KeyEvent.ACTION_DOWN,
+                                        KeyEvent.KEYCODE_FORWARD_DEL,
+                                    ),
+                                ),
+                            size = LARGE,
+                            color = SECONDARY,
+                        ),
+                    backgroundColor = SURFACE_VARIANT,
+                    longPress = DeleteWordAfterCursor,
+                ),
                 RETURN_KEY_ITEM,
             ),
         ),
