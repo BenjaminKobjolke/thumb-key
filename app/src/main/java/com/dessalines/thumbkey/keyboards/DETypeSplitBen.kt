@@ -192,24 +192,6 @@ val KB_DE_TYPESPLITBEN_MAIN =
                             action = GotoSettings,
                             color = MUTED,
                         ),
-                    bottom =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.Keyboard),
-                            action = SwitchIME,
-                            color = MUTED,
-                        ),
-                    left =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.Language),
-                            action = SwitchLanguage,
-                            color = MUTED,
-                        ),
-                    right =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.LinearScale),
-                            action = MoveKeyboard.CycleRight,
-                            color = MUTED,
-                        ),
                 ),
                 KeyItemC(
                     center =
@@ -455,24 +437,6 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                         KeyC(
                             display = KeyDisplay.IconDisplay(Icons.Outlined.Settings),
                             action = GotoSettings,
-                            color = MUTED,
-                        ),
-                    bottom =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.Keyboard),
-                            action = SwitchIME,
-                            color = MUTED,
-                        ),
-                    left =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.Language),
-                            action = SwitchLanguage,
-                            color = MUTED,
-                        ),
-                    right =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.LinearScale),
-                            action = MoveKeyboard.CycleRight,
                             color = MUTED,
                         ),
                 ),
