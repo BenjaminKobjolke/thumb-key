@@ -20,5 +20,7 @@ build.sh
 .claude
 claude-plans
 tmp/commit_msg.tmp
+.reasonix/
 /tools/upload/
 /tools/ftp_sync.ini
+tickets/
