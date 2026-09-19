@@ -163,11 +163,11 @@ val KB_DE_TYPESPLITBEN_MAIN =
                 ),
                 SPACEBAR_TYPESPLIT_BOTTOM_KEY_ITEM.copy(
                     center =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.Mic),
-                            action = SwitchIMEVoice,
-                            color = MUTED,
+                        SPACEBAR_CENTER_KEYC.copy(
+                            display = SWITCH_IME_VOICE_KEYC.display,
+                            color = SWITCH_IME_VOICE_KEYC.color,
                         ),
+                    longPress = SwitchIMEVoice,
                 ),
                 KeyItemC(
                     center = KeyC("n", size = LARGE),
@@ -410,11 +410,11 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                 ),
                 SPACEBAR_TYPESPLIT_BOTTOM_KEY_ITEM.copy(
                     center =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.Mic),
-                            action = SwitchIMEVoice,
-                            color = MUTED,
+                        SPACEBAR_CENTER_KEYC.copy(
+                            display = SWITCH_IME_VOICE_KEYC.display,
+                            color = SWITCH_IME_VOICE_KEYC.color,
                         ),
+                    longPress = SwitchIMEVoice,
                 ),
                 KeyItemC(
                     center = KeyC("N", size = LARGE),
@@ -545,9 +545,8 @@ val KB_DE_TYPESPLITBEN_NUMERIC =
             listOf(
                 KeyItemC(
                     center =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.Mic),
-                            action = SwitchIMEVoice,
+                        SPACEBAR_CENTER_KEYC.copy(
+                            display = SWITCH_IME_VOICE_KEYC.display,
                             size = LARGE,
                             color = SECONDARY,
                         ),
@@ -556,6 +555,7 @@ val KB_DE_TYPESPLITBEN_NUMERIC =
                     left = KeyC("-"),
                     right = KeyC("_"),
                     backgroundColor = SURFACE_VARIANT,
+                    longPress = SwitchIMEVoice,
                 ),
                 KeyItemC(
                     center = KeyC("4", size = LARGE),
