@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,6 +40,7 @@ import androidx.navigation.NavController
 import com.dessalines.thumbkey.BuildConfig
 import com.dessalines.thumbkey.MainActivity
 import com.dessalines.thumbkey.R
+import com.dessalines.thumbkey.summera.SUMMERA_LOGIN_URL
 import com.dessalines.thumbkey.summera.SummeraAccount
 import com.dessalines.thumbkey.summera.hasMicrophonePermission
 import com.dessalines.thumbkey.summera.poll
@@ -69,6 +71,7 @@ fun SummeraSettingsScreen(navController: NavController) {
     var signInError by remember { mutableStateOf<String?>(null) }
     var microphoneGranted by remember { mutableStateOf(hasMicrophonePermission(ctx)) }
     var lastCrash by remember { mutableStateOf(SummeraAccount.lastCrash(ctx)) }
+    var debugLog by remember { mutableStateOf(SummeraAccount.debugLog(ctx)) }
 
     val timeoutStr = stringResource(R.string.summera_timeout)
     val microphoneLauncher =
@@ -76,23 +79,30 @@ fun SummeraSettingsScreen(navController: NavController) {
             microphoneGranted = it
         }
 
+    fun logDebug(line: String) {
+        SummeraAccount.logSignIn(ctx, line)
+    }
+
     // resumeCode: a stored pending code to keep polling with, null starts a fresh sign-in
     fun signIn(resumeCode: String? = null) {
         signInError = null
         signInJob =
             scope.launch {
                 try {
-                    val client = SummeraAccount.client()
+                    logDebug("sign-in start, resume=${resumeCode != null}")
+                    val client = SummeraAccount.signInClient(ctx)
                     val code =
                         resumeCode ?: run {
-                            val registerCode = withContext(Dispatchers.IO) { client.auth.createRegisterCode() }
+                            val registerCode = withContext(Dispatchers.IO) { client.auth.createRegisterCode(SUMMERA_LOGIN_URL) }
                             SummeraAccount.savePending(ctx, registerCode.code)
+                            logDebug("code ${registerCode.code.take(6)}…, opening browser")
                             CustomTabsIntent.Builder().build().launchUrl(ctx, registerCode.url.toUri())
                             registerCode.code
                         }
 
-                    val result = awaitSignIn(client, code)
+                    val result = awaitSignIn(client, code, ::logDebug)
                     SummeraAccount.clearPending(ctx)
+                    logDebug("poll finished: ${if (result == null) "timeout" else "signed in"}")
                     if (result == null) {
                         signInError = timeoutStr
                     } else {
@@ -107,6 +117,7 @@ fun SummeraSettingsScreen(navController: NavController) {
                     // Anything escaping this job would take the whole process down
                     SummeraAccount.clearPending(ctx)
                     Log.e(TAG, "Summera sign-in failed", e)
+                    logDebug("sign-in failed: ${e.message}")
                     signInError = e.message ?: e::class.java.simpleName
                 } finally {
                     // Not clearing the pending code here: a cancellation by the lifecycle has to
@@ -121,6 +132,8 @@ fun SummeraSettingsScreen(navController: NavController) {
     LifecycleResumeEffect(Unit) {
         if (credentials == null) credentials = SummeraAccount.credentials(ctx)
         lastCrash = SummeraAccount.lastCrash(ctx)
+        // As of this resume, not live: it is read after the fact
+        debugLog = SummeraAccount.debugLog(ctx)
         if (credentials == null && signInJob == null) {
             SummeraAccount.pendingCode(ctx)?.let { signIn(it) }
         }
@@ -215,6 +228,23 @@ fun SummeraSettingsScreen(navController: NavController) {
                             },
                         )
                     }
+                    val log = debugLog
+                    if (BuildConfig.DEBUG && log != null) {
+                        Preference(
+                            title = { Text(stringResource(R.string.summera_debug_log)) },
+                            summary = { Text(log) },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Description,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = {
+                                SummeraAccount.clearDebugLog(ctx)
+                                debugLog = null
+                            },
+                        )
+                    }
                     Preference(
                         title = { Text(stringResource(R.string.summera_microphone_title)) },
                         summary = {
@@ -246,11 +276,14 @@ fun SummeraSettingsScreen(navController: NavController) {
 private suspend fun awaitSignIn(
     client: XidaAiClient,
     code: String,
+    log: (String) -> Unit,
 ): Credentials? =
     poll {
         try {
             withContext(Dispatchers.IO) { client.auth.check(code) }
-        } catch (_: XidaAiException) {
+        } catch (e: XidaAiException) {
+            // A wrong response shape shows up as a repeating reason instead of silence
+            log("check: pending (${e.message})")
             null
         }
     }

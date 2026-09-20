@@ -4,8 +4,13 @@ package de.xida.aichatapi
 class AuthService internal constructor(
     private val client: XidaAiClient,
 ) {
-    fun createRegisterCode(): RegisterCode {
-        val json = client.http.postForm("register/code", client.softwareParams())
+    /**
+     * [redirectUri] is where the login page should send the browser once the login is done. The
+     * server may ignore it today (SUMMERA AI API #9748), the polling with [check] works either way.
+     */
+    fun createRegisterCode(redirectUri: String? = null): RegisterCode {
+        val params = client.softwareParams() + listOfNotNull(redirectUri?.let { "redirect_uri" to it })
+        val json = client.http.postForm("register/code", params)
         return parseResponse { RegisterCode.fromJson(json, client.baseUrl) }
     }
 

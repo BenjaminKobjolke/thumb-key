@@ -1,6 +1,7 @@
 package com.dessalines.thumbkey
 
 import android.app.Application
+import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.compose.setContent
@@ -23,6 +24,8 @@ import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.AppSettingsViewModelFactory
 import com.dessalines.thumbkey.db.ClipboardDB
 import com.dessalines.thumbkey.db.ClipboardRepository
+import com.dessalines.thumbkey.summera.SUMMERA_LOGIN_HOST
+import com.dessalines.thumbkey.summera.SUMMERA_LOGIN_SCHEME
 import com.dessalines.thumbkey.summera.SummeraAccount
 import com.dessalines.thumbkey.ui.components.common.ShowChangelog
 import com.dessalines.thumbkey.ui.components.settings.SettingsScreen
@@ -100,7 +103,11 @@ class MainActivity : AppCompatActivity() {
 
             val startDestination by remember {
                 mutableStateOf(
-                    if (!thumbkeyEnabled) {
+                    // First, so the login page gets back to the Summera AI screen even before the
+                    // keyboard is enabled
+                    if (isSummeraLoginLink(intent)) {
+                        "summera"
+                    } else if (!thumbkeyEnabled) {
                         "setup"
                     } else {
                         intent.extras?.getString("startRoute") ?: "settings"
@@ -223,4 +230,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // ponytail: recreate() instead of navigating, fine because the settings screens hold no
+        // unsaved state. The Summera AI screen then resumes the pending sign-in by itself
+        recreate()
+    }
 }
+
+// The register_code the link carries is ignored on purpose: the pending code in the preferences is
+// the one the poll trusts, a link can come from anywhere
+private fun isSummeraLoginLink(intent: Intent): Boolean =
+    intent.data?.let { it.scheme == SUMMERA_LOGIN_SCHEME && it.host == SUMMERA_LOGIN_HOST } == true

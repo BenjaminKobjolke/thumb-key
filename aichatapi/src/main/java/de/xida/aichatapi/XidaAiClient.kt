@@ -11,8 +11,9 @@ class XidaAiClient(
     val software: String,
     val appVersion: String,
     val baseUrl: String = DEFAULT_BASE_URL,
+    logger: ((String) -> Unit)? = null,
 ) {
-    internal val http = Http(baseUrl)
+    internal val http = Http(baseUrl, logger)
 
     val auth = AuthService(this)
     val services = ServicesService(this)

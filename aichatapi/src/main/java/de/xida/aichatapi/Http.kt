@@ -27,8 +27,39 @@ internal fun <T> parseResponse(parse: () -> T): T =
         throw XidaAiException(FALLBACK_ERROR, e)
     }
 
+private val SECRET_KEYS = setOf("api_token", "password")
+private const val REGISTER_CODE_KEY = "register_code"
+private const val REGISTER_CODE_VISIBLE = 6
+private const val MASK = "***"
+private const val LOG_BODY_MAX = 400
+
+private val SECRET_JSON = Regex("(\"(?:${SECRET_KEYS.joinToString("|")})\"\\s*:\\s*\")[^\"]*")
+private val REGISTER_CODE_JSON = Regex("(\"$REGISTER_CODE_KEY\"\\s*:\\s*\")([^\"]*)")
+
+// Enough to correlate two calls, not enough to reuse the code
+private fun shortenCode(code: String): String = code.take(REGISTER_CODE_VISIBLE) + "…"
+
+/** Request params as one log line, without anything that could be replayed. */
+internal fun redactParams(params: Map<String, String>): String =
+    params.entries.joinToString("&") { (key, value) ->
+        val shown =
+            when (key) {
+                in SECRET_KEYS -> MASK
+                REGISTER_CODE_KEY -> shortenCode(value)
+                else -> value
+            }
+        "$key=$shown"
+    }
+
+/** A JSON response body with the same values blanked as in [redactParams]. */
+internal fun redactSecrets(text: String): String =
+    text
+        .replace(SECRET_JSON) { it.groupValues[1] + MASK }
+        .replace(REGISTER_CODE_JSON) { it.groupValues[1] + shortenCode(it.groupValues[2]) }
+
 internal class Http(
     private val baseUrl: String,
+    private val logger: ((String) -> Unit)? = null,
 ) {
     fun postForm(
         path: String,
@@ -38,7 +69,7 @@ internal class Http(
             params.entries
                 .joinToString("&") { "${encode(it.key)}=${encode(it.value)}" }
                 .toByteArray()
-        return execute(path, "application/x-www-form-urlencoded") { conn ->
+        return execute(path, "application/x-www-form-urlencoded", params) { conn ->
             conn.setFixedLengthStreamingMode(body.size)
             conn.outputStream.use { it.write(body) }
         }
@@ -52,7 +83,7 @@ internal class Http(
         mimeType: String,
     ): JSONObject {
         val boundary = "----aichatapi${UUID.randomUUID()}"
-        return execute(path, "multipart/form-data; boundary=$boundary") { conn ->
+        return execute(path, "multipart/form-data; boundary=$boundary", params + ("file" to file.name)) { conn ->
             // Chunked, so the file is streamed instead of buffered in memory
             conn.setChunkedStreamingMode(0)
             conn.outputStream.use { out ->
@@ -74,6 +105,7 @@ internal class Http(
     private fun execute(
         path: String,
         contentType: String,
+        logParams: Map<String, String>,
         writeBody: (HttpURLConnection) -> Unit,
     ): JSONObject {
         val conn = URL("${baseUrl.trimEnd('/')}/$path").openConnection() as HttpURLConnection
@@ -84,15 +116,26 @@ internal class Http(
             conn.readTimeout = TIMEOUT_MS
             conn.setRequestProperty("Accept", "application/json")
             conn.setRequestProperty("Content-Type", contentType)
+            log("POST $path ${redactParams(logParams)}")
             writeBody(conn)
 
             val stream = if (conn.responseCode >= 400) conn.errorStream else conn.inputStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            log("<- ${conn.responseCode} ${redactSecrets(text).take(LOG_BODY_MAX)}")
             return parseResponse { requireSuccess(JSONObject(text)) }
         } catch (e: IOException) {
+            log("<- failed: ${e.message}")
             throw XidaAiException(e.message ?: FALLBACK_ERROR, e)
         } finally {
             conn.disconnect()
+        }
+    }
+
+    // A broken log must not break a request
+    private fun log(line: String) {
+        try {
+            logger?.invoke(line)
+        } catch (_: Exception) {
         }
     }
 

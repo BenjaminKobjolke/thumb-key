@@ -18,11 +18,24 @@
             android:name=".MainActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"
             android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTask"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- The Summera AI login page ends here. singleTask reuses the running task.
+                 Scheme and host have to match SUMMERA_LOGIN_SCHEME / SUMMERA_LOGIN_HOST -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="thumbkey"
+                    android:host="summera-login" />
             </intent-filter>
         </activity>
 
