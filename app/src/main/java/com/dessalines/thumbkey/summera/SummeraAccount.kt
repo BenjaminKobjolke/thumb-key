@@ -39,6 +39,8 @@ private const val KEY_API_TOKEN = "api_token"
 private const val KEY_EMAIL = "email"
 private const val KEY_PENDING_CODE = "pending_code"
 private const val KEY_PENDING_STARTED_AT = "pending_started_at"
+private const val KEY_LAST_CRASH = "last_crash"
+private const val LAST_CRASH_MAX_CHARS = 800
 
 object SummeraAccount {
     fun client(): XidaAiClient = XidaAiClient(software = SOFTWARE_ID, appVersion = BuildConfig.VERSION_NAME)
@@ -96,6 +98,20 @@ object SummeraAccount {
             .remove(KEY_PENDING_CODE)
             .remove(KEY_PENDING_STARTED_AT)
             .apply()
+    }
+
+    /** Debug breadcrumb of an uncaught exception. commit(), not apply(): the process is dying. */
+    fun saveLastCrash(
+        context: Context,
+        text: String,
+    ) {
+        prefs(context).edit().putString(KEY_LAST_CRASH, text.take(LAST_CRASH_MAX_CHARS)).commit()
+    }
+
+    fun lastCrash(context: Context): String? = prefs(context).getString(KEY_LAST_CRASH, null)
+
+    fun clearLastCrash(context: Context) {
+        prefs(context).edit().remove(KEY_LAST_CRASH).apply()
     }
 
     private fun prefs(context: Context): SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

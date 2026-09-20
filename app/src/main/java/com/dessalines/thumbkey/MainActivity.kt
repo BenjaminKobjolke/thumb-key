@@ -23,6 +23,7 @@ import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.AppSettingsViewModelFactory
 import com.dessalines.thumbkey.db.ClipboardDB
 import com.dessalines.thumbkey.db.ClipboardRepository
+import com.dessalines.thumbkey.summera.SummeraAccount
 import com.dessalines.thumbkey.ui.components.common.ShowChangelog
 import com.dessalines.thumbkey.ui.components.settings.SettingsScreen
 import com.dessalines.thumbkey.ui.components.settings.about.AboutScreen
@@ -52,7 +53,23 @@ class ThumbkeyApplication : Application() {
             database.appSettingsDao(),
         )
     }
+
+    override fun onCreate() {
+        super.onCreate()
+        // ponytail: debug-only breadcrumb for the Summera sign-in, shown on the Summera AI screen.
+        // Delete it together with the lastCrash functions once the sign-in is confirmed working
+        if (BuildConfig.DEBUG) {
+            val previous = Thread.getDefaultUncaughtExceptionHandler()
+            Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+                val frames = throwable.stackTrace.take(CRASH_BREADCRUMB_FRAMES).joinToString("\n")
+                SummeraAccount.saveLastCrash(this, "${throwable::class.java.name}: ${throwable.message}\n$frames")
+                previous?.uncaughtException(thread, throwable)
+            }
+        }
+    }
 }
+
+private const val CRASH_BREADCRUMB_FRAMES = 10
 
 class MainActivity : AppCompatActivity() {
     private val appSettingsViewModel: AppSettingsViewModel by viewModels {
