@@ -1,5 +1,9 @@
 # aichatapi
 
+**Source of truth:** `Intern/ai-chat-api-client-android` on Gitea (`xida.me:3030`), checked out at
+`D:\GIT\Intern\android\ai-chat-api-client-android`. This folder is a copy that stays until it is
+replaced by a git submodule of that repo, so fixes go to the new repo first.
+
 Native Kotlin/Android client for the XIDA AI chat API (`https://ai.xida.de/api/v11`). It is a plain
 `com.android.library` module with no dependencies beyond the Android platform (`HttpURLConnection`
 and `org.json`), so another project can copy the folder and `include ':aichatapi'`. The module's
