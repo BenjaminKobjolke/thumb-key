@@ -30,6 +30,26 @@ class ResponseParsingTest {
     }
 
     @Test
+    fun registerCheckMalformedThrowsXidaAiException() {
+        val e =
+            assertThrows(XidaAiException::class.java) {
+                parseResponse { Credentials.fromJson(JSONObject("""{"success": true, "api_token": "a1b2c3"}""")) }
+            }
+        assertEquals("request_failed", e.message)
+    }
+
+    @Test
+    fun registerCodeMalformedThrowsXidaAiException() {
+        val e =
+            assertThrows(XidaAiException::class.java) {
+                parseResponse {
+                    RegisterCode.fromJson(JSONObject("""{"success": true, "url": "https://ai.xida.de/x"}"""), baseUrl)
+                }
+            }
+        assertEquals("request_failed", e.message)
+    }
+
+    @Test
     fun transcribeSuccess() {
         val json = JSONObject("""{"success": true, "status": "pending_attachments", "id": 456}""")
         assertEquals(456, parseTranscribeId(json))

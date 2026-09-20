@@ -4,12 +4,14 @@ package de.xida.aichatapi
 class AuthService internal constructor(
     private val client: XidaAiClient,
 ) {
-    fun createRegisterCode(): RegisterCode =
-        RegisterCode.fromJson(client.http.postForm("register/code", client.softwareParams()), client.baseUrl)
+    fun createRegisterCode(): RegisterCode {
+        val json = client.http.postForm("register/code", client.softwareParams())
+        return parseResponse { RegisterCode.fromJson(json, client.baseUrl) }
+    }
 
     /** Throws [XidaAiException] until the user finished the browser leg, so callers keep polling. */
-    fun check(code: String): Credentials =
-        Credentials.fromJson(
-            client.http.postForm("register/check", client.softwareParams() + ("register_code" to code)),
-        )
+    fun check(code: String): Credentials {
+        val json = client.http.postForm("register/check", client.softwareParams() + ("register_code" to code))
+        return parseResponse { Credentials.fromJson(json) }
+    }
 }

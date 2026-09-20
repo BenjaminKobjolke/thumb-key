@@ -19,6 +19,14 @@ internal fun requireSuccess(json: JSONObject): JSONObject {
     return json
 }
 
+/** The one place a malformed response turns into the module's [XidaAiException]. */
+internal fun <T> parseResponse(parse: () -> T): T =
+    try {
+        parse()
+    } catch (e: JSONException) {
+        throw XidaAiException(FALLBACK_ERROR, e)
+    }
+
 internal class Http(
     private val baseUrl: String,
 ) {
@@ -80,11 +88,9 @@ internal class Http(
 
             val stream = if (conn.responseCode >= 400) conn.errorStream else conn.inputStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            return requireSuccess(JSONObject(text))
+            return parseResponse { requireSuccess(JSONObject(text)) }
         } catch (e: IOException) {
             throw XidaAiException(e.message ?: FALLBACK_ERROR, e)
-        } catch (e: JSONException) {
-            throw XidaAiException(FALLBACK_ERROR, e)
         } finally {
             conn.disconnect()
         }
