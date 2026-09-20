@@ -119,6 +119,7 @@ val KB_DE_TYPESPLITBEN_MAIN =
                             ReplaceLastText("; "),
                         ),
                     backgroundColor = SURFACE_VARIANT,
+                    longPress = SummeraDictate,
                 ),
                 KeyItemC(
                     center = KeyC("d", size = LARGE),
@@ -366,6 +367,7 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                             ReplaceLastText("; "),
                         ),
                     backgroundColor = SURFACE_VARIANT,
+                    longPress = SummeraDictate,
                 ),
                 KeyItemC(
                     center = KeyC("D", size = LARGE),

@@ -79,6 +79,9 @@ import com.dessalines.thumbkey.keyboards.EMOJI_BACK_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.KB_EN_THUMBKEY_MAIN
 import com.dessalines.thumbkey.keyboards.NUMERIC_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.RETURN_KEY_ITEM
+import com.dessalines.thumbkey.summera.DictationState
+import com.dessalines.thumbkey.summera.SummeraDictation
+import com.dessalines.thumbkey.summera.SummeraDictationScreen
 import com.dessalines.thumbkey.utils.CircularDragAction
 import com.dessalines.thumbkey.utils.ColorVariant
 import com.dessalines.thumbkey.utils.KeyAction
@@ -243,7 +246,11 @@ fun KeyboardScreen(
     val keyWidth = legendWidth.toFloat()
     val cornerRadius = (keyRadius / 100.0f) * ((keyWidth + keyHeight) / 4.0f)
 
-    if (mode == KeyboardMode.EMOJI) {
+    // An active Summera dictation replaces whatever the keyboard would show
+    val dictationState = SummeraDictation.state
+    val dictationActive = dictationState != DictationState.Idle
+
+    if (mode == KeyboardMode.EMOJI && !dictationActive) {
         // Dynamically determine number of rows based on keyboard structure
         val rowCount = keyboardDefinition.modes.main.arr.size
         val controllerKeys =
@@ -702,8 +709,8 @@ fun KeyboardScreen(
                 }
             }
         }
-    } else if (mode == KeyboardMode.CLIPBOARD) {
-        // Clipboard history view
+    } else if (dictationActive || mode == KeyboardMode.CLIPBOARD) {
+        // Clipboard history view, or the Summera dictation view in the same frame
         val scope = CoroutineScope(Dispatchers.IO)
         val clipboardHistoryEnabled =
             (settings?.clipboardHistoryEnabled ?: DEFAULT_CLIPBOARD_HISTORY_ENABLED).toBool()
@@ -713,11 +720,13 @@ fun KeyboardScreen(
         val keyboardHeight = Dp(keyHeight * rowCount)
 
         // Perform auto-cleanup when entering clipboard view, and clear all if disabled
-        LaunchedEffect(Unit) {
-            if (clipboardHistoryEnabled) {
-                clipboardRepository?.clearExpired()
-            } else {
-                clipboardRepository?.clearAll()
+        if (!dictationActive) {
+            LaunchedEffect(Unit) {
+                if (clipboardHistoryEnabled) {
+                    clipboardRepository?.clearExpired()
+                } else {
+                    clipboardRepository?.clearAll()
+                }
             }
         }
 
@@ -758,42 +767,51 @@ fun KeyboardScreen(
                             },
                         ),
             ) {
-                ClipboardHistoryScreen(
-                    clipboardItems = clipboardItems,
-                    isEnabled = clipboardHistoryEnabled,
-                    onItemClick = { item ->
-                        // Paste and return to keyboard
-                        ctx.currentInputConnection.commitText(item.text, 1)
-                        mode = KeyboardMode.MAIN
-                    },
-                    onItemPaste = { item ->
-                        // Paste WITHOUT returning to keyboard
-                        ctx.currentInputConnection.commitText(item.text, 1)
-                    },
-                    onItemDelete = { item ->
-                        scope.launch {
-                            clipboardRepository?.deleteItem(item)
-                        }
-                    },
-                    onItemTogglePin = { item ->
-                        scope.launch {
-                            clipboardRepository?.togglePin(item)
-                        }
-                    },
-                    onBack = {
-                        mode = KeyboardMode.MAIN
-                    },
-                    onClearAll = {
-                        scope.launch {
-                            clipboardRepository?.clearUnpinned()
-                        }
-                    },
-                    onGoToClipboardSettings = onGoToClipboardSettings,
-                    keyHeight = keyHeight,
-                    keyPadding = keyPadding,
-                    cornerRadius = cornerRadius,
-                    vibrateOnTap = vibrateOnTap,
-                )
+                if (dictationActive) {
+                    SummeraDictationScreen(
+                        state = dictationState,
+                        onStop = { SummeraDictation.stopAndSend(ctx) },
+                        onCancel = { SummeraDictation.cancel(ctx) },
+                        onRetry = { SummeraDictation.start(ctx) },
+                    )
+                } else {
+                    ClipboardHistoryScreen(
+                        clipboardItems = clipboardItems,
+                        isEnabled = clipboardHistoryEnabled,
+                        onItemClick = { item ->
+                            // Paste and return to keyboard
+                            ctx.currentInputConnection.commitText(item.text, 1)
+                            mode = KeyboardMode.MAIN
+                        },
+                        onItemPaste = { item ->
+                            // Paste WITHOUT returning to keyboard
+                            ctx.currentInputConnection.commitText(item.text, 1)
+                        },
+                        onItemDelete = { item ->
+                            scope.launch {
+                                clipboardRepository?.deleteItem(item)
+                            }
+                        },
+                        onItemTogglePin = { item ->
+                            scope.launch {
+                                clipboardRepository?.togglePin(item)
+                            }
+                        },
+                        onBack = {
+                            mode = KeyboardMode.MAIN
+                        },
+                        onClearAll = {
+                            scope.launch {
+                                clipboardRepository?.clearUnpinned()
+                            }
+                        },
+                        onGoToClipboardSettings = onGoToClipboardSettings,
+                        keyHeight = keyHeight,
+                        keyPadding = keyPadding,
+                        cornerRadius = cornerRadius,
+                        vibrateOnTap = vibrateOnTap,
+                    )
+                }
             }
         }
     } else {

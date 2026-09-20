@@ -19,6 +19,7 @@ import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_HISTORY_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_DISABLE_FULLSCREEN_EDITOR
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
+import com.dessalines.thumbkey.summera.SummeraDictation
 import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
@@ -154,6 +155,8 @@ class IMEService :
     }
 
     override fun onWindowHidden() {
+        // Never keep the microphone open, or type a transcript, behind a hidden keyboard
+        SummeraDictation.cancel(this)
         currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(this)
         super.onWindowHidden()
     }

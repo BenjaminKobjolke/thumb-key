@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.InstallMobile
 import androidx.compose.material.icons.outlined.KeyboardAlt
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.ShortText
@@ -175,6 +176,16 @@ fun SettingsScreen(
                             )
                         },
                         onClick = { navController.navigate("clipboardSettings") },
+                    )
+                    Preference(
+                        title = { Text(stringResource(R.string.summera_title)) },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Mic,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = { navController.navigate("summera") },
                     )
                     Preference(
                         title = {

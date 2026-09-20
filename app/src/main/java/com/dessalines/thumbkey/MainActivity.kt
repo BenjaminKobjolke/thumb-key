@@ -32,6 +32,7 @@ import com.dessalines.thumbkey.ui.components.settings.clipboard.ClipboardSetting
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.LookAndFeelScreen
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.ModifyKeysScreen
 import com.dessalines.thumbkey.ui.components.settings.other.OtherSettingsScreen
+import com.dessalines.thumbkey.ui.components.settings.summera.SummeraSettingsScreen
 import com.dessalines.thumbkey.ui.components.setup.SetupScreen
 import com.dessalines.thumbkey.ui.screens.AbbreviationsScreen
 import com.dessalines.thumbkey.ui.theme.ThumbkeyTheme
@@ -162,6 +163,9 @@ class MainActivity : AppCompatActivity() {
                             appSettingsViewModel = appSettingsViewModel,
                             clipboardRepository = (application as ThumbkeyApplication).clipboardRepository,
                         )
+                    }
+                    composable(route = "summera") {
+                        SummeraSettingsScreen(navController = navController)
                     }
                     composable(route = "modifyKeys") {
                         ModifyKeysScreen(

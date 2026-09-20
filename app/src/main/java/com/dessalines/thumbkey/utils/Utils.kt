@@ -45,6 +45,9 @@ import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_LAYOUT
 import com.dessalines.thumbkey.db.LayoutsUpdate
+import com.dessalines.thumbkey.summera.SummeraAccount
+import com.dessalines.thumbkey.summera.SummeraDictation
+import com.dessalines.thumbkey.summera.hasMicrophonePermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -1530,6 +1533,20 @@ fun performKeyAction(
                         }
                     }
                 }
+            }
+        }
+
+        KeyAction.SummeraDictate -> {
+            val blocker =
+                when {
+                    SummeraAccount.credentials(ime) == null -> R.string.summera_sign_in_first
+                    !hasMicrophonePermission(ime) -> R.string.summera_microphone_permission
+                    else -> null
+                }
+            if (blocker != null) {
+                Toast.makeText(ime, blocker, Toast.LENGTH_LONG).show()
+            } else {
+                SummeraDictation.toggle(ime)
             }
         }
 

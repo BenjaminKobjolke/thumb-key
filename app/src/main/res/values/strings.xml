@@ -155,4 +155,23 @@
     <string name="other">Other</string>
     <string name="show_on_screen_keyboard">Show on-screen keyboard</string>
     <string name="show_on_screen_keyboard_description">Show on-screen keyboard while using physical keyboard</string>
+    <!-- Summera AI -->
+    <string name="summera_title">Summera AI</string>
+    <string name="summera_sign_in">Sign in with Summera AI</string>
+    <string name="summera_signing_in">Waiting for the sign-in in your browser…</string>
+    <string name="summera_sign_out">Sign out</string>
+    <string name="summera_signed_in_as">Signed in as %1$s</string>
+    <string name="summera_sign_in_first">Sign in to Summera AI in the settings</string>
+    <string name="summera_microphone_permission">Allow the microphone in the Summera AI settings</string>
+    <string name="summera_microphone_title">Microphone permission</string>
+    <string name="summera_microphone_granted">Granted</string>
+    <string name="summera_microphone_not_granted">Not granted, tap to allow</string>
+    <string name="summera_recording">Recording</string>
+    <string name="summera_stop">Stop</string>
+    <string name="summera_transcribing">Transcribing…</string>
+    <string name="summera_cancel">Cancel</string>
+    <string name="summera_retry">Try again</string>
+    <string name="summera_close">Close</string>
+    <string name="summera_failed">Summera AI failed: %1$s</string>
+    <string name="summera_timeout">Timed out</string>
 </resources>

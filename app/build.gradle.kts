@@ -96,6 +96,9 @@ android {
 }
 
 dependencies {
+    // Summera AI (XIDA AI chat API) client
+    implementation(project(":aichatapi"))
+
     // Freedroidwarn
     implementation("com.github.woheller69:FreeDroidWarn:V1.13")
 

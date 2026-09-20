@@ -298,6 +298,8 @@ sealed class KeyAction {
 
     data object SwitchIMEVoice : KeyAction()
 
+    data object SummeraDictate : KeyAction()
+
     class ExpandAbbreviation(
         val text: String,
     ) : KeyAction()
