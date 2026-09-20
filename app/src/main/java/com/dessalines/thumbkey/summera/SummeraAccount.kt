@@ -37,6 +37,8 @@ private const val PREFS_NAME = "summera"
 private const val KEY_USER_ID = "user_id"
 private const val KEY_API_TOKEN = "api_token"
 private const val KEY_EMAIL = "email"
+private const val KEY_PENDING_CODE = "pending_code"
+private const val KEY_PENDING_STARTED_AT = "pending_started_at"
 
 object SummeraAccount {
     fun client(): XidaAiClient = XidaAiClient(software = SOFTWARE_ID, appVersion = BuildConfig.VERSION_NAME)
@@ -65,6 +67,35 @@ object SummeraAccount {
             apiToken = apiToken,
             email = prefs.getString(KEY_EMAIL, null).orEmpty(),
         )
+    }
+
+    /** Remembers the register code of a running sign-in, so it survives the screen or the activity dying. */
+    fun savePending(
+        context: Context,
+        code: String,
+    ) {
+        prefs(context)
+            .edit()
+            .putString(KEY_PENDING_CODE, code)
+            .putLong(KEY_PENDING_STARTED_AT, System.currentTimeMillis())
+            .apply()
+    }
+
+    /** The pending register code, or null once it is older than the poll window (it is dead by then). */
+    fun pendingCode(context: Context): String? {
+        val prefs = prefs(context)
+        val code = prefs.getString(KEY_PENDING_CODE, null) ?: return null
+        if (System.currentTimeMillis() - prefs.getLong(KEY_PENDING_STARTED_AT, 0L) < POLL_TIMEOUT_MS) return code
+        clearPending(context)
+        return null
+    }
+
+    fun clearPending(context: Context) {
+        prefs(context)
+            .edit()
+            .remove(KEY_PENDING_CODE)
+            .remove(KEY_PENDING_STARTED_AT)
+            .apply()
     }
 
     private fun prefs(context: Context): SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

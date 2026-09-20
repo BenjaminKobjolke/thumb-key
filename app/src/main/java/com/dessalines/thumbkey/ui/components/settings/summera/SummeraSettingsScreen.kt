@@ -2,9 +2,12 @@ package com.dessalines.thumbkey.ui.components.settings.summera
 
 import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -22,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,14 +34,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import androidx.navigation.NavController
+import com.dessalines.thumbkey.MainActivity
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.summera.SummeraAccount
 import com.dessalines.thumbkey.summera.hasMicrophonePermission
 import com.dessalines.thumbkey.summera.poll
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 import com.dessalines.thumbkey.utils.TAG
-import com.dessalines.thumbkey.utils.openLink
+import de.xida.aichatapi.Credentials
+import de.xida.aichatapi.XidaAiClient
 import de.xida.aichatapi.XidaAiException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -66,38 +73,50 @@ fun SummeraSettingsScreen(navController: NavController) {
             microphoneGranted = it
         }
 
-    fun signIn() {
+    // resumeCode: a stored pending code to keep polling with, null starts a fresh sign-in
+    fun signIn(resumeCode: String? = null) {
         signInError = null
         signInJob =
             scope.launch {
                 try {
                     val client = SummeraAccount.client()
-                    val registerCode = withContext(Dispatchers.IO) { client.auth.createRegisterCode() }
-                    openLink(registerCode.url, ctx)
-
-                    // check() fails until the browser leg is done
-                    val result =
-                        poll {
-                            try {
-                                withContext(Dispatchers.IO) { client.auth.check(registerCode.code) }
-                            } catch (_: XidaAiException) {
-                                null
-                            }
+                    val code =
+                        resumeCode ?: run {
+                            val registerCode = withContext(Dispatchers.IO) { client.auth.createRegisterCode() }
+                            SummeraAccount.savePending(ctx, registerCode.code)
+                            CustomTabsIntent.Builder().build().launchUrl(ctx, registerCode.url.toUri())
+                            registerCode.code
                         }
+
+                    val result = awaitSignIn(client, code)
+                    SummeraAccount.clearPending(ctx)
                     if (result == null) {
                         signInError = timeoutStr
                     } else {
                         SummeraAccount.save(ctx, result)
                         credentials = result
+                        // A resumed sign-in already has this screen in front
+                        if (resumeCode == null) bringToFront(ctx)
                     }
                 } catch (e: XidaAiException) {
+                    SummeraAccount.clearPending(ctx)
                     signInError = e.message
                 } catch (e: ActivityNotFoundException) {
+                    SummeraAccount.clearPending(ctx)
                     signInError = e.message
                 } finally {
+                    // Not clearing the pending code here: a cancellation by the lifecycle has to
+                    // leave it for the resume
                     signInJob = null
                 }
             }
+    }
+
+    // Picks a sign-in up again that the screen or the activity dying cut off
+    LaunchedEffect(Unit) {
+        if (credentials == null && signInJob == null) {
+            SummeraAccount.pendingCode(ctx)?.let { signIn(it) }
+        }
     }
 
     Scaffold(
@@ -150,7 +169,10 @@ fun SummeraSettingsScreen(navController: NavController) {
                                     contentDescription = null,
                                 )
                             },
-                            onClick = { signInJob?.cancel() },
+                            onClick = {
+                                SummeraAccount.clearPending(ctx)
+                                signInJob?.cancel()
+                            },
                         )
                     } else {
                         Preference(
@@ -193,4 +215,31 @@ fun SummeraSettingsScreen(navController: NavController) {
             }
         },
     )
+}
+
+// check() fails until the browser leg is done
+private suspend fun awaitSignIn(
+    client: XidaAiClient,
+    code: String,
+): Credentials? =
+    poll {
+        try {
+            withContext(Dispatchers.IO) { client.auth.check(code) }
+        } catch (_: XidaAiException) {
+            null
+        }
+    }
+
+private fun bringToFront(ctx: Context) {
+    // ponytail: allowed from the background only because the Custom Tab runs in our own task, a
+    // browser without Custom Tabs leaves the sign-in to the resume when this screen is reopened
+    try {
+        ctx.startActivity(
+            Intent(ctx, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+        )
+    } catch (e: SecurityException) {
+        // The credentials are saved, the screen shows them the next time it is opened
+        Log.w(TAG, "Could not return from the sign-in page", e)
+    }
 }

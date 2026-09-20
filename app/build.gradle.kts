@@ -118,6 +118,9 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.activity:activity-ktx:1.13.0")
 
+    // Browser
+    implementation("androidx.browser:browser:1.9.0")
+
     // LiveData
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
 
