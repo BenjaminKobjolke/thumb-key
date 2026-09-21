@@ -93,7 +93,17 @@ fun SummeraSettingsScreen(navController: NavController) {
                     val client = SummeraAccount.signInClient(ctx)
                     val code =
                         resumeCode ?: run {
-                            val registerCode = withContext(Dispatchers.IO) { client.auth.createRegisterCode(SUMMERA_LOGIN_URL) }
+                            val registerCode =
+                                withContext(Dispatchers.IO) {
+                                    try {
+                                        client.auth.createRegisterCode(SUMMERA_LOGIN_URL)
+                                    } catch (e: XidaAiException) {
+                                        // ponytail: only needed while the server lacks redirect_login_success
+                                        // for de.xida.thumbkey, remove once sql/113.sql is confirmed live
+                                        logDebug("return link rejected (${e.message}), retrying without")
+                                        client.auth.createRegisterCode()
+                                    }
+                                }
                             SummeraAccount.savePending(ctx, registerCode.code)
                             logDebug("code ${registerCode.code.take(6)}…, opening browser")
                             CustomTabsIntent.Builder().build().launchUrl(ctx, registerCode.url.toUri())

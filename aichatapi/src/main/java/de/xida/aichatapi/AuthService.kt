@@ -6,7 +6,8 @@ class AuthService internal constructor(
 ) {
     /**
      * [redirectUri] is where the login page should send the browser once the login is done. The
-     * server may ignore it today (SUMMERA AI API #9748), the polling with [check] works either way.
+     * server rejects one that is not registered for the app (SUMMERA AI API #9748) with an
+     * [XidaAiException]; without it the polling with [check] works all the same.
      */
     fun createRegisterCode(redirectUri: String? = null): RegisterCode {
         val params = client.softwareParams() + listOfNotNull(redirectUri?.let { "redirect_uri" to it })
