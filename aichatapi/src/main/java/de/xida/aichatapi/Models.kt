@@ -14,14 +14,13 @@ data class Credentials(
     val email: String,
 ) {
     companion object {
-        internal fun fromJson(json: JSONObject): Credentials {
-            val user = json.getJSONObject("user")
-            return Credentials(
-                userId = user.getInt("id"),
+        // register/check answers flat, there is no nested user object
+        internal fun fromJson(json: JSONObject): Credentials =
+            Credentials(
+                userId = json.getInt("id"),
                 apiToken = json.getString("api_token"),
-                email = user.optString("email"),
+                email = json.optString("email"),
             )
-        }
     }
 }
 

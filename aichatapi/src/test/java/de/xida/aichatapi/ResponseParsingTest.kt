@@ -24,7 +24,10 @@ class ResponseParsingTest {
     fun registerCheck() {
         val json =
             JSONObject(
-                """{"success": true, "api_token": "a1b2c3", "user": {"id": 42, "name": "John Doe", "email": "user@example.com"}}""",
+                """
+                {"success": true, "api_token": "a1b2c3", "id": 42, "name": "John Doe",
+                 "email": "user@example.com", "software": "de.xida.thumbkey", "admin": false}
+                """,
             )
         assertEquals(Credentials(42, "a1b2c3", "user@example.com"), Credentials.fromJson(json))
     }
