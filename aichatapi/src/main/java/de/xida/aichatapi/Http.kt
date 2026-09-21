@@ -14,7 +14,10 @@ private const val FALLBACK_ERROR = "request_failed"
 
 internal fun requireSuccess(json: JSONObject): JSONObject {
     if (!json.optBoolean("success")) {
-        throw XidaAiException(json.optString("message").ifEmpty { FALLBACK_ERROR })
+        // The server sends the reason top-level or nested in "data", depending on the endpoint
+        val message =
+            json.optString("message").ifEmpty { json.optJSONObject("data")?.optString("message").orEmpty() }
+        throw XidaAiException(message.ifEmpty { FALLBACK_ERROR })
     }
     return json
 }

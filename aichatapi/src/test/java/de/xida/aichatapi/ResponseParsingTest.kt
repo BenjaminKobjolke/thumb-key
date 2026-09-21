@@ -109,6 +109,17 @@ class ResponseParsingTest {
     }
 
     @Test
+    fun successFalseWithNestedMessageThrows() {
+        val e =
+            assertThrows(XidaAiException::class.java) {
+                requireSuccess(
+                    JSONObject("""{"success":false,"error":1,"data":{"message":"registration_pending"}}"""),
+                )
+            }
+        assertEquals("registration_pending", e.message)
+    }
+
+    @Test
     fun successFalseWithoutMessageThrows() {
         assertThrows(XidaAiException::class.java) {
             requireSuccess(JSONObject("""{"success": false, "status": ""}"""))
