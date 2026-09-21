@@ -94,16 +94,7 @@ fun SummeraSettingsScreen(navController: NavController) {
                     val code =
                         resumeCode ?: run {
                             val registerCode =
-                                withContext(Dispatchers.IO) {
-                                    try {
-                                        client.auth.createRegisterCode(SUMMERA_LOGIN_URL)
-                                    } catch (e: XidaAiException) {
-                                        // ponytail: only needed while the server lacks redirect_login_success
-                                        // for de.xida.thumbkey, remove once sql/113.sql is confirmed live
-                                        logDebug("return link rejected (${e.message}), retrying without")
-                                        client.auth.createRegisterCode()
-                                    }
-                                }
+                                withContext(Dispatchers.IO) { client.auth.createRegisterCode(SUMMERA_LOGIN_URL) }
                             SummeraAccount.savePending(ctx, registerCode.code)
                             logDebug("code ${registerCode.code.take(6)}…, opening browser")
                             CustomTabsIntent.Builder().build().launchUrl(ctx, registerCode.url.toUri())
@@ -133,6 +124,8 @@ fun SummeraSettingsScreen(navController: NavController) {
                     // Not clearing the pending code here: a cancellation by the lifecycle has to
                     // leave it for the resume
                     signInJob = null
+                    // ponytail: no live log, one read at job end shows the lines written after the resume
+                    debugLog = SummeraAccount.debugLog(ctx)
                 }
             }
     }
@@ -142,7 +135,7 @@ fun SummeraSettingsScreen(navController: NavController) {
     LifecycleResumeEffect(Unit) {
         if (credentials == null) credentials = SummeraAccount.credentials(ctx)
         lastCrash = SummeraAccount.lastCrash(ctx)
-        // As of this resume, not live: it is read after the fact
+        // As of this resume, not live: it is read again only when a sign-in ends
         debugLog = SummeraAccount.debugLog(ctx)
         if (credentials == null && signInJob == null) {
             SummeraAccount.pendingCode(ctx)?.let { signIn(it) }
