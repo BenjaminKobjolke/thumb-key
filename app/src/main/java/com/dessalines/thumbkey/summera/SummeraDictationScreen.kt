@@ -16,6 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -130,24 +131,33 @@ private fun StatusView(
     showProgress: Boolean = false,
     buttons: @Composable () -> Unit,
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(PADDING, Alignment.CenterVertically),
+    // Solid panel like RecordingView: without it the app behind the keyboard shows through
+    Surface(
+        shape = RoundedCornerShape(PADDING),
+        color = MaterialTheme.colorScheme.surfaceVariant,
         modifier =
             Modifier
                 .fillMaxSize()
                 .padding(PADDING),
     ) {
-        if (showProgress) {
-            CircularProgressIndicator()
-        }
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(PADDING)) {
-            buttons()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(PADDING, Alignment.CenterVertically),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(PADDING),
+        ) {
+            if (showProgress) {
+                CircularProgressIndicator()
+            }
+            Text(
+                text = text,
+                textAlign = TextAlign.Center,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(PADDING)) {
+                buttons()
+            }
         }
     }
 }
