@@ -37,7 +37,8 @@ sealed interface DictationState {
     data object Uploading : DictationState
 
     data class Polling(
-        val id: Int,
+        /** The last answer of the server, null until the first poll is back. */
+        val result: TranscriptionStatus? = null,
     ) : DictationState
 
     data class Failed(
@@ -121,17 +122,22 @@ object SummeraDictation {
                         withContext(Dispatchers.IO) {
                             client.services.transcribe(credentials, file, Locale.getDefault().language)
                         }
-                    state = DictationState.Polling(id)
+                    state = DictationState.Polling()
+                    // The log lines never carry the dictated text
+                    SummeraAccount.logSignIn(ime, "dictation: uploaded, id=$id")
 
                     val result =
                         poll {
-                            withContext(Dispatchers.IO) { client.services.info(credentials, id) }
-                                .takeIf { it.status != TranscriptionStatus.PENDING }
+                            val status = withContext(Dispatchers.IO) { client.services.info(credentials, id) }
+                            state = DictationState.Polling(status)
+                            SummeraAccount.logSignIn(ime, "dictation: status=${status.status} message=${status.message}")
+                            status.takeIf { it.isFinished }
                         }
                     val text = result?.text
                     state =
                         when {
                             result == null -> {
+                                SummeraAccount.logSignIn(ime, "dictation: timeout")
                                 DictationState.Failed(ime.getString(R.string.summera_timeout))
                             }
 
@@ -145,6 +151,7 @@ object SummeraDictation {
                             }
                         }
                 } catch (e: XidaAiException) {
+                    SummeraAccount.logSignIn(ime, "dictation: failed ${e.message}")
                     state = DictationState.Failed(e.message.orEmpty())
                 }
                 // Not in a finally: a cancelled run must not delete the file of the next recording,

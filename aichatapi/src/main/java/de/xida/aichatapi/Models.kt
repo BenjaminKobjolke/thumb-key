@@ -47,9 +47,15 @@ data class TranscriptionStatus(
     /** Only set once [status] is [COMPLETE]. */
     val text: String?,
     val message: String?,
+    /** services/info does not send it today, search/info does; shown instead of the app's own text when present. */
+    val statusMessage: String?,
 ) {
+    // The server has several in-progress states, only complete and error end the job
+    val isFinished: Boolean get() = status == COMPLETE || status == ERROR
+
     companion object {
         const val PENDING = "pending_attachments"
+        const val ACTIVE = "active_attachments"
         const val COMPLETE = "complete"
         const val ERROR = "error"
 
@@ -65,7 +71,12 @@ data class TranscriptionStatus(
                 } else {
                     null
                 }
-            return TranscriptionStatus(status, text, json.optString("message").ifEmpty { null })
+            return TranscriptionStatus(
+                status,
+                text,
+                json.optString("message").ifEmpty { null },
+                json.optString("status_message").ifEmpty { null },
+            )
         }
     }
 }

@@ -2,8 +2,10 @@ package de.xida.aichatapi
 
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ResponseParsingTest {
@@ -72,6 +74,29 @@ class ResponseParsingTest {
         val status = TranscriptionStatus.fromJson(json)
         assertEquals(TranscriptionStatus.PENDING, status.status)
         assertNull(status.text)
+        assertFalse(status.isFinished)
+        assertNull(status.statusMessage)
+    }
+
+    @Test
+    fun infoActiveIsNotFinished() {
+        val json = JSONObject("""{"success": true, "status": "active_attachments", "id": 456}""")
+        val status = TranscriptionStatus.fromJson(json)
+        assertEquals(TranscriptionStatus.ACTIVE, status.status)
+        assertFalse(status.isFinished)
+        assertNull(status.text)
+    }
+
+    @Test
+    fun infoStatusMessage() {
+        val json =
+            JSONObject(
+                """
+                {"success": true, "status": "pending_attachments", "id": 456,
+                 "status_message": "Transcribing audio – 42%"}
+                """,
+            )
+        assertEquals("Transcribing audio – 42%", TranscriptionStatus.fromJson(json).statusMessage)
     }
 
     @Test
@@ -87,6 +112,7 @@ class ResponseParsingTest {
         val status = TranscriptionStatus.fromJson(json)
         assertEquals(TranscriptionStatus.COMPLETE, status.status)
         assertEquals("Transcribed speech ...", status.text)
+        assertTrue(status.isFinished)
     }
 
     @Test
@@ -97,6 +123,7 @@ class ResponseParsingTest {
         assertEquals(TranscriptionStatus.ERROR, status.status)
         assertNull(status.text)
         assertEquals("text_not_found", status.message)
+        assertTrue(status.isFinished)
     }
 
     @Test

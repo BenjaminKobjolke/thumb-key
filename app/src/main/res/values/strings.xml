@@ -168,6 +168,9 @@
     <string name="summera_microphone_not_granted">Not granted, tap to allow</string>
     <string name="summera_recording">Recording</string>
     <string name="summera_stop">Stop</string>
+    <string name="summera_uploading">Sending your recording to Summera…</string>
+    <string name="summera_pending">Getting ready to extract information from your content</string>
+    <string name="summera_active">Extracting information from your audio</string>
     <string name="summera_transcribing">Transcribing…</string>
     <string name="summera_cancel">Cancel</string>
     <string name="summera_retry">Try again</string>

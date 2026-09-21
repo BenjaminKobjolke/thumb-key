@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.R
+import de.xida.aichatapi.TranscriptionStatus
 import kotlinx.coroutines.delay
 
 private val PADDING = 12.dp
@@ -53,10 +54,20 @@ fun SummeraDictationScreen(
             }
         }
 
-        // Uploading and polling look the same to the user
+        // Uploading and polling: tell the user what is going on, with the texts of the Summera AI app
         else -> {
+            val result = (state as? DictationState.Polling)?.result
             StatusView(
-                text = stringResource(R.string.summera_transcribing),
+                text =
+                    result?.statusMessage ?: stringResource(
+                        when {
+                            state is DictationState.Uploading -> R.string.summera_uploading
+                            result?.status == TranscriptionStatus.PENDING -> R.string.summera_pending
+                            result?.status == TranscriptionStatus.ACTIVE -> R.string.summera_active
+                            // Unknown in-progress status, or the first poll is not back yet
+                            else -> R.string.summera_transcribing
+                        },
+                    ),
                 showProgress = true,
             ) {
                 OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.summera_cancel)) }

@@ -18,7 +18,7 @@ class ServicesService internal constructor(
         )
     }
 
-    /** The endpoint is read-only, poll it until the status is no longer pending. */
+    /** The endpoint is read-only, poll it until it is finished. */
     fun info(
         credentials: Credentials,
         id: Int,
