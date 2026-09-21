@@ -12,6 +12,13 @@ import com.dessalines.thumbkey.utils.FontSizeVariant.*
 import com.dessalines.thumbkey.utils.KeyAction.*
 import com.dessalines.thumbkey.utils.SwipeNWay.*
 
+/** Space key whose center shows the mic (system voice input and Summera dictation). */
+private val SPACEBAR_MIC_CENTER_KEYC =
+    SPACEBAR_CENTER_KEYC.copy(
+        display = SWITCH_IME_VOICE_KEYC.display,
+        color = SWITCH_IME_VOICE_KEYC.color,
+    )
+
 val KB_DE_TYPESPLITBEN_MAIN =
     KeyboardC(
         listOf(
@@ -94,7 +101,8 @@ val KB_DE_TYPESPLITBEN_MAIN =
                         ),
                 ),
                 KeyItemC(
-                    center = KeyC(" "),
+                    // Mic marks the long-press Summera dictation; a tap still types a space
+                    center = SPACEBAR_MIC_CENTER_KEYC,
                     swipeType = FOUR_WAY_CROSS,
                     slideType = SlideType.DELETE,
                     left =
@@ -163,11 +171,7 @@ val KB_DE_TYPESPLITBEN_MAIN =
                     bottom = KeyC("v"),
                 ),
                 SPACEBAR_TYPESPLIT_BOTTOM_KEY_ITEM.copy(
-                    center =
-                        SPACEBAR_CENTER_KEYC.copy(
-                            display = SWITCH_IME_VOICE_KEYC.display,
-                            color = SWITCH_IME_VOICE_KEYC.color,
-                        ),
+                    center = SPACEBAR_MIC_CENTER_KEYC,
                     longPress = SwitchIMEVoice,
                 ),
                 KeyItemC(
@@ -342,7 +346,8 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                         ),
                 ),
                 KeyItemC(
-                    center = KeyC(" "),
+                    // Mic marks the long-press Summera dictation; a tap still types a space
+                    center = SPACEBAR_MIC_CENTER_KEYC,
                     swipeType = FOUR_WAY_CROSS,
                     slideType = SlideType.DELETE,
                     left =
@@ -411,11 +416,7 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                     bottom = KeyC("V"),
                 ),
                 SPACEBAR_TYPESPLIT_BOTTOM_KEY_ITEM.copy(
-                    center =
-                        SPACEBAR_CENTER_KEYC.copy(
-                            display = SWITCH_IME_VOICE_KEYC.display,
-                            color = SWITCH_IME_VOICE_KEYC.color,
-                        ),
+                    center = SPACEBAR_MIC_CENTER_KEYC,
                     longPress = SwitchIMEVoice,
                 ),
                 KeyItemC(
