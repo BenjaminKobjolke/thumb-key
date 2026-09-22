@@ -44,38 +44,40 @@ data class RegisterCode(
 
 data class TranscriptionStatus(
     val status: String,
-    /** Only set once [status] is [COMPLETE]. */
+    /** The raw transcript, only set once [status] is [COMPLETE]. */
     val text: String?,
     val message: String?,
     /** services/info does not send it today, search/info does; shown instead of the app's own text when present. */
     val statusMessage: String?,
+    /** Answer of the optional `prompt` sent with the upload, only set on [COMPLETE] when that AI step succeeded. */
+    val promptResult: String? = null,
+    /** True when a prompt was sent and its AI step failed; [text] is still the transcript. */
+    val promptFailed: Boolean = false,
 ) {
-    // The server has several in-progress states, only complete and error end the job
+    // The server has several in-progress states, only complete and error end the job: poll while !isFinished
     val isFinished: Boolean get() = status == COMPLETE || status == ERROR
 
     companion object {
         const val PENDING = "pending_attachments"
         const val ACTIVE = "active_attachments"
+        const val PENDING_AI = "pending_ai"
+        const val ACTIVE_AI = "active_ai"
         const val COMPLETE = "complete"
         const val ERROR = "error"
 
         internal fun fromJson(json: JSONObject): TranscriptionStatus {
             val status = json.optString("status")
-            val text =
-                if (status == COMPLETE) {
-                    json
-                        .optJSONArray("results")
-                        ?.optJSONObject(0)
-                        ?.optJSONObject("result")
-                        ?.optString("text")
-                } else {
-                    null
-                }
+            val results = if (status == COMPLETE) json.optJSONArray("results") else null
+            val prompt = results?.optJSONObject(1)
+            // success comes as 1/0, accept a boolean as well
+            val promptOk = prompt != null && (prompt.optInt("success") == 1 || prompt.optBoolean("success"))
             return TranscriptionStatus(
                 status,
-                text,
+                results?.optJSONObject(0)?.optJSONObject("result")?.optString("text"),
                 json.optString("message").ifEmpty { null },
                 json.optString("status_message").ifEmpty { null },
+                promptResult = if (promptOk) prompt?.optJSONObject("result")?.optString("text") else null,
+                promptFailed = prompt != null && !promptOk,
             )
         }
     }

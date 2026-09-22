@@ -17,6 +17,7 @@ class XidaAiClient(
 
     val auth = AuthService(this)
     val services = ServicesService(this)
+    val settings = UserSettingsService(this)
 
     internal fun softwareParams(): Map<String, String> = mapOf("software" to software, "app_version" to appVersion)
 

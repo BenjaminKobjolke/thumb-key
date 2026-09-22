@@ -127,6 +127,164 @@ class ResponseParsingTest {
     }
 
     @Test
+    fun infoPendingAiIsNotFinished() {
+        val json = JSONObject("""{"success": true, "status": "pending_ai", "id": 456}""")
+        val status = TranscriptionStatus.fromJson(json)
+        assertEquals(TranscriptionStatus.PENDING_AI, status.status)
+        assertFalse(status.isFinished)
+        assertNull(status.text)
+    }
+
+    @Test
+    fun infoActiveAiIsNotFinished() {
+        val json = JSONObject("""{"success": true, "status": "active_ai", "id": 456}""")
+        val status = TranscriptionStatus.fromJson(json)
+        assertEquals(TranscriptionStatus.ACTIVE_AI, status.status)
+        assertFalse(status.isFinished)
+        assertNull(status.text)
+    }
+
+    @Test
+    fun infoCompleteWithPrompt() {
+        val json =
+            JSONObject(
+                """
+                {"success": true, "status": "complete", "id": 456, "tokens": 0,
+                 "results": [{"id": 789, "type": "text", "status": "complete",
+                              "result": {"text": "raw transcript"}},
+                             {"id": 790, "type": "ai", "success": 1, "prompt_text": "fix grammar",
+                              "result": {"text": "Raw transcript."}}]}
+                """,
+            )
+        val status = TranscriptionStatus.fromJson(json)
+        assertEquals("raw transcript", status.text)
+        assertEquals("Raw transcript.", status.promptResult)
+        assertFalse(status.promptFailed)
+        assertTrue(status.isFinished)
+    }
+
+    @Test
+    fun infoCompleteWithFailedPrompt() {
+        val json =
+            JSONObject(
+                """
+                {"success": true, "status": "complete", "id": 456,
+                 "results": [{"id": 789, "type": "text", "result": {"text": "raw transcript"}},
+                             {"id": 790, "type": "ai", "success": 0, "prompt_text": "fix grammar",
+                              "result": {"text": ""}}]}
+                """,
+            )
+        val status = TranscriptionStatus.fromJson(json)
+        assertEquals("raw transcript", status.text)
+        assertNull(status.promptResult)
+        assertTrue(status.promptFailed)
+    }
+
+    @Test
+    fun infoCompleteWithoutPrompt() {
+        val json =
+            JSONObject(
+                """
+                {"success": true, "status": "complete", "id": 456,
+                 "results": [{"id": 789, "type": "text", "result": {"text": "raw transcript"}}]}
+                """,
+            )
+        val status = TranscriptionStatus.fromJson(json)
+        assertNull(status.promptResult)
+        assertFalse(status.promptFailed)
+    }
+
+    @Test
+    fun listPage() {
+        val json =
+            JSONObject(
+                """
+                {"success": true,
+                 "pagination": {"start": 0, "limit": 20, "amount": 2, "total": 7},
+                 "transcriptions": [
+                   {"id": 912, "status": "complete", "created_at": "2026-09-22 10:15:03", "language": "de",
+                    "text": "raw transcript", "prompt": "fix grammar", "prompt_status": "complete",
+                    "prompt_result": "Raw transcript."},
+                   {"id": 901, "status": "pending_attachments", "created_at": "2026-09-21 08:00:00",
+                    "language": null, "text": null, "prompt": null, "prompt_status": null, "prompt_result": null}
+                 ]}
+                """,
+            )
+        val page = parseTranscriptionPage(json)
+        assertEquals(0, page.start)
+        assertEquals(7, page.total)
+        assertEquals(2, page.items.size)
+        assertEquals(
+            TranscriptionSummary(
+                912,
+                "complete",
+                "2026-09-22 10:15:03",
+                "de",
+                "raw transcript",
+                "fix grammar",
+                "complete",
+                "Raw transcript.",
+            ),
+            page.items[0],
+        )
+        assertEquals(
+            TranscriptionSummary(901, "pending_attachments", "2026-09-21 08:00:00", null, null, null, null, null),
+            page.items[1],
+        )
+    }
+
+    @Test
+    fun listEmpty() {
+        val json =
+            JSONObject(
+                """{"success": true, "pagination": {"start": 0, "limit": 20, "amount": 0, "total": 0}, "transcriptions": []}""",
+            )
+        val page = parseTranscriptionPage(json)
+        assertEquals(0, page.total)
+        assertTrue(page.items.isEmpty())
+    }
+
+    @Test
+    fun createdAtMillisParsesServerTime() {
+        val item = TranscriptionSummary(1, "complete", "2026-09-22 10:15:00", null, "x", null, null, null)
+        // 10:15 CEST = 08:15 UTC
+        assertEquals(1790064900000L, item.createdAtMillis(fallback = 0L))
+        val winter = item.copy(createdAt = "2026-01-10 12:00:00")
+        // 12:00 CET = 11:00 UTC
+        assertEquals(1768042800000L, winter.createdAtMillis(fallback = 0L))
+    }
+
+    @Test
+    fun createdAtMillisMalformedUsesFallback() {
+        val item = TranscriptionSummary(1, "complete", "not a date", null, "x", null, null, null)
+        assertEquals(42L, item.createdAtMillis(fallback = 42L))
+        assertEquals(42L, item.copy(createdAt = "").createdAtMillis(fallback = 42L))
+    }
+
+    @Test
+    fun transcriptionPromptsRoundTrip() {
+        val prompts =
+            listOf(
+                TranscriptionPrompt("a1", "correct spelling and grammar errors", "2026-09-22T10:00:00Z", "2026-09-22T10:00:00Z"),
+                TranscriptionPrompt("b2", "summarize", "2026-09-22T11:00:00Z", "2026-09-22T12:00:00Z"),
+            )
+        val encoded = encodeTranscriptionPrompts(prompts)
+        assertEquals(1, JSONObject(encoded).getInt("version"))
+        assertEquals(prompts, parseTranscriptionPrompts(encoded))
+    }
+
+    @Test
+    fun transcriptionPromptsEmptyValue() {
+        val json = JSONObject("""{"success": true, "settings": [{"key": "transcriptionPrompts", "value": ""}]}""")
+        assertTrue(parseTranscriptionPromptsSetting(json).isEmpty())
+    }
+
+    @Test
+    fun transcriptionPromptsUnknownVersionIsEmpty() {
+        assertTrue(parseTranscriptionPrompts("""{"version": 2, "items": [{"id": "x"}]}""").isEmpty())
+    }
+
+    @Test
     fun successFalseThrows() {
         val e =
             assertThrows(XidaAiException::class.java) {
