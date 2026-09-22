@@ -1,0 +1,3 @@
+[submodule "aichatapi"]
+	path = aichatapi
+	url = https://xida.me:3030/Intern/ai-chat-api-client-android.git
