@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,7 +47,7 @@ fun SummeraDictationScreen(
 ) {
     when (state) {
         is DictationState.Recording -> {
-            RecordingView(startedAt = state.startedAt, onStop = onStop)
+            RecordingView(startedAt = state.startedAt, onStop = onStop, onCancel = onCancel)
         }
 
         is DictationState.Failed -> {
@@ -81,8 +83,10 @@ fun SummeraDictationScreen(
 private fun RecordingView(
     startedAt: Long,
     onStop: () -> Unit,
+    onCancel: () -> Unit,
 ) {
     var elapsedSeconds by remember(startedAt) { mutableLongStateOf(0L) }
+    var confirmCancel by remember(startedAt) { mutableStateOf(false) }
     LaunchedEffect(startedAt) {
         while (true) {
             elapsedSeconds = (System.currentTimeMillis() - startedAt) / DateUtils.SECOND_IN_MILLIS
@@ -90,37 +94,63 @@ private fun RecordingView(
         }
     }
 
-    Button(
-        onClick = onStop,
-        shape = RoundedCornerShape(PADDING),
+    // Confirmation is inline: the IME window has no reliable window token for an AlertDialog.
+    // Recording keeps running behind the question, so "Keep recording" loses nothing.
+    if (confirmCancel) {
+        StatusView(text = stringResource(R.string.summera_discard_question)) {
+            Button(onClick = onCancel) { Text(stringResource(R.string.summera_discard)) }
+            OutlinedButton(onClick = { confirmCancel = false }) {
+                Text(stringResource(R.string.summera_keep_recording))
+            }
+        }
+        return
+    }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(PADDING),
         modifier =
             Modifier
                 .fillMaxSize()
                 .padding(PADDING),
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(PADDING),
+        Button(
+            onClick = onStop,
+            shape = RoundedCornerShape(PADDING),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(PADDING),
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(PADDING),
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(PADDING),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Mic,
+                        contentDescription = stringResource(R.string.summera_recording),
+                    )
+                    Text(
+                        text = DateUtils.formatElapsedTime(elapsedSeconds),
+                        style = MaterialTheme.typography.headlineMedium,
+                    )
+                }
                 Icon(
-                    imageVector = Icons.Outlined.Mic,
-                    contentDescription = stringResource(R.string.summera_recording),
+                    imageVector = Icons.Outlined.Stop,
+                    contentDescription = null,
+                    modifier = Modifier.size(ICON_SIZE),
                 )
-                Text(
-                    text = DateUtils.formatElapsedTime(elapsedSeconds),
-                    style = MaterialTheme.typography.headlineMedium,
-                )
+                Text(stringResource(R.string.summera_stop))
             }
-            Icon(
-                imageVector = Icons.Outlined.Stop,
-                contentDescription = null,
-                modifier = Modifier.size(ICON_SIZE),
-            )
-            Text(stringResource(R.string.summera_stop))
+        }
+        OutlinedButton(
+            onClick = { confirmCancel = true },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.summera_cancel))
         }
     }
 }

@@ -173,6 +173,9 @@
     <string name="summera_active">Extracting information from your audio</string>
     <string name="summera_transcribing">Transcribing…</string>
     <string name="summera_cancel">Cancel</string>
+    <string name="summera_discard_question">Discard this recording?</string>
+    <string name="summera_discard">Discard</string>
+    <string name="summera_keep_recording">Keep recording</string>
     <string name="summera_retry">Try again</string>
     <string name="summera_close">Close</string>
     <string name="summera_failed">Summera AI failed: %1$s</string>
