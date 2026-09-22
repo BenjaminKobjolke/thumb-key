@@ -18,8 +18,10 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,6 +74,7 @@ fun SummeraSettingsScreen(navController: NavController) {
     var microphoneGranted by remember { mutableStateOf(hasMicrophonePermission(ctx)) }
     var lastCrash by remember { mutableStateOf(SummeraAccount.lastCrash(ctx)) }
     var debugLog by remember { mutableStateOf(SummeraAccount.debugLog(ctx)) }
+    var activePrompt by remember { mutableStateOf(SummeraAccount.activePromptText(ctx)) }
 
     val timeoutStr = stringResource(R.string.summera_timeout)
     val microphoneLauncher =
@@ -137,6 +140,7 @@ fun SummeraSettingsScreen(navController: NavController) {
         lastCrash = SummeraAccount.lastCrash(ctx)
         // As of this resume, not live: it is read again only when a sign-in ends
         debugLog = SummeraAccount.debugLog(ctx)
+        activePrompt = SummeraAccount.activePromptText(ctx)
         if (credentials == null && signInJob == null) {
             SummeraAccount.pendingCode(ctx)?.let { signIn(it) }
         }
@@ -182,6 +186,27 @@ fun SummeraSettingsScreen(navController: NavController) {
                                 SummeraAccount.clear(ctx)
                                 credentials = null
                             },
+                        )
+                        Preference(
+                            title = { Text(stringResource(R.string.summera_prompts)) },
+                            summary = { Text(activePrompt ?: stringResource(R.string.summera_no_prompt)) },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Tune,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = { navController.navigate("summeraPrompts") },
+                        )
+                        Preference(
+                            title = { Text(stringResource(R.string.summera_history)) },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.History,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = { navController.navigate("summeraHistory") },
                         )
                     } else if (signInJob != null) {
                         Preference(

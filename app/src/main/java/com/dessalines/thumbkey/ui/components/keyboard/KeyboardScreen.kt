@@ -790,6 +790,7 @@ fun KeyboardScreen(
                         onStop = { SummeraDictation.stopAndSend(ctx) },
                         onCancel = { SummeraDictation.cancel(ctx) },
                         onRetry = { SummeraDictation.start(ctx) },
+                        onInsert = { SummeraDictation.insert(ctx, it) },
                     )
                 } else {
                     ClipboardHistoryScreen(

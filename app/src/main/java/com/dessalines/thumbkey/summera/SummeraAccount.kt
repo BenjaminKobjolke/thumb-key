@@ -6,6 +6,7 @@ import android.util.Log
 import com.dessalines.thumbkey.BuildConfig
 import com.dessalines.thumbkey.utils.TAG
 import de.xida.aichatapi.Credentials
+import de.xida.aichatapi.TranscriptionPrompt
 import de.xida.aichatapi.XidaAiClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
@@ -52,6 +53,8 @@ private const val KEY_PENDING_CODE = "pending_code"
 private const val KEY_PENDING_STARTED_AT = "pending_started_at"
 private const val KEY_LAST_CRASH = "last_crash"
 private const val KEY_TRANSCRIPTS_RESTORED = "transcripts_restored"
+private const val KEY_ACTIVE_PROMPT_ID = "active_prompt_id"
+private const val KEY_ACTIVE_PROMPT_TEXT = "active_prompt_text"
 private const val LAST_CRASH_MAX_CHARS = 800
 private const val KEY_DEBUG_LOG = "debug_log"
 private const val DEBUG_LOG_MAX_LINES = 40
@@ -104,6 +107,27 @@ object SummeraAccount {
     fun setTranscriptsRestored(context: Context) {
         prefs(context).edit().putBoolean(KEY_TRANSCRIPTS_RESTORED, true).apply()
     }
+
+    /**
+     * The saved prompt every dictation sends, or null for none. The text is kept locally so the
+     * upload needs no extra call; [clear] on sign-out wipes it.
+     */
+    fun saveActivePrompt(
+        context: Context,
+        prompt: TranscriptionPrompt?,
+    ) {
+        val editor = prefs(context).edit()
+        if (prompt == null) {
+            editor.remove(KEY_ACTIVE_PROMPT_ID).remove(KEY_ACTIVE_PROMPT_TEXT)
+        } else {
+            editor.putString(KEY_ACTIVE_PROMPT_ID, prompt.id).putString(KEY_ACTIVE_PROMPT_TEXT, prompt.text)
+        }
+        editor.apply()
+    }
+
+    fun activePromptId(context: Context): String? = prefs(context).getString(KEY_ACTIVE_PROMPT_ID, null)
+
+    fun activePromptText(context: Context): String? = prefs(context).getString(KEY_ACTIVE_PROMPT_TEXT, null)
 
     /** Remembers the register code of a running sign-in, so it survives the screen or the activity dying. */
     fun savePending(

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Mic
@@ -19,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,8 +47,13 @@ fun SummeraDictationScreen(
     onStop: () -> Unit,
     onCancel: () -> Unit,
     onRetry: () -> Unit,
+    onInsert: (String) -> Unit,
 ) {
     when (state) {
+        is DictationState.Done -> {
+            ResultView(state = state, onInsert = onInsert, onClose = onCancel)
+        }
+
         is DictationState.Recording -> {
             RecordingView(startedAt = state.startedAt, onStop = onStop, onCancel = onCancel)
         }
@@ -67,6 +75,8 @@ fun SummeraDictationScreen(
                             state is DictationState.Uploading -> R.string.summera_uploading
                             result?.status == TranscriptionStatus.PENDING -> R.string.summera_pending
                             result?.status == TranscriptionStatus.ACTIVE -> R.string.summera_active
+                            result?.status == TranscriptionStatus.PENDING_AI -> R.string.summera_pending_ai
+                            result?.status == TranscriptionStatus.ACTIVE_AI -> R.string.summera_active_ai
                             // Unknown in-progress status, or the first poll is not back yet
                             else -> R.string.summera_transcribing
                         },
@@ -151,6 +161,57 @@ private fun RecordingView(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.summera_cancel))
+        }
+    }
+}
+
+/** Both texts of a dictation with a prompt; the user picks the one to type. */
+@Composable
+private fun ResultView(
+    state: DictationState.Done,
+    onInsert: (String) -> Unit,
+    onClose: () -> Unit,
+) {
+    val answer = state.answer
+    Surface(
+        shape = RoundedCornerShape(PADDING),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(PADDING),
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(PADDING),
+            modifier = Modifier.padding(PADDING),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(PADDING / 2),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    text = stringResource(R.string.summera_answer),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Text(answer ?: stringResource(R.string.summera_prompt_failed))
+                Text(
+                    text = stringResource(R.string.summera_transcript),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Text(state.transcript)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(PADDING)) {
+                if (answer != null) {
+                    Button(onClick = { onInsert(answer) }) { Text(stringResource(R.string.summera_insert_answer)) }
+                }
+                OutlinedButton(onClick = { onInsert(state.transcript) }) {
+                    Text(stringResource(R.string.summera_insert_transcript))
+                }
+                TextButton(onClick = onClose) { Text(stringResource(R.string.summera_close)) }
+            }
         }
     }
 }

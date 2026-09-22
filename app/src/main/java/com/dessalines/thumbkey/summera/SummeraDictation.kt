@@ -52,6 +52,12 @@ sealed interface DictationState {
     data class Failed(
         val message: String,
     ) : DictationState
+
+    /** Both texts of a dictation with a prompt; [answer] is null when the AI step failed. */
+    data class Done(
+        val transcript: String,
+        val answer: String?,
+    ) : DictationState
 }
 
 fun hasMicrophonePermission(context: Context): Boolean =
@@ -75,7 +81,8 @@ object SummeraDictation {
                 stopAndSend(ime)
             }
 
-            DictationState.Idle, is DictationState.Failed -> {
+            // Done: the unread result is dropped, the spacebar starts a new recording
+            DictationState.Idle, is DictationState.Failed, is DictationState.Done -> {
                 start(ime)
             }
 
@@ -122,13 +129,14 @@ object SummeraDictation {
         state = DictationState.Uploading
 
         val file = recordingFile(ime)
+        val prompt = SummeraAccount.activePromptText(ime)
         job =
             scope.launch {
                 try {
                     val client = SummeraAccount.client()
                     val id =
                         withContext(Dispatchers.IO) {
-                            client.services.transcribe(credentials, file, Locale.getDefault().language)
+                            client.services.transcribe(credentials, file, Locale.getDefault().language, prompt = prompt)
                         }
                     state = DictationState.Polling()
                     // The log lines never carry the dictated text
@@ -158,9 +166,13 @@ object SummeraDictation {
                                 // the connection can still point at the old one after a hide
                                 val repository = (ime.application as ThumbkeyApplication).clipboardRepository
                                 withContext(Dispatchers.IO) { repository.addTranscript(text, id) }
-                                val connection = ime.currentInputConnection
-                                if (ime.isInputViewShown && connection != null) connection.commitText(text, 1)
-                                DictationState.Idle
+                                if (prompt == null) {
+                                    commit(ime, text)
+                                    DictationState.Idle
+                                } else {
+                                    // With a prompt the user picks which text to insert
+                                    DictationState.Done(text, result.promptResult.takeUnless { result.promptFailed })
+                                }
                             }
                         }
                 } catch (e: XidaAiException) {
@@ -225,6 +237,23 @@ object SummeraDictation {
                 cancel(ime)
             }
         }
+    }
+
+    /** Types one of the texts of a [DictationState.Done] result and brings the keys back. */
+    fun insert(
+        ime: IMEService,
+        text: String,
+    ) {
+        commit(ime, text)
+        state = DictationState.Idle
+    }
+
+    private fun commit(
+        ime: IMEService,
+        text: String,
+    ) {
+        val connection = ime.currentInputConnection
+        if (ime.isInputViewShown && connection != null) connection.commitText(text, 1)
     }
 
     fun cancel(context: Context) {

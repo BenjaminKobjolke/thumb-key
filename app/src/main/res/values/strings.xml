@@ -182,6 +182,24 @@
     <string name="summera_timeout">Timed out</string>
     <string name="summera_last_crash">Last crash (debug), tap to clear</string>
     <string name="summera_debug_log">Summera log (debug), tap to clear</string>
+    <string name="summera_pending_ai">Waiting for the AI to run your prompt</string>
+    <string name="summera_active_ai">Running your prompt</string>
+    <string name="summera_answer">AI answer</string>
+    <string name="summera_transcript">Transcript</string>
+    <string name="summera_insert_answer">Insert answer</string>
+    <string name="summera_insert_transcript">Insert transcript</string>
+    <string name="summera_prompt_failed">The AI step failed, here is the transcript</string>
+    <string name="summera_prompts">Prompts</string>
+    <string name="summera_no_prompt">No prompt</string>
+    <string name="summera_add_prompt">Add prompt</string>
+    <string name="summera_edit_prompt">Edit prompt</string>
+    <string name="summera_delete_prompt">Delete prompt</string>
+    <string name="summera_save">Save</string>
+    <string name="summera_prompt_hint">e.g. correct spelling and grammar errors</string>
+    <string name="summera_history">Transcription history</string>
+    <string name="summera_load_more">Load more</string>
+    <string name="summera_prompt">Prompt</string>
+    <string name="summera_loading">Loading…</string>
     <string name="transcript_history">Transcript history</string>
     <string name="transcript_empty">No transcripts yet</string>
 </resources>

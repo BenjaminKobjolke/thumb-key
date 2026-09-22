@@ -36,6 +36,8 @@ import com.dessalines.thumbkey.ui.components.settings.clipboard.ClipboardSetting
 import com.dessalines.thumbkey.ui.components.settings.lookandfeel.LookAndFeelScreen
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.ModifyKeysScreen
 import com.dessalines.thumbkey.ui.components.settings.other.OtherSettingsScreen
+import com.dessalines.thumbkey.ui.components.settings.summera.SummeraHistoryScreen
+import com.dessalines.thumbkey.ui.components.settings.summera.SummeraPromptsScreen
 import com.dessalines.thumbkey.ui.components.settings.summera.SummeraSettingsScreen
 import com.dessalines.thumbkey.ui.components.setup.SetupScreen
 import com.dessalines.thumbkey.ui.screens.AbbreviationsScreen
@@ -190,6 +192,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     composable(route = "summera") {
                         SummeraSettingsScreen(navController = navController)
+                    }
+                    composable(route = "summeraPrompts") {
+                        SummeraPromptsScreen(navController = navController)
+                    }
+                    composable(route = "summeraHistory") {
+                        SummeraHistoryScreen(navController = navController)
                     }
                     composable(route = "modifyKeys") {
                         ModifyKeysScreen(
