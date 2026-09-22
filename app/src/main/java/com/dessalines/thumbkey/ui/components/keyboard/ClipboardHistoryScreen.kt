@@ -61,6 +61,8 @@ val spacing = 16.dp
 @Composable
 fun ClipboardHistoryScreen(
     clipboardItems: List<ClipboardItem>,
+    title: String,
+    emptyText: String,
     isEnabled: Boolean,
     onItemClick: (ClipboardItem) -> Unit,
     onItemPaste: (ClipboardItem) -> Unit,
@@ -86,6 +88,7 @@ fun ClipboardHistoryScreen(
     ) {
         // Header row
         ClipboardHeader(
+            title = title,
             onBack = onBack,
             onClearAll = onClearAll,
             showClearAll = isEnabled,
@@ -109,7 +112,7 @@ fun ClipboardHistoryScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = stringResource(R.string.clipboard_empty),
+                    text = emptyText,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -193,6 +196,7 @@ private fun ClipboardDisabledView(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ClipboardHeader(
+    title: String,
     onBack: () -> Unit,
     onClearAll: () -> Unit,
     showClearAll: Boolean,
@@ -241,7 +245,7 @@ private fun ClipboardHeader(
             }
 
             Text(
-                text = stringResource(R.string.clipboard_history),
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )

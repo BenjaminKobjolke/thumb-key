@@ -145,6 +145,7 @@ fun KeyboardScreen(
     val lastAction = remember { mutableStateOf<Pair<KeyAction, TimeMark>?>(null) }
 
     val clipboardItems by clipboardRepository.allClipboardItems.observeAsState(initial = emptyList())
+    val transcripts by clipboardRepository.allTranscripts.observeAsState(initial = emptyList())
 
     val keyboard =
         when (mode) {
@@ -387,6 +388,9 @@ fun KeyboardScreen(
                                         onToggleClipboardMode = { enable ->
                                             mode = if (enable) KeyboardMode.CLIPBOARD else KeyboardMode.MAIN
                                         },
+                                        onToggleTranscriptHistoryMode = { enable ->
+                                            mode = if (enable) KeyboardMode.TRANSCRIPTS else KeyboardMode.MAIN
+                                        },
                                         onToggleHideLetters = onToggleHideLetters,
                                         onSwitchLanguage = onSwitchLanguage,
                                         onChangePosition = onChangePosition,
@@ -479,6 +483,9 @@ fun KeyboardScreen(
                                             } else {
                                                 KeyboardMode.MAIN
                                             }
+                                    },
+                                    onToggleTranscriptHistoryMode = { enable ->
+                                        mode = if (enable) KeyboardMode.TRANSCRIPTS else KeyboardMode.MAIN
                                     },
                                     onToggleCapsLock = {
                                         capsLock = !capsLock
@@ -664,6 +671,9 @@ fun KeyboardScreen(
                                                 KeyboardMode.MAIN
                                             }
                                     },
+                                    onToggleTranscriptHistoryMode = { enable ->
+                                        mode = if (enable) KeyboardMode.TRANSCRIPTS else KeyboardMode.MAIN
+                                    },
                                     onToggleCapsLock = {
                                         capsLock = !capsLock
 
@@ -709,9 +719,10 @@ fun KeyboardScreen(
                 }
             }
         }
-    } else if (dictationActive || mode == KeyboardMode.CLIPBOARD) {
-        // Clipboard history view, or the Summera dictation view in the same frame
+    } else if (dictationActive || mode == KeyboardMode.CLIPBOARD || mode == KeyboardMode.TRANSCRIPTS) {
+        // Clipboard or transcript history view, or the Summera dictation view in the same frame
         val scope = CoroutineScope(Dispatchers.IO)
+        val showTranscripts = mode == KeyboardMode.TRANSCRIPTS
         val clipboardHistoryEnabled =
             (settings?.clipboardHistoryEnabled ?: DEFAULT_CLIPBOARD_HISTORY_ENABLED).toBool()
 
@@ -720,13 +731,19 @@ fun KeyboardScreen(
         val keyboardHeight = Dp(keyHeight * rowCount)
 
         // Perform auto-cleanup when entering clipboard view, and clear all if disabled
-        if (!dictationActive) {
+        if (!dictationActive && !showTranscripts) {
             LaunchedEffect(Unit) {
                 if (clipboardHistoryEnabled) {
                     clipboardRepository?.clearExpired()
                 } else {
                     clipboardRepository?.clearAll()
                 }
+            }
+        }
+        // Earlier transcripts of this Summera account, once per sign-in; the LiveData shows them as they land
+        if (!dictationActive && showTranscripts) {
+            LaunchedEffect(Unit) {
+                SummeraDictation.restoreTranscripts(ctx, clipboardRepository)
             }
         }
 
@@ -776,8 +793,10 @@ fun KeyboardScreen(
                     )
                 } else {
                     ClipboardHistoryScreen(
-                        clipboardItems = clipboardItems,
-                        isEnabled = clipboardHistoryEnabled,
+                        clipboardItems = if (showTranscripts) transcripts else clipboardItems,
+                        title = stringResource(if (showTranscripts) R.string.transcript_history else R.string.clipboard_history),
+                        emptyText = stringResource(if (showTranscripts) R.string.transcript_empty else R.string.clipboard_empty),
+                        isEnabled = showTranscripts || clipboardHistoryEnabled,
                         onItemClick = { item ->
                             // Paste and return to keyboard
                             ctx.currentInputConnection.commitText(item.text, 1)
@@ -802,7 +821,11 @@ fun KeyboardScreen(
                         },
                         onClearAll = {
                             scope.launch {
-                                clipboardRepository?.clearUnpinned()
+                                if (showTranscripts) {
+                                    clipboardRepository?.clearUnpinnedTranscripts()
+                                } else {
+                                    clipboardRepository?.clearUnpinned()
+                                }
                             }
                         },
                         onGoToClipboardSettings = onGoToClipboardSettings,
@@ -962,6 +985,9 @@ fun KeyboardScreen(
                                                 } else {
                                                     KeyboardMode.MAIN
                                                 }
+                                        },
+                                        onToggleTranscriptHistoryMode = { enable ->
+                                            mode = if (enable) KeyboardMode.TRANSCRIPTS else KeyboardMode.MAIN
                                         },
                                         onToggleCapsLock = {
                                             capsLock = !capsLock

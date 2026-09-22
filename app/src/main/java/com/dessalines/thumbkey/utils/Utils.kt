@@ -346,6 +346,7 @@ fun performKeyAction(
     onToggleNumericMode: (enable: Boolean) -> Unit,
     onToggleEmojiMode: (enable: Boolean) -> Unit,
     onToggleClipboardMode: (enable: Boolean) -> Unit,
+    onToggleTranscriptHistoryMode: (enable: Boolean) -> Unit,
     onToggleCapsLock: () -> Unit,
     onToggleHideLetters: () -> Unit,
     onAutoCapitalize: (enable: Boolean) -> Unit,
@@ -1306,6 +1307,11 @@ fun performKeyAction(
             Log.d(TAG, "Toggling Clipboard: $enable")
             keyboardSettings.textProcessor?.handleFinishInput(ime)
             onToggleClipboardMode(enable)
+        }
+
+        is KeyAction.ToggleTranscriptHistoryMode -> {
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
+            onToggleTranscriptHistoryMode(action.enable)
         }
 
         KeyAction.GotoSettings -> {

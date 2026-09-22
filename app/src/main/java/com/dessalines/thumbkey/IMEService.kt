@@ -155,8 +155,9 @@ class IMEService :
     }
 
     override fun onWindowHidden() {
-        // Never keep the microphone open, or type a transcript, behind a hidden keyboard
-        SummeraDictation.cancel(this)
+        // Never keep the microphone open behind a hidden keyboard; a running transcription finishes
+        // into the transcript history
+        SummeraDictation.onKeyboardHidden(this)
         currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(this)
         super.onWindowHidden()
     }

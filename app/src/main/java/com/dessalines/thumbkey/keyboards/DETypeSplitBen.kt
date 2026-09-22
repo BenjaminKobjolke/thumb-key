@@ -12,6 +12,14 @@ import com.dessalines.thumbkey.utils.FontSizeVariant.*
 import com.dessalines.thumbkey.utils.KeyAction.*
 import com.dessalines.thumbkey.utils.SwipeNWay.*
 
+/** Opens the Summera transcript history (right swipe on the clipboard key). */
+private val TRANSCRIPT_HISTORY_KEYC =
+    KeyC(
+        display = KeyDisplay.IconDisplay(Icons.Outlined.History),
+        action = ToggleTranscriptHistoryMode(true),
+        color = MUTED,
+    )
+
 /** Space key whose center shows the mic (system voice input and Summera dictation). */
 private val SPACEBAR_MIC_CENTER_KEYC =
     SPACEBAR_CENTER_KEYC.copy(
@@ -49,6 +57,7 @@ val KB_DE_TYPESPLITBEN_MAIN =
                     top = COPY_KEYC,
                     topLeft = SELECT_ALL_KEYC,
                     topRight = CUT_KEYC,
+                    right = TRANSCRIPT_HISTORY_KEYC,
                     bottom = PASTE_KEYC,
                     bottomLeft = UNDO_KEYC,
                     bottomRight = REDO_KEYC,
@@ -294,6 +303,7 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                     top = COPY_KEYC,
                     topLeft = SELECT_ALL_KEYC,
                     topRight = CUT_KEYC,
+                    right = TRANSCRIPT_HISTORY_KEYC,
                     bottom = PASTE_KEYC,
                     bottomLeft = UNDO_KEYC,
                     bottomRight = REDO_KEYC,
@@ -521,7 +531,7 @@ val KB_DE_TYPESPLITBEN_NUMERIC =
                             size = LARGE,
                             color = SECONDARY,
                         ),
-                ),
+                ).copy(right = TRANSCRIPT_HISTORY_KEYC),
                 KeyItemC(
                     center = KeyC("1", size = LARGE),
                     bottomRight = KeyC("!"),

@@ -222,6 +222,11 @@ sealed class KeyAction {
         val enable: Boolean,
     ) : KeyAction()
 
+    /** Opens the Summera transcript history; separate from [ToggleClipboardMode] so upstream merges stay easy. */
+    class ToggleTranscriptHistoryMode(
+        val enable: Boolean,
+    ) : KeyAction()
+
     class ComposeLastKey(
         val text: String,
     ) : KeyAction()
@@ -326,6 +331,7 @@ enum class KeyboardMode {
     CTRLED,
     ALTED,
     CLIPBOARD,
+    TRANSCRIPTS,
 }
 
 enum class SwipeDirection {

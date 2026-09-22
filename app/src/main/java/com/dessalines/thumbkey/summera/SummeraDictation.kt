@@ -12,9 +12,14 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.R
+import com.dessalines.thumbkey.ThumbkeyApplication
+import com.dessalines.thumbkey.db.ClipboardItem
+import com.dessalines.thumbkey.db.ClipboardRepository
+import com.dessalines.thumbkey.db.SOURCE_TRANSCRIPT
 import com.dessalines.thumbkey.utils.TAG
 import de.xida.aichatapi.TranscriptionStatus
 import de.xida.aichatapi.XidaAiException
+import de.xida.aichatapi.createdAtMillis
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,6 +31,9 @@ import java.util.Locale
 
 private const val RECORDING_FILE = "summera-dictation.m4a"
 private const val SAMPLING_RATE = 44_100
+
+// The server caps services/list at 100 per page
+private const val RESTORE_PAGE_SIZE = 100
 
 sealed interface DictationState {
     data object Idle : DictationState
@@ -146,7 +154,12 @@ object SummeraDictation {
                             }
 
                             else -> {
-                                ime.currentInputConnection?.commitText(text, 1)
+                                // Kept whatever happens to the keyboard; typed only into a field that is on screen,
+                                // the connection can still point at the old one after a hide
+                                val repository = (ime.application as ThumbkeyApplication).clipboardRepository
+                                withContext(Dispatchers.IO) { repository.addTranscript(text, id) }
+                                val connection = ime.currentInputConnection
+                                if (ime.isInputViewShown && connection != null) connection.commitText(text, 1)
                                 DictationState.Idle
                             }
                         }
@@ -158,6 +171,60 @@ object SummeraDictation {
                 // cancel() already removed its own
                 file.delete()
             }
+    }
+
+    /**
+     * Pulls the transcripts dictated before (another phone, a reinstall) into [repository], once per
+     * sign-in. A failure leaves the flag unset, so the next open of the history tries again.
+     */
+    suspend fun restoreTranscripts(
+        context: Context,
+        repository: ClipboardRepository,
+    ) {
+        val credentials = SummeraAccount.credentials(context) ?: return
+        if (SummeraAccount.transcriptsRestored(context)) return
+        try {
+            val client = SummeraAccount.client()
+            val items = mutableListOf<ClipboardItem>()
+            var start = 0
+            do {
+                val page = withContext(Dispatchers.IO) { client.services.list(credentials, start, RESTORE_PAGE_SIZE) }
+                page.items
+                    .filter { it.status == TranscriptionStatus.COMPLETE && !it.text.isNullOrBlank() }
+                    .mapTo(items) {
+                        ClipboardItem(
+                            text = it.text.orEmpty(),
+                            timestamp = it.createdAtMillis(),
+                            source = SOURCE_TRANSCRIPT,
+                            remoteId = it.id,
+                        )
+                    }
+                start += page.items.size
+            } while (page.items.isNotEmpty() && start < page.total)
+            withContext(Dispatchers.IO) { repository.restoreTranscripts(items) }
+            SummeraAccount.setTranscriptsRestored(context)
+            SummeraAccount.logSignIn(context, "transcripts: restored ${items.size}")
+        } catch (e: XidaAiException) {
+            SummeraAccount.logSignIn(context, "transcripts: restore failed ${e.message}")
+        }
+    }
+
+    /**
+     * The keyboard window went away. The mic never stays open behind it, but a running upload or
+     * poll goes on: its transcript lands in the transcript history.
+     */
+    fun onKeyboardHidden(ime: IMEService) {
+        when (state) {
+            is DictationState.Recording -> {
+                stopAndSend(ime)
+            }
+
+            DictationState.Uploading, is DictationState.Polling -> {}
+
+            else -> {
+                cancel(ime)
+            }
+        }
     }
 
     fun cancel(context: Context) {

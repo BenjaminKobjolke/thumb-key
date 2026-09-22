@@ -182,4 +182,6 @@
     <string name="summera_timeout">Timed out</string>
     <string name="summera_last_crash">Last crash (debug), tap to clear</string>
     <string name="summera_debug_log">Summera log (debug), tap to clear</string>
+    <string name="transcript_history">Transcript history</string>
+    <string name="transcript_empty">No transcripts yet</string>
 </resources>

@@ -51,6 +51,7 @@ private const val KEY_EMAIL = "email"
 private const val KEY_PENDING_CODE = "pending_code"
 private const val KEY_PENDING_STARTED_AT = "pending_started_at"
 private const val KEY_LAST_CRASH = "last_crash"
+private const val KEY_TRANSCRIPTS_RESTORED = "transcripts_restored"
 private const val LAST_CRASH_MAX_CHARS = 800
 private const val KEY_DEBUG_LOG = "debug_log"
 private const val DEBUG_LOG_MAX_LINES = 40
@@ -95,6 +96,13 @@ object SummeraAccount {
             apiToken = apiToken,
             email = prefs.getString(KEY_EMAIL, null).orEmpty(),
         )
+    }
+
+    /** True once the transcript history has pulled the earlier transcripts of this sign-in; [clear] resets it. */
+    fun transcriptsRestored(context: Context): Boolean = prefs(context).getBoolean(KEY_TRANSCRIPTS_RESTORED, false)
+
+    fun setTranscriptsRestored(context: Context) {
+        prefs(context).edit().putBoolean(KEY_TRANSCRIPTS_RESTORED, true).apply()
     }
 
     /** Remembers the register code of a running sign-in, so it survives the screen or the activity dying. */
