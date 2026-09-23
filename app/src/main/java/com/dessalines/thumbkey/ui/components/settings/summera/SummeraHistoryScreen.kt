@@ -68,7 +68,7 @@ fun SummeraHistoryScreen(navController: NavController) {
         error = null
         scope.launch {
             try {
-                val page = withContext(Dispatchers.IO) { SummeraAccount.client().services.list(credentials, items.size, PAGE_SIZE) }
+                val page = withContext(Dispatchers.IO) { SummeraAccount.client(ctx).services.list(credentials, items.size, PAGE_SIZE) }
                 items.addAll(page.items)
                 total = page.total
             } catch (e: XidaAiException) {

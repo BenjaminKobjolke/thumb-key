@@ -37,6 +37,7 @@ import com.dessalines.thumbkey.ui.components.settings.lookandfeel.LookAndFeelScr
 import com.dessalines.thumbkey.ui.components.settings.modifykeys.ModifyKeysScreen
 import com.dessalines.thumbkey.ui.components.settings.other.OtherSettingsScreen
 import com.dessalines.thumbkey.ui.components.settings.summera.SummeraHistoryScreen
+import com.dessalines.thumbkey.ui.components.settings.summera.SummeraLogScreen
 import com.dessalines.thumbkey.ui.components.settings.summera.SummeraPromptsScreen
 import com.dessalines.thumbkey.ui.components.settings.summera.SummeraSettingsScreen
 import com.dessalines.thumbkey.ui.components.setup.SetupScreen
@@ -61,7 +62,7 @@ class ThumbkeyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // ponytail: debug-only breadcrumb for the Summera sign-in, shown on the Summera AI screen.
+        // ponytail: debug-only last crash of the app, shown on the Summera Debug log screen.
         // Delete it together with the lastCrash functions once the sign-in is confirmed working
         if (BuildConfig.DEBUG) {
             val previous = Thread.getDefaultUncaughtExceptionHandler()
@@ -198,6 +199,9 @@ class MainActivity : AppCompatActivity() {
                     }
                     composable(route = "summeraHistory") {
                         SummeraHistoryScreen(navController = navController)
+                    }
+                    composable(route = "summeraLog") {
+                        SummeraLogScreen(navController = navController)
                     }
                     composable(route = "modifyKeys") {
                         ModifyKeysScreen(

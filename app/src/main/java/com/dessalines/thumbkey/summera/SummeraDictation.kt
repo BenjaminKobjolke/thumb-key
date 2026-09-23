@@ -133,27 +133,24 @@ object SummeraDictation {
         job =
             scope.launch {
                 try {
-                    val client = SummeraAccount.client()
+                    val client = SummeraAccount.client(ime)
                     val id =
                         withContext(Dispatchers.IO) {
                             client.services.transcribe(credentials, file, Locale.getDefault().language, prompt = prompt)
                         }
                     state = DictationState.Polling()
-                    // The log lines never carry the dictated text
-                    SummeraAccount.logSignIn(ime, "dictation: uploaded, id=$id")
 
                     val result =
                         poll {
                             val status = withContext(Dispatchers.IO) { client.services.info(credentials, id) }
                             state = DictationState.Polling(status)
-                            SummeraAccount.logSignIn(ime, "dictation: status=${status.status} message=${status.message}")
                             status.takeIf { it.isFinished }
                         }
                     val text = result?.text
                     state =
                         when {
                             result == null -> {
-                                SummeraAccount.logSignIn(ime, "dictation: timeout")
+                                SummeraAccount.log(ime, "dictation: timeout")
                                 DictationState.Failed(ime.getString(R.string.summera_timeout))
                             }
 
@@ -176,7 +173,7 @@ object SummeraDictation {
                             }
                         }
                 } catch (e: XidaAiException) {
-                    SummeraAccount.logSignIn(ime, "dictation: failed ${e.message}")
+                    SummeraAccount.log(ime, "dictation: failed ${e.message}")
                     state = DictationState.Failed(e.message.orEmpty())
                 }
                 // Not in a finally: a cancelled run must not delete the file of the next recording,
@@ -196,7 +193,7 @@ object SummeraDictation {
         val credentials = SummeraAccount.credentials(context) ?: return
         if (SummeraAccount.transcriptsRestored(context)) return
         try {
-            val client = SummeraAccount.client()
+            val client = SummeraAccount.client(context)
             val items = mutableListOf<ClipboardItem>()
             var start = 0
             do {
@@ -215,9 +212,9 @@ object SummeraDictation {
             } while (page.items.isNotEmpty() && start < page.total)
             withContext(Dispatchers.IO) { repository.restoreTranscripts(items) }
             SummeraAccount.setTranscriptsRestored(context)
-            SummeraAccount.logSignIn(context, "transcripts: restored ${items.size}")
+            SummeraAccount.log(context, "transcripts: restored ${items.size}")
         } catch (e: XidaAiException) {
-            SummeraAccount.logSignIn(context, "transcripts: restore failed ${e.message}")
+            SummeraAccount.log(context, "transcripts: restore failed ${e.message}")
         }
     }
 

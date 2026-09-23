@@ -2,9 +2,7 @@ package com.dessalines.thumbkey.summera
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import com.dessalines.thumbkey.BuildConfig
-import com.dessalines.thumbkey.utils.TAG
 import de.xida.aichatapi.Credentials
 import de.xida.aichatapi.TranscriptionPrompt
 import de.xida.aichatapi.XidaAiClient
@@ -57,22 +55,32 @@ private const val KEY_ACTIVE_PROMPT_ID = "active_prompt_id"
 private const val KEY_ACTIVE_PROMPT_TEXT = "active_prompt_text"
 private const val LAST_CRASH_MAX_CHARS = 800
 private const val KEY_DEBUG_LOG = "debug_log"
+private const val KEY_DEBUG_LOGGING = "debug_logging"
 private const val DEBUG_LOG_MAX_LINES = 40
 private const val DEBUG_LOG_REPEAT_WINDOW = 3
 
 object SummeraAccount {
-    fun client(): XidaAiClient = XidaAiClient(software = SOFTWARE_ID, appVersion = BuildConfig.VERSION_NAME)
-
     /**
-     * The client of the sign-in, which logs its calls in debug builds. Dictation keeps [client]:
-     * its responses carry the dictated text, which has no business in a log.
+     * The one client every Summera call goes through. While the debug switch is on, every request
+     * and answer lands in the in-app log through [log]; the library redacts tokens, passwords and
+     * register codes, the dictated text is logged as is.
      */
-    fun signInClient(context: Context): XidaAiClient {
+    fun client(context: Context): XidaAiClient {
         // Not the Activity, the lambda outlives the screen
         val appContext = context.applicationContext
-        // Release builds pass no logger at all, so the client skips building the lines
-        val logger: ((String) -> Unit)? = if (BuildConfig.DEBUG) ({ line -> logSignIn(appContext, line) }) else null
+        // With the switch off no logger is passed at all, so the client skips building the lines
+        val logger: ((String) -> Unit)? = if (debugLoggingEnabled(context)) ({ line -> log(appContext, line) }) else null
         return XidaAiClient(software = SOFTWARE_ID, appVersion = BuildConfig.VERSION_NAME, logger = logger)
+    }
+
+    /** The user-facing debug switch on the Debug log screen. Off by default, in every build type. */
+    fun debugLoggingEnabled(context: Context): Boolean = prefs(context).getBoolean(KEY_DEBUG_LOGGING, false)
+
+    fun setDebugLogging(
+        context: Context,
+        enabled: Boolean,
+    ) {
+        prefs(context).edit().putBoolean(KEY_DEBUG_LOGGING, enabled).apply()
     }
 
     fun save(
@@ -172,18 +180,17 @@ object SummeraAccount {
         prefs(context).edit().remove(KEY_LAST_CRASH).apply()
     }
 
-    /** The one way a sign-in line gets recorded: logcat and the debug log, in debug builds only. */
-    fun logSignIn(
+    /** The one way a line gets recorded: the in-app debug log, only while the switch is on. Nothing goes to logcat. */
+    fun log(
         context: Context,
         line: String,
     ) {
-        if (!BuildConfig.DEBUG) return
-        Log.d(TAG, line)
+        if (!debugLoggingEnabled(context)) return
         appendDebugLog(context, line)
     }
 
-    // ponytail: debug-only log of the sign-in calls, shown on the Summera AI screen. Delete it
-    // together with the lastCrash functions once the sign-in is confirmed working
+    // ponytail: the user-facing debug log of every Summera call, shown on the Debug log screen.
+    // Capped at DEBUG_LOG_MAX_LINES in SharedPreferences; a file would be the upgrade if that is too little
     @Synchronized
     private fun appendDebugLog(
         context: Context,

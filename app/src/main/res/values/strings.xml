@@ -180,8 +180,12 @@
     <string name="summera_close">Close</string>
     <string name="summera_failed">Summera AI failed: %1$s</string>
     <string name="summera_timeout">Timed out</string>
-    <string name="summera_last_crash">Last crash (debug), tap to clear</string>
-    <string name="summera_debug_log">Summera log (debug), tap to clear</string>
+    <string name="summera_last_crash">Last crash</string>
+    <string name="summera_debug_log">Debug log</string>
+    <string name="summera_debug_logging">Debug logging</string>
+    <string name="summera_debug_logging_summary">Record every Summera AI request and answer here</string>
+    <string name="summera_log_empty">Nothing logged yet</string>
+    <string name="summera_clear">Clear</string>
     <string name="summera_pending_ai">Waiting for the AI to run your prompt</string>
     <string name="summera_active_ai">Running your prompt</string>
     <string name="summera_answer">AI answer</string>

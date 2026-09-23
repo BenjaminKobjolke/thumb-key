@@ -17,7 +17,6 @@ import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.Mic
@@ -39,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.navigation.NavController
-import com.dessalines.thumbkey.BuildConfig
 import com.dessalines.thumbkey.MainActivity
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.summera.SUMMERA_LOGIN_URL
@@ -72,8 +70,6 @@ fun SummeraSettingsScreen(navController: NavController) {
     var signInJob by remember { mutableStateOf<Job?>(null) }
     var signInError by remember { mutableStateOf<String?>(null) }
     var microphoneGranted by remember { mutableStateOf(hasMicrophonePermission(ctx)) }
-    var lastCrash by remember { mutableStateOf(SummeraAccount.lastCrash(ctx)) }
-    var debugLog by remember { mutableStateOf(SummeraAccount.debugLog(ctx)) }
     var activePrompt by remember { mutableStateOf(SummeraAccount.activePromptText(ctx)) }
 
     val timeoutStr = stringResource(R.string.summera_timeout)
@@ -83,7 +79,7 @@ fun SummeraSettingsScreen(navController: NavController) {
         }
 
     fun logDebug(line: String) {
-        SummeraAccount.logSignIn(ctx, line)
+        SummeraAccount.log(ctx, line)
     }
 
     // resumeCode: a stored pending code to keep polling with, null starts a fresh sign-in
@@ -93,7 +89,7 @@ fun SummeraSettingsScreen(navController: NavController) {
             scope.launch {
                 try {
                     logDebug("sign-in start, resume=${resumeCode != null}")
-                    val client = SummeraAccount.signInClient(ctx)
+                    val client = SummeraAccount.client(ctx)
                     val code =
                         resumeCode ?: run {
                             val registerCode =
@@ -127,8 +123,6 @@ fun SummeraSettingsScreen(navController: NavController) {
                     // Not clearing the pending code here: a cancellation by the lifecycle has to
                     // leave it for the resume
                     signInJob = null
-                    // ponytail: no live log, one read at job end shows the lines written after the resume
-                    debugLog = SummeraAccount.debugLog(ctx)
                 }
             }
     }
@@ -137,9 +131,6 @@ fun SummeraSettingsScreen(navController: NavController) {
     // one up again that the screen or the activity dying cut off
     LifecycleResumeEffect(Unit) {
         if (credentials == null) credentials = SummeraAccount.credentials(ctx)
-        lastCrash = SummeraAccount.lastCrash(ctx)
-        // As of this resume, not live: it is read again only when a sign-in ends
-        debugLog = SummeraAccount.debugLog(ctx)
         activePrompt = SummeraAccount.activePromptText(ctx)
         if (credentials == null && signInJob == null) {
             SummeraAccount.pendingCode(ctx)?.let { signIn(it) }
@@ -239,40 +230,6 @@ fun SummeraSettingsScreen(navController: NavController) {
                             onClick = { signIn() },
                         )
                     }
-                    val crash = lastCrash
-                    if (BuildConfig.DEBUG && crash != null) {
-                        Preference(
-                            title = { Text(stringResource(R.string.summera_last_crash)) },
-                            summary = { Text(crash) },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.BugReport,
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                SummeraAccount.clearLastCrash(ctx)
-                                lastCrash = null
-                            },
-                        )
-                    }
-                    val log = debugLog
-                    if (BuildConfig.DEBUG && log != null) {
-                        Preference(
-                            title = { Text(stringResource(R.string.summera_debug_log)) },
-                            summary = { Text(log) },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Description,
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                SummeraAccount.clearDebugLog(ctx)
-                                debugLog = null
-                            },
-                        )
-                    }
                     Preference(
                         title = { Text(stringResource(R.string.summera_microphone_title)) },
                         summary = {
@@ -293,6 +250,16 @@ fun SummeraSettingsScreen(navController: NavController) {
                             )
                         },
                         onClick = { microphoneLauncher.launch(Manifest.permission.RECORD_AUDIO) },
+                    )
+                    Preference(
+                        title = { Text(stringResource(R.string.summera_debug_log)) },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.BugReport,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = { navController.navigate("summeraLog") },
                     )
                 }
             }

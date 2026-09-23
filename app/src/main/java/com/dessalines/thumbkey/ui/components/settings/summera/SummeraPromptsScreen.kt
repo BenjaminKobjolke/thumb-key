@@ -70,7 +70,7 @@ fun SummeraPromptsScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         val credentials = SummeraAccount.credentials(ctx) ?: return@LaunchedEffect
         try {
-            val loaded = withContext(Dispatchers.IO) { SummeraAccount.client().settings.getTranscriptionPrompts(credentials) }
+            val loaded = withContext(Dispatchers.IO) { SummeraAccount.client(ctx).settings.getTranscriptionPrompts(credentials) }
             prompts = loaded
             // Deleted on another device
             if (activeId != null && loaded.none { it.id == activeId }) setActive(null)
@@ -84,7 +84,7 @@ fun SummeraPromptsScreen(navController: NavController) {
         error = null
         scope.launch {
             try {
-                withContext(Dispatchers.IO) { SummeraAccount.client().settings.saveTranscriptionPrompts(credentials, list) }
+                withContext(Dispatchers.IO) { SummeraAccount.client(ctx).settings.saveTranscriptionPrompts(credentials, list) }
                 prompts = list
             } catch (e: XidaAiException) {
                 error = e.message.orEmpty()
