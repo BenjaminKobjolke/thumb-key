@@ -789,7 +789,7 @@ fun KeyboardScreen(
                         state = dictationState,
                         onStop = { SummeraDictation.stopAndSend(ctx) },
                         onCancel = { SummeraDictation.cancel(ctx) },
-                        onRetry = { SummeraDictation.start(ctx) },
+                        onRetry = { SummeraDictation.retry(ctx) },
                         onInsert = { SummeraDictation.insert(ctx, it) },
                     )
                 } else {

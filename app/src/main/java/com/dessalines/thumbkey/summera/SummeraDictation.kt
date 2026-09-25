@@ -17,6 +17,7 @@ import com.dessalines.thumbkey.db.ClipboardItem
 import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.db.SOURCE_TRANSCRIPT
 import com.dessalines.thumbkey.utils.TAG
+import de.xida.aichatapi.Credentials
 import de.xida.aichatapi.TranscriptionStatus
 import de.xida.aichatapi.XidaAiException
 import de.xida.aichatapi.createdAtMillis
@@ -111,11 +112,20 @@ object SummeraDictation {
         }
     }
 
+    /** Re-sends the kept recording after a send failure, or records anew after a recorder failure. */
+    fun retry(ime: IMEService) {
+        if (!recordingFile(ime).exists()) {
+            start(ime)
+            return
+        }
+        val credentials = credentialsOrSignIn(ime) ?: return
+        send(ime, credentials)
+    }
+
     fun stopAndSend(ime: IMEService) {
-        val credentials = SummeraAccount.credentials(ime)
+        val credentials = credentialsOrSignIn(ime)
         if (credentials == null) {
             releaseRecorder()
-            state = DictationState.Failed(ime.getString(R.string.summera_sign_in_first))
             return
         }
         try {
@@ -126,6 +136,22 @@ object SummeraDictation {
             return
         }
         releaseRecorder()
+        send(ime, credentials)
+    }
+
+    /** The stored credentials, or null with the sign-in failure already shown. */
+    private fun credentialsOrSignIn(ime: IMEService): Credentials? {
+        val credentials = SummeraAccount.credentials(ime)
+        if (credentials == null) {
+            state = DictationState.Failed(ime.getString(R.string.summera_sign_in_first))
+        }
+        return credentials
+    }
+
+    private fun send(
+        ime: IMEService,
+        credentials: Credentials,
+    ) {
         state = DictationState.Uploading
 
         val file = recordingFile(ime)
@@ -163,6 +189,7 @@ object SummeraDictation {
                                 // the connection can still point at the old one after a hide
                                 val repository = (ime.application as ThumbkeyApplication).clipboardRepository
                                 withContext(Dispatchers.IO) { repository.addTranscript(text, id) }
+                                file.delete()
                                 if (prompt == null) {
                                     commit(ime, text)
                                     DictationState.Idle
@@ -176,9 +203,7 @@ object SummeraDictation {
                     SummeraAccount.log(ime, "dictation: failed ${e.message}")
                     state = DictationState.Failed(e.message.orEmpty())
                 }
-                // Not in a finally: a cancelled run must not delete the file of the next recording,
-                // cancel() already removed its own
-                file.delete()
+                // A failed run keeps the file for retry; cancel() removes it.
             }
     }
 
@@ -220,7 +245,8 @@ object SummeraDictation {
 
     /**
      * The keyboard window went away. The mic never stays open behind it, but a running upload or
-     * poll goes on: its transcript lands in the transcript history.
+     * poll goes on: its transcript lands in the transcript history. A failure is also kept, panel
+     * and recording, so the user can restore connectivity and retry.
      */
     fun onKeyboardHidden(ime: IMEService) {
         when (state) {
@@ -228,7 +254,7 @@ object SummeraDictation {
                 stopAndSend(ime)
             }
 
-            DictationState.Uploading, is DictationState.Polling -> {}
+            DictationState.Uploading, is DictationState.Polling, is DictationState.Failed -> {}
 
             else -> {
                 cancel(ime)
