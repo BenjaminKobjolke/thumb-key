@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
+import android.view.inputmethod.EditorInfo
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -319,6 +320,15 @@ object SummeraDictation {
     ) {
         commit(ime, text)
         state = DictationState.Idle
+    }
+
+    /** Closes a [DictationState.Done] result: back to the keys in a text field, else hides the keyboard. */
+    fun dismiss(ime: IMEService) {
+        cancel(ime)
+        val editor = ime.currentInputEditorInfo
+        if (ime.currentInputConnection == null || editor == null || editor.inputType == EditorInfo.TYPE_NULL) {
+            ime.requestHideSelf(0)
+        }
     }
 
     private fun commit(

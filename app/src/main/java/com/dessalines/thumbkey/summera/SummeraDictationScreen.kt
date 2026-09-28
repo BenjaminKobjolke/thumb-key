@@ -1,7 +1,6 @@
 package com.dessalines.thumbkey.summera
 
 import android.text.format.DateUtils
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,6 +49,7 @@ fun SummeraDictationScreen(
     onRetry: () -> Unit,
     onInsert: (String) -> Unit,
     onReplacements: (String) -> Unit,
+    onDismiss: () -> Unit,
 ) {
     when (state) {
         is DictationState.Done -> {
@@ -57,7 +57,7 @@ fun SummeraDictationScreen(
                 state = state,
                 onInsert = onInsert,
                 onReplacements = onReplacements,
-                onClose = onCancel,
+                onDismiss = onDismiss,
             )
         }
 
@@ -183,7 +183,7 @@ private fun ResultView(
     state: DictationState.Done,
     onInsert: (String) -> Unit,
     onReplacements: (String) -> Unit,
-    onClose: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
     val answer = state.answer
     Surface(
@@ -209,27 +209,48 @@ private fun ResultView(
                     text = stringResource(R.string.summera_answer),
                     style = MaterialTheme.typography.labelLarge,
                 )
-                Text(answer ?: stringResource(R.string.summera_prompt_failed))
+                Text(
+                    text = answer ?: stringResource(R.string.summera_prompt_failed),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 Text(
                     text = stringResource(R.string.summera_transcript),
                     style = MaterialTheme.typography.labelLarge,
                 )
-                Text(state.transcript)
+                Text(
+                    text = state.transcript,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
             }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(PADDING),
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
+            Column(
+                verticalArrangement = Arrangement.spacedBy(PADDING),
             ) {
                 if (answer != null) {
-                    Button(onClick = { onInsert(answer) }) { Text(stringResource(R.string.summera_insert_answer)) }
+                    Button(
+                        onClick = { onInsert(answer) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.summera_insert_answer))
+                    }
                 }
-                OutlinedButton(onClick = { onInsert(state.transcript) }) {
+                OutlinedButton(
+                    onClick = { onInsert(state.transcript) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Text(stringResource(R.string.summera_insert_transcript))
                 }
-                TextButton(onClick = { onReplacements(state.transcript) }) {
-                    Text(stringResource(R.string.summera_replacements))
+                OutlinedButton(
+                    onClick = { onReplacements(state.transcript) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.summera_edit_replacements))
                 }
-                TextButton(onClick = onClose) { Text(stringResource(R.string.summera_close)) }
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.summera_dismiss))
+                }
             }
         }
     }

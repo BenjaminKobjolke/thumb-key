@@ -192,6 +192,8 @@
     <string name="summera_transcript">Transcript</string>
     <string name="summera_insert_answer">Insert answer</string>
     <string name="summera_insert_transcript">Insert transcript</string>
+    <string name="summera_edit_replacements">Edit replacements</string>
+    <string name="summera_dismiss">Dismiss</string>
     <string name="summera_prompt_failed">The AI step failed, here is the transcript</string>
     <string name="summera_prompts">Prompts</string>
     <string name="summera_replacements">Replacements</string>

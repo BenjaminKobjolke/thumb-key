@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -780,7 +781,13 @@ fun KeyboardScreen(
                         .then(if (!ignoreBottomPadding) Modifier.safeDrawingPadding() else Modifier)
                         .padding(bottom = pushupSizeDp)
                         .fillMaxWidth()
-                        .height(keyboardHeight)
+                        .then(
+                            if (dictationActive && dictationState is DictationState.Done) {
+                                Modifier.fillMaxHeight()
+                            } else {
+                                Modifier.height(keyboardHeight)
+                            },
+                        )
                         .then(
                             if (backdropEnabled) {
                                 Modifier.padding(top = backdropPadding)
@@ -797,6 +804,7 @@ fun KeyboardScreen(
                         onRetry = { SummeraDictation.retry(ctx) },
                         onInsert = { SummeraDictation.insert(ctx, it) },
                         onReplacements = { SummeraDictation.openReplacements(ctx, it) },
+                        onDismiss = { SummeraDictation.dismiss(ctx) },
                     )
                 } else {
                     ClipboardHistoryScreen(
