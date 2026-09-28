@@ -96,6 +96,8 @@ android {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+
     // Summera AI (XIDA AI chat API) client
     implementation(project(":aichatapi"))
 
