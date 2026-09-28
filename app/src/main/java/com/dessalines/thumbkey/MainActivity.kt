@@ -24,6 +24,7 @@ import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.AppSettingsViewModelFactory
 import com.dessalines.thumbkey.db.ClipboardDB
 import com.dessalines.thumbkey.db.ClipboardRepository
+import com.dessalines.thumbkey.summera.EXTRA_TRANSCRIPT
 import com.dessalines.thumbkey.summera.SUMMERA_LOGIN_HOST
 import com.dessalines.thumbkey.summera.SUMMERA_LOGIN_SCHEME
 import com.dessalines.thumbkey.summera.SummeraAccount
@@ -39,6 +40,7 @@ import com.dessalines.thumbkey.ui.components.settings.other.OtherSettingsScreen
 import com.dessalines.thumbkey.ui.components.settings.summera.SummeraHistoryScreen
 import com.dessalines.thumbkey.ui.components.settings.summera.SummeraLogScreen
 import com.dessalines.thumbkey.ui.components.settings.summera.SummeraPromptsScreen
+import com.dessalines.thumbkey.ui.components.settings.summera.SummeraReplacementsScreen
 import com.dessalines.thumbkey.ui.components.settings.summera.SummeraSettingsScreen
 import com.dessalines.thumbkey.ui.components.setup.SetupScreen
 import com.dessalines.thumbkey.ui.screens.AbbreviationsScreen
@@ -196,6 +198,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     composable(route = "summeraPrompts") {
                         SummeraPromptsScreen(navController = navController)
+                    }
+                    composable(route = "summeraReplacements") {
+                        SummeraReplacementsScreen(
+                            navController = navController,
+                            transcript = intent.getStringExtra(EXTRA_TRANSCRIPT),
+                        )
                     }
                     composable(route = "summeraHistory") {
                         SummeraHistoryScreen(navController = navController)

@@ -2,6 +2,7 @@ package com.dessalines.thumbkey.summera
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Build
@@ -11,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import com.dessalines.thumbkey.IMEService
+import com.dessalines.thumbkey.MainActivity
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.ThumbkeyApplication
 import com.dessalines.thumbkey.db.ClipboardItem
@@ -32,6 +34,7 @@ import java.util.Locale
 
 private const val RECORDING_FILE = "summera-dictation.m4a"
 private const val SAMPLING_RATE = 44_100
+const val EXTRA_TRANSCRIPT = "summera_transcript"
 
 // The server caps services/list at 100 per page
 private const val RESTORE_PAGE_SIZE = 100
@@ -246,7 +249,8 @@ object SummeraDictation {
     /**
      * The keyboard window went away. The mic never stays open behind it, but a running upload or
      * poll goes on: its transcript lands in the transcript history. A failure is also kept, panel
-     * and recording, so the user can restore connectivity and retry.
+     * and recording, so the user can restore connectivity and retry. A finished result stays so
+     * the user can return from its replacements screen and still insert it.
      */
     fun onKeyboardHidden(ime: IMEService) {
         when (state) {
@@ -254,12 +258,28 @@ object SummeraDictation {
                 stopAndSend(ime)
             }
 
-            DictationState.Uploading, is DictationState.Polling, is DictationState.Failed -> {}
+            DictationState.Uploading,
+            is DictationState.Polling,
+            is DictationState.Failed,
+            is DictationState.Done,
+            -> {}
 
             else -> {
                 cancel(ime)
             }
         }
+    }
+
+    fun openReplacements(
+        ime: IMEService,
+        transcript: String,
+    ) {
+        ime.startActivity(
+            Intent(ime, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra("startRoute", "summeraReplacements")
+                .putExtra(EXTRA_TRANSCRIPT, transcript),
+        )
     }
 
     /** Types one of the texts of a [DictationState.Done] result and brings the keys back. */

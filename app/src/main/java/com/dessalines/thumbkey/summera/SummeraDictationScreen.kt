@@ -1,6 +1,7 @@
 package com.dessalines.thumbkey.summera
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,8 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Stop
@@ -48,10 +49,16 @@ fun SummeraDictationScreen(
     onCancel: () -> Unit,
     onRetry: () -> Unit,
     onInsert: (String) -> Unit,
+    onReplacements: (String) -> Unit,
 ) {
     when (state) {
         is DictationState.Done -> {
-            ResultView(state = state, onInsert = onInsert, onClose = onCancel)
+            ResultView(
+                state = state,
+                onInsert = onInsert,
+                onReplacements = onReplacements,
+                onClose = onCancel,
+            )
         }
 
         is DictationState.Recording -> {
@@ -73,10 +80,15 @@ fun SummeraDictationScreen(
                     result?.statusMessage ?: stringResource(
                         when {
                             state is DictationState.Uploading -> R.string.summera_uploading
+
                             result?.status == TranscriptionStatus.PENDING -> R.string.summera_pending
+
                             result?.status == TranscriptionStatus.ACTIVE -> R.string.summera_active
+
                             result?.status == TranscriptionStatus.PENDING_AI -> R.string.summera_pending_ai
+
                             result?.status == TranscriptionStatus.ACTIVE_AI -> R.string.summera_active_ai
+
                             // Unknown in-progress status, or the first poll is not back yet
                             else -> R.string.summera_transcribing
                         },
@@ -170,6 +182,7 @@ private fun RecordingView(
 private fun ResultView(
     state: DictationState.Done,
     onInsert: (String) -> Unit,
+    onReplacements: (String) -> Unit,
     onClose: () -> Unit,
 ) {
     val answer = state.answer
@@ -203,12 +216,18 @@ private fun ResultView(
                 )
                 Text(state.transcript)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(PADDING)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(PADDING),
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+            ) {
                 if (answer != null) {
                     Button(onClick = { onInsert(answer) }) { Text(stringResource(R.string.summera_insert_answer)) }
                 }
                 OutlinedButton(onClick = { onInsert(state.transcript) }) {
                     Text(stringResource(R.string.summera_insert_transcript))
+                }
+                TextButton(onClick = { onReplacements(state.transcript) }) {
+                    Text(stringResource(R.string.summera_replacements))
                 }
                 TextButton(onClick = onClose) { Text(stringResource(R.string.summera_close)) }
             }

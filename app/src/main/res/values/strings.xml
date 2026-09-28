@@ -194,6 +194,12 @@
     <string name="summera_insert_transcript">Insert transcript</string>
     <string name="summera_prompt_failed">The AI step failed, here is the transcript</string>
     <string name="summera_prompts">Prompts</string>
+    <string name="summera_replacements">Replacements</string>
+    <string name="summera_replacements_summary">Fix misheard words in dictations with a prompt</string>
+    <string name="summera_replacements_pick_word">Tap a misheard word</string>
+    <string name="summera_replacement_from">Word</string>
+    <string name="summera_replacement_to">Replace with</string>
+    <string name="summera_delete_replacement">Delete replacement</string>
     <string name="summera_no_prompt">No prompt</string>
     <string name="summera_add_prompt">Add prompt</string>
     <string name="summera_edit_prompt">Edit prompt</string>

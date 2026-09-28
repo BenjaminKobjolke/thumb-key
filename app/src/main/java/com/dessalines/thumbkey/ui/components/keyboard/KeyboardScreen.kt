@@ -249,7 +249,12 @@ fun KeyboardScreen(
 
     // An active Summera dictation replaces whatever the keyboard would show
     val dictationState = SummeraDictation.state
-    val dictationActive = dictationState != DictationState.Idle
+    val dictationActive =
+        dictationState != DictationState.Idle &&
+            !(
+                dictationState is DictationState.Done &&
+                    ctx.currentInputEditorInfo.packageName == ctx.packageName
+            )
 
     if (mode == KeyboardMode.EMOJI && !dictationActive) {
         // Dynamically determine number of rows based on keyboard structure
@@ -791,6 +796,7 @@ fun KeyboardScreen(
                         onCancel = { SummeraDictation.cancel(ctx) },
                         onRetry = { SummeraDictation.retry(ctx) },
                         onInsert = { SummeraDictation.insert(ctx, it) },
+                        onReplacements = { SummeraDictation.openReplacements(ctx, it) },
                     )
                 } else {
                     ClipboardHistoryScreen(

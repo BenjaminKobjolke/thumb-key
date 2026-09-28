@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.FindReplace
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.Mic
@@ -188,6 +189,17 @@ fun SummeraSettingsScreen(navController: NavController) {
                                 )
                             },
                             onClick = { navController.navigate("summeraPrompts") },
+                        )
+                        Preference(
+                            title = { Text(stringResource(R.string.summera_replacements)) },
+                            summary = { Text(stringResource(R.string.summera_replacements_summary)) },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.FindReplace,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = { navController.navigate("summeraReplacements") },
                         )
                         Preference(
                             title = { Text(stringResource(R.string.summera_history)) },
