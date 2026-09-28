@@ -20,6 +20,7 @@ import com.dessalines.thumbkey.db.ClipboardRepository
 import com.dessalines.thumbkey.db.SOURCE_TRANSCRIPT
 import com.dessalines.thumbkey.utils.TAG
 import de.xida.aichatapi.Credentials
+import de.xida.aichatapi.TranscriptionReplacement
 import de.xida.aichatapi.TranscriptionStatus
 import de.xida.aichatapi.XidaAiException
 import de.xida.aichatapi.createdAtMillis
@@ -38,6 +39,22 @@ const val EXTRA_TRANSCRIPT = "summera_transcript"
 
 // The server caps services/list at 100 per page
 private const val RESTORE_PAGE_SIZE = 100
+
+/** Replaces whole words only; [TranscriptionReplacement.from] may also be a phrase. */
+internal fun applyReplacements(
+    text: String,
+    replacements: List<TranscriptionReplacement>,
+): String =
+    replacements.fold(text) { result, replacement ->
+        if (replacement.from.isBlank()) {
+            result
+        } else {
+            Regex(
+                "(?<![\\p{L}\\p{N}])${Regex.escape(replacement.from)}(?![\\p{L}\\p{N}])",
+                RegexOption.IGNORE_CASE,
+            ).replace(result, Regex.escapeReplacement(replacement.to))
+        }
+    }
 
 sealed interface DictationState {
     data object Idle : DictationState
@@ -167,6 +184,19 @@ object SummeraDictation {
                         withContext(Dispatchers.IO) {
                             client.services.transcribe(credentials, file, Locale.getDefault().language, prompt = prompt)
                         }
+                    val replacements =
+                        if (prompt == null) {
+                            try {
+                                withContext(Dispatchers.IO) {
+                                    client.settings.getTranscriptionReplacements(credentials)
+                                }
+                            } catch (e: XidaAiException) {
+                                SummeraAccount.log(ime, "dictation: replacements failed ${e.message}")
+                                emptyList()
+                            }
+                        } else {
+                            emptyList()
+                        }
                     state = DictationState.Polling()
 
                     val result =
@@ -194,7 +224,7 @@ object SummeraDictation {
                                 withContext(Dispatchers.IO) { repository.addTranscript(text, id) }
                                 file.delete()
                                 if (prompt == null) {
-                                    commit(ime, text)
+                                    commit(ime, applyReplacements(text, replacements))
                                     DictationState.Idle
                                 } else {
                                     // With a prompt the user picks which text to insert

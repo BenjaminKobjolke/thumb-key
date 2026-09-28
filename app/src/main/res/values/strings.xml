@@ -195,7 +195,8 @@
     <string name="summera_prompt_failed">The AI step failed, here is the transcript</string>
     <string name="summera_prompts">Prompts</string>
     <string name="summera_replacements">Replacements</string>
-    <string name="summera_replacements_summary">Fix misheard words in dictations with a prompt</string>
+    <string name="summera_replacements_summary">Fixes misheard words in every dictation</string>
+    <string name="summera_replacements_hint">With a prompt, Summera AI applies these replacements while it processes your dictation. Without a prompt, the keyboard replaces the words in the transcript before typing it (whole words, upper and lower case ignored).</string>
     <string name="summera_replacements_pick_word">Tap a misheard word</string>
     <string name="summera_replacement_from">Word</string>
     <string name="summera_replacement_to">Replace with</string>

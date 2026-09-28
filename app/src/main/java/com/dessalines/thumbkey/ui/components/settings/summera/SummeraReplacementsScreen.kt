@@ -108,6 +108,11 @@ fun SummeraReplacementsScreen(
                         .padding(vertical = 12.dp),
             ) {
                 ProvidePreferenceTheme {
+                    Text(
+                        text = stringResource(R.string.summera_replacements_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
                     error?.let {
                         Preference(title = { Text(stringResource(R.string.summera_failed, it)) })
                     }
