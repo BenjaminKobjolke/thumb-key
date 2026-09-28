@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.R
 import de.xida.aichatapi.TranscriptionStatus
@@ -195,7 +196,7 @@ private fun ResultView(
                 .padding(PADDING),
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(PADDING),
+            verticalArrangement = Arrangement.spacedBy(PADDING / 2),
             modifier = Modifier.padding(PADDING),
         ) {
             Column(
@@ -223,33 +224,59 @@ private fun ResultView(
                 )
             }
             Column(
-                verticalArrangement = Arrangement.spacedBy(PADDING),
+                verticalArrangement = Arrangement.spacedBy(PADDING / 2),
             ) {
-                if (answer != null) {
-                    Button(
-                        onClick = { onInsert(answer) },
-                        modifier = Modifier.fillMaxWidth(),
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(PADDING / 2),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (answer != null) {
+                        Button(
+                            onClick = { onInsert(answer) },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.summera_insert_answer),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = { onInsert(state.transcript) },
+                        modifier = Modifier.weight(1f),
                     ) {
-                        Text(stringResource(R.string.summera_insert_answer))
+                        Text(
+                            text = stringResource(R.string.summera_insert_transcript),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
-                OutlinedButton(
-                    onClick = { onInsert(state.transcript) },
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(PADDING / 2),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(stringResource(R.string.summera_insert_transcript))
-                }
-                OutlinedButton(
-                    onClick = { onReplacements(state.transcript) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.summera_edit_replacements))
-                }
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.summera_dismiss))
+                    OutlinedButton(
+                        onClick = { onReplacements(state.transcript) },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.summera_edit_replacements),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.summera_dismiss),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
