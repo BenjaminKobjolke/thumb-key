@@ -1,0 +1,4 @@
+# Non-code assets — would force graphify's LLM pass; not architecture
+src/main/res/
+src/main/assets/
+*.png
