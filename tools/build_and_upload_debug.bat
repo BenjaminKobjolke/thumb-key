@@ -45,3 +45,4 @@ echo Done.
 echo ========================================
 echo.
 endlocal
+exit /b 0

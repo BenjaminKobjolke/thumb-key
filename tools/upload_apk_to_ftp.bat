@@ -7,7 +7,7 @@ set "STAGING=%~dp0upload"
 if not exist "%SETTINGS%" (
     echo ERROR: "%SETTINGS%" not found.
     echo Copy ftp_sync_example.ini to ftp_sync.ini and fill in the FTP password.
-    pause
+    if not "%TICKETS_WATCHER_COMMAND_RUN%"=="1" pause
     exit /b 1
 )
 

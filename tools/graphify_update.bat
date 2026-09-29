@@ -47,6 +47,7 @@ if errorlevel 1 (
 echo === [1/2] live-graph AST refresh (no LLM) : %CODE_DIR% ===
 set "GRAPHIFY_OUT=%CD%\graphify-out"
 "%GRAPHIFY%" update "%CD%\%CODE_DIR%"
+set "RC=!errorlevel!"
 echo.
 
 echo === [2/2] smoke test: live root graph ===
@@ -59,13 +60,15 @@ REM Report directed flag + node count of the LIVE root graph (should be directed
 if exist "graphify-out\.graphify_python" (
   set /p GPY2=<graphify-out\.graphify_python
   "!GPY2!" -c "import json;d=json.load(open('graphify-out/graph.json',encoding='utf-8'));print('directed:',d.get('directed'),'  nodes:',len(d.get('nodes',[])))"
+  if errorlevel 1 if "!RC!"=="0" set "RC=1"
 )
 echo.
 echo --- god nodes (top 5) ---
 "%GRAPHIFY%" god-nodes --top 5
+if errorlevel 1 if "!RC!"=="0" set "RC=1"
 echo.
 echo --- sample query ---
 "%GRAPHIFY%" query "What are the main modules and how do they connect?"
+if errorlevel 1 if "!RC!"=="0" set "RC=1"
 
-popd
-endlocal
+popd & endlocal & exit /b %RC%
