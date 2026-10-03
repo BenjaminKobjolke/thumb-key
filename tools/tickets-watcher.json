@@ -1,5 +1,10 @@
 {
   "files": {
     "TICKETS_WATCHER_COMMANDS.md": 1
-  }
+  },
+  "analysis_commands": [
+    "run-gradle.bat testDebugUnitTest --console=plain",
+    "run-gradle.bat :app:lintKotlin --console=plain",
+    "run-gradle.bat :app:lintDebug --console=plain"
+  ]
 }
