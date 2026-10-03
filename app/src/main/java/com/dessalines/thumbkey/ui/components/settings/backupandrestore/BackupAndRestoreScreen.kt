@@ -78,6 +78,7 @@ import com.dessalines.thumbkey.db.DEFAULT_SLIDE_SENSITIVITY
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_SPACEBAR_DEADZONE_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
 import com.dessalines.thumbkey.db.DEFAULT_SPACEBAR_MULTITAPS
+import com.dessalines.thumbkey.db.DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE
 import com.dessalines.thumbkey.db.DEFAULT_THEME
 import com.dessalines.thumbkey.db.DEFAULT_THEME_COLOR
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
@@ -284,6 +285,7 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             hideSymbols = DEFAULT_HIDE_SYMBOLS,
             keyBorders = DEFAULT_KEY_BORDERS,
             spacebarMultiTaps = DEFAULT_SPACEBAR_MULTITAPS,
+            switchToLettersAfterSpace = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE,
             theme = DEFAULT_THEME,
             themeColor = DEFAULT_THEME_COLOR,
             vibrateOnTap = DEFAULT_VIBRATE_ON_TAP,

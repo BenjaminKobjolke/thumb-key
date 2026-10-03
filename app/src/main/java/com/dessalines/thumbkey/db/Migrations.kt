@@ -323,3 +323,12 @@ val MIGRATION_27_28 =
             )
         }
     }
+
+val MIGRATION_28_29 =
+    object : Migration(28, 29) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE AppSettings ADD COLUMN switch_to_letters_after_space INTEGER NOT NULL DEFAULT $DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE",
+            )
+        }
+    }

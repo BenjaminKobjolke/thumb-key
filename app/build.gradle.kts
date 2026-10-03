@@ -4,7 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
-    kotlin("plugin.serialization") version "2.4.0"
+    kotlin("plugin.serialization") version "2.4.20"
 }
 
 kotlin {
@@ -15,14 +15,14 @@ kotlin {
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.dessalines.thumbkey"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 181
-        versionName = "5.1.11"
+        targetSdk = 37
+        versionCode = 187
+        versionName = "5.1.17"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -66,9 +66,8 @@ android {
                 // the Android Gradle plugin. To learn more, go to the section about
                 // R8 configuration files.
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-
                 // Includes a local, custom Proguard rules file
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
         debug {
@@ -102,19 +101,19 @@ dependencies {
     implementation(project(":aichatapi"))
 
     // Freedroidwarn
-    implementation("com.github.woheller69:FreeDroidWarn:V1.13")
+    implementation("com.github.woheller69:FreeDroidWarn:V1.14")
 
     // Exporting / importing DB helper
     implementation("com.github.dessalines:room-db-export-import:0.1.1")
 
     // Compose BOM
-    implementation(platform("androidx.compose:compose-bom:2026.06.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.runtime:runtime-livedata:1.11.4")
+    implementation("androidx.compose.runtime:runtime-livedata:1.12.1")
 
     // Activities
     implementation("androidx.activity:activity-compose:1.13.0")
@@ -127,7 +126,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.9.8")
+    implementation("androidx.navigation:navigation-compose:2.10.1")
 
     // Emoji Picker
     implementation("androidx.emoji2:emoji2-emojipicker:1.6.0")
@@ -144,21 +143,21 @@ dependencies {
 
     // Room
     // To use Kotlin annotation processing tool
-    ksp("androidx.room:room-compiler:2.8.4")
-    implementation("androidx.room:room-runtime:2.8.4")
-    annotationProcessor("androidx.room:room-compiler:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.5")
+    implementation("androidx.room:room-runtime:2.8.5")
+    annotationProcessor("androidx.room:room-compiler:2.8.5")
 
     // optional - Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.5")
 
     // App compat
-    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.appcompat:appcompat:1.8.0")
 
     // YAML serialization
     implementation("com.charleskorn.kaml:kaml:0.104.0")
 
     // Kotlin Reflect
-    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.0")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.20")
 
     // Arrow-kt for mutating deeply nested data classes
     implementation("io.arrow-kt:arrow-optics:2.2.3")

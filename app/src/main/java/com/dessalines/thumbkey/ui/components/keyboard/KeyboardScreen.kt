@@ -72,6 +72,7 @@ import com.dessalines.thumbkey.db.DEFAULT_SLIDE_SENSITIVITY
 import com.dessalines.thumbkey.db.DEFAULT_SLIDE_SPACEBAR_DEADZONE_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
 import com.dessalines.thumbkey.db.DEFAULT_SPACEBAR_MULTITAPS
+import com.dessalines.thumbkey.db.DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEY_ITEM
@@ -99,6 +100,7 @@ import com.dessalines.thumbkey.utils.toBool
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.collections.sortedBy
 import kotlin.time.TimeMark
 
 @Composable
@@ -202,6 +204,8 @@ fun KeyboardScreen(
 
     val autoCapitalize = (settings?.autoCapitalize ?: DEFAULT_AUTO_CAPITALIZE).toBool()
     val spacebarMultiTaps = (settings?.spacebarMultiTaps ?: DEFAULT_SPACEBAR_MULTITAPS).toBool()
+    val switchToLettersAfterSpace =
+        (settings?.switchToLettersAfterSpace ?: DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE).toBool()
     val slideEnabled = (settings?.slideEnabled ?: DEFAULT_SLIDE_ENABLED).toBool()
     val slideCursorMovementMode = (settings?.slideCursorMovementMode ?: DEFAULT_SLIDE_CURSOR_MOVEMENT_MODE)
     val slideSpacebarDeadzoneEnabled = (settings?.slideSpacebarDeadzoneEnabled ?: DEFAULT_SLIDE_SPACEBAR_DEADZONE_ENABLED).toBool()
@@ -276,7 +280,7 @@ fun KeyboardScreen(
                         if (backdropEnabled) {
                             Modifier.background(backdropColor)
                         } else {
-                            (Modifier)
+                            Modifier
                         },
                     ),
         ) {
@@ -304,7 +308,7 @@ fun KeyboardScreen(
                                 if (backdropEnabled) {
                                     Modifier.padding(top = backdropPadding)
                                 } else {
-                                    (Modifier)
+                                    Modifier
                                 },
                             ),
                 ) {
@@ -322,7 +326,7 @@ fun KeyboardScreen(
                                             shape = RoundedCornerShape(cornerRadius.dp),
                                         )
                                     } else {
-                                        (Modifier)
+                                        Modifier
                                     },
                                 ).background(MaterialTheme.colorScheme.surface),
                     ) {
@@ -513,10 +517,23 @@ fun KeyboardScreen(
                                         mode = KeyboardMode.MAIN
                                     },
                                     onChangePosition = onChangePosition,
-                                    onKeyEvent = {
+                                    onKeyEvent = { action ->
                                         when (mode) {
                                             KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
-                                                mode = KeyboardMode.MAIN
+                                                if (action is KeyAction.SendEvent) {
+                                                    mode = KeyboardMode.MAIN
+                                                }
+                                            }
+
+                                            KeyboardMode.NUMERIC -> {
+                                                if (
+                                                    switchToLettersAfterSpace &&
+                                                    action is KeyAction.CommitText &&
+                                                    action.text == " "
+                                                ) {
+                                                    capsLock = false
+                                                    mode = KeyboardMode.MAIN
+                                                }
                                             }
 
                                             else -> {}
@@ -544,7 +561,7 @@ fun KeyboardScreen(
                                 if (backdropEnabled) {
                                     Modifier.padding(top = backdropPadding)
                                 } else {
-                                    (Modifier)
+                                    Modifier
                                 },
                             ),
                 ) {
@@ -562,7 +579,7 @@ fun KeyboardScreen(
                                             shape = RoundedCornerShape(cornerRadius.dp),
                                         )
                                     } else {
-                                        (Modifier)
+                                        Modifier
                                     },
                                 ).background(MaterialTheme.colorScheme.surface),
                     ) {
@@ -702,10 +719,23 @@ fun KeyboardScreen(
                                         mode = KeyboardMode.MAIN
                                     },
                                     onChangePosition = onChangePosition,
-                                    onKeyEvent = {
+                                    onKeyEvent = { action ->
                                         when (mode) {
                                             KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
-                                                mode = KeyboardMode.MAIN
+                                                if (action is KeyAction.SendEvent) {
+                                                    mode = KeyboardMode.MAIN
+                                                }
+                                            }
+
+                                            KeyboardMode.NUMERIC -> {
+                                                if (
+                                                    switchToLettersAfterSpace &&
+                                                    action is KeyAction.CommitText &&
+                                                    action.text == " "
+                                                ) {
+                                                    capsLock = false
+                                                    mode = KeyboardMode.MAIN
+                                                }
                                             }
 
                                             else -> {}
@@ -739,9 +769,9 @@ fun KeyboardScreen(
         if (!dictationActive && !showTranscripts) {
             LaunchedEffect(Unit) {
                 if (clipboardHistoryEnabled) {
-                    clipboardRepository?.clearExpired()
+                    clipboardRepository.clearExpired()
                 } else {
-                    clipboardRepository?.clearAll()
+                    clipboardRepository.clearAll()
                 }
             }
         }
@@ -759,7 +789,7 @@ fun KeyboardScreen(
                         if (backdropEnabled) {
                             Modifier.background(backdropColor)
                         } else {
-                            (Modifier)
+                            Modifier
                         },
                     ),
         ) {
@@ -785,7 +815,7 @@ fun KeyboardScreen(
                             if (backdropEnabled) {
                                 Modifier.padding(top = backdropPadding)
                             } else {
-                                (Modifier)
+                                Modifier
                             },
                         ),
             ) {
@@ -816,12 +846,12 @@ fun KeyboardScreen(
                         },
                         onItemDelete = { item ->
                             scope.launch {
-                                clipboardRepository?.deleteItem(item)
+                                clipboardRepository.deleteItem(item)
                             }
                         },
                         onItemTogglePin = { item ->
                             scope.launch {
-                                clipboardRepository?.togglePin(item)
+                                clipboardRepository.togglePin(item)
                             }
                         },
                         onBack = {
@@ -830,9 +860,9 @@ fun KeyboardScreen(
                         onClearAll = {
                             scope.launch {
                                 if (showTranscripts) {
-                                    clipboardRepository?.clearUnpinnedTranscripts()
+                                    clipboardRepository.clearUnpinnedTranscripts()
                                 } else {
-                                    clipboardRepository?.clearUnpinned()
+                                    clipboardRepository.clearUnpinned()
                                 }
                             }
                         },
@@ -874,7 +904,7 @@ fun KeyboardScreen(
                             if (backdropEnabled) {
                                 Modifier.padding(top = backdropPadding)
                             } else {
-                                (Modifier)
+                                Modifier
                             },
                         ),
             ) {
@@ -1006,11 +1036,23 @@ fun KeyboardScreen(
                                             }
                                         },
                                         onToggleHideLetters = onToggleHideLetters,
-                                        onKeyEvent = {
+                                        onKeyEvent = { action ->
                                             when (mode) {
                                                 KeyboardMode.CTRLED, KeyboardMode.ALTED -> {
-                                                    mode =
-                                                        KeyboardMode.MAIN
+                                                    if (action is KeyAction.SendEvent) {
+                                                        mode = KeyboardMode.MAIN
+                                                    }
+                                                }
+
+                                                KeyboardMode.NUMERIC -> {
+                                                    if (
+                                                        switchToLettersAfterSpace &&
+                                                        action is KeyAction.CommitText &&
+                                                        action.text == " "
+                                                    ) {
+                                                        capsLock = false
+                                                        mode = KeyboardMode.MAIN
+                                                    }
                                                 }
 
                                                 else -> {}

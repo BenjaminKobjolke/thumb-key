@@ -29,3 +29,4 @@ HANDOFF.md
 /PLAN_*.md
 graphify-out/
 app/graphify-out/
+deploy_to_device.sh

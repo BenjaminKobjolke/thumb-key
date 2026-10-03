@@ -48,6 +48,7 @@ const val DEFAULT_HIDE_LETTERS = 0
 const val DEFAULT_HIDE_SYMBOLS = 0
 const val DEFAULT_KEY_BORDERS = 1
 const val DEFAULT_SPACEBAR_MULTITAPS = 1
+const val DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE = 0
 const val DEFAULT_SLIDE_SENSITIVITY = 9
 const val DEFAULT_SLIDE_ENABLED = 0
 const val DEFAULT_SLIDE_CURSOR_MOVEMENT_MODE = 0
@@ -349,6 +350,11 @@ data class AppSettings(
         defaultValue = DEFAULT_SHOW_ON_SCREEN_KEYBOARD.toString(),
     )
     val showOnScreenKeyboard: Int,
+    @ColumnInfo(
+        name = "switch_to_letters_after_space",
+        defaultValue = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE.toString(),
+    )
+    val switchToLettersAfterSpace: Int = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE,
 )
 
 data class LayoutsUpdate(
@@ -477,6 +483,8 @@ data class BehaviorUpdate(
     val autoCapitalize: Int,
     @ColumnInfo(name = "spacebar_multitaps")
     val spacebarMultiTaps: Int,
+    @ColumnInfo(name = "switch_to_letters_after_space")
+    val switchToLettersAfterSpace: Int = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE,
     @ColumnInfo(name = "drag_return_enabled")
     val dragReturnEnabled: Int,
     @ColumnInfo(name = "circular_drag_enabled")
@@ -669,7 +677,7 @@ data class Abbreviation(
 )
 
 @Database(
-    version = 28,
+    version = 29,
     entities = [AppSettings::class, Abbreviation::class],
     exportSchema = true,
 )
@@ -721,6 +729,7 @@ abstract class AppDB : RoomDatabase() {
                             MIGRATION_25_26,
                             MIGRATION_26_27,
                             MIGRATION_27_28,
+                            MIGRATION_28_29,
                         )
                         // Necessary because it can't insert data on creation
                         .addCallback(
