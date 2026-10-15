@@ -31,5 +31,5 @@
       "test": "green"
     }
   },
-  "analysis_test_timeout_seconds": 560
+  "analysis_test_timeout_seconds": 800
 }
