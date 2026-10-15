@@ -56,6 +56,7 @@ private const val KEY_ACTIVE_PROMPT_TEXT = "active_prompt_text"
 private const val LAST_CRASH_MAX_CHARS = 800
 private const val KEY_DEBUG_LOG = "debug_log"
 private const val KEY_DEBUG_LOGGING = "debug_logging"
+private const val KEY_WAIT_SOUNDS = "wait_sounds"
 private const val DEBUG_LOG_MAX_LINES = 40
 private const val DEBUG_LOG_REPEAT_WINDOW = 3
 
@@ -81,6 +82,16 @@ object SummeraAccount {
         enabled: Boolean,
     ) {
         prefs(context).edit().putBoolean(KEY_DEBUG_LOGGING, enabled).apply()
+    }
+
+    /** The speaker toggle on the recording panel. Off by default. */
+    fun waitSoundsEnabled(context: Context): Boolean = prefs(context).getBoolean(KEY_WAIT_SOUNDS, false)
+
+    fun setWaitSounds(
+        context: Context,
+        enabled: Boolean,
+    ) {
+        prefs(context).edit().putBoolean(KEY_WAIT_SOUNDS, enabled).apply()
     }
 
     fun save(

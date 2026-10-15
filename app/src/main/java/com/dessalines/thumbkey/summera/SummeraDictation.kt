@@ -29,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -174,6 +175,7 @@ object SummeraDictation {
         credentials: Credentials,
     ) {
         state = DictationState.Uploading
+        SummeraSounds.startWaiting(ime)
 
         val file = recordingFile(ime)
         val prompt = SummeraAccount.activePromptText(ime)
@@ -236,6 +238,10 @@ object SummeraDictation {
                 } catch (e: XidaAiException) {
                     SummeraAccount.log(ime, "dictation: failed ${e.message}")
                     state = DictationState.Failed(e.message.orEmpty())
+                } finally {
+                    SummeraSounds.stopWaiting()
+                    // Cancellation means the user left the wait: stop silently.
+                    if (isActive) SummeraSounds.playDone(ime)
                 }
                 // A failed run keeps the file for retry; cancel() removes it.
             }
@@ -340,6 +346,7 @@ object SummeraDictation {
     }
 
     fun cancel(context: Context) {
+        SummeraSounds.stopWaiting()
         job?.cancel()
         job = null
         releaseRecorder()

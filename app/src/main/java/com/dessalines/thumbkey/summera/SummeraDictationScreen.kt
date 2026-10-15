@@ -2,6 +2,7 @@ package com.dessalines.thumbkey.summera
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,9 +15,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.VolumeOff
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -31,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -108,6 +113,8 @@ private fun RecordingView(
     onStop: () -> Unit,
     onCancel: () -> Unit,
 ) {
+    val context = LocalContext.current
+    var soundsOn by remember { mutableStateOf(SummeraAccount.waitSoundsEnabled(context)) }
     var elapsedSeconds by remember(startedAt) { mutableLongStateOf(0L) }
     var confirmCancel by remember(startedAt) { mutableStateOf(false) }
     LaunchedEffect(startedAt) {
@@ -136,37 +143,58 @@ private fun RecordingView(
                 .fillMaxSize()
                 .padding(PADDING),
     ) {
-        Button(
-            onClick = onStop,
-            shape = RoundedCornerShape(PADDING),
+        Box(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .weight(1f),
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(PADDING),
+            Button(
+                onClick = onStop,
+                shape = RoundedCornerShape(PADDING),
+                modifier = Modifier.fillMaxSize(),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(PADDING),
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(PADDING),
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(PADDING),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Mic,
+                            contentDescription = stringResource(R.string.summera_recording),
+                        )
+                        Text(
+                            text = DateUtils.formatElapsedTime(elapsedSeconds),
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                    }
                     Icon(
-                        imageVector = Icons.Outlined.Mic,
-                        contentDescription = stringResource(R.string.summera_recording),
+                        imageVector = Icons.Outlined.Stop,
+                        contentDescription = null,
+                        modifier = Modifier.size(ICON_SIZE),
                     )
-                    Text(
-                        text = DateUtils.formatElapsedTime(elapsedSeconds),
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
+                    Text(stringResource(R.string.summera_stop))
                 }
+            }
+            IconButton(
+                onClick = {
+                    soundsOn = !soundsOn
+                    SummeraAccount.setWaitSounds(context, soundsOn)
+                },
+                modifier = Modifier.align(Alignment.CenterEnd).padding(PADDING),
+            ) {
                 Icon(
-                    imageVector = Icons.Outlined.Stop,
-                    contentDescription = null,
+                    imageVector = if (soundsOn) Icons.Outlined.VolumeUp else Icons.Outlined.VolumeOff,
+                    contentDescription =
+                        stringResource(
+                            if (soundsOn) R.string.summera_wait_sounds_on else R.string.summera_wait_sounds_off,
+                        ),
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(ICON_SIZE),
                 )
-                Text(stringResource(R.string.summera_stop))
             }
         }
         OutlinedButton(
