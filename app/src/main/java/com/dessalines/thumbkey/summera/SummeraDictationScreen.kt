@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -143,58 +144,58 @@ private fun RecordingView(
                 .fillMaxSize()
                 .padding(PADDING),
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+        Button(
+            onClick = onStop,
+            shape = RoundedCornerShape(PADDING),
+            modifier = Modifier.fillMaxWidth().weight(1f),
         ) {
-            Button(
-                onClick = onStop,
-                shape = RoundedCornerShape(PADDING),
-                modifier = Modifier.fillMaxSize(),
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(PADDING),
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(PADDING),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(PADDING),
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(PADDING),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Mic,
-                            contentDescription = stringResource(R.string.summera_recording),
-                        )
-                        Text(
-                            text = DateUtils.formatElapsedTime(elapsedSeconds),
-                            style = MaterialTheme.typography.headlineMedium,
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Outlined.Mic,
+                        contentDescription = stringResource(R.string.summera_recording),
+                    )
+                    Text(
+                        text = DateUtils.formatElapsedTime(elapsedSeconds),
+                        style = MaterialTheme.typography.headlineMedium,
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Spacer(Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.Outlined.Stop,
                         contentDescription = null,
                         modifier = Modifier.size(ICON_SIZE),
                     )
-                    Text(stringResource(R.string.summera_stop))
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                        IconButton(
+                            onClick = {
+                                soundsOn = !soundsOn
+                                SummeraAccount.setWaitSounds(context, soundsOn)
+                            },
+                        ) {
+                            Icon(
+                                imageVector = if (soundsOn) Icons.Outlined.VolumeUp else Icons.Outlined.VolumeOff,
+                                contentDescription =
+                                    stringResource(
+                                        if (soundsOn) R.string.summera_wait_sounds_on else R.string.summera_wait_sounds_off,
+                                    ),
+                                modifier = Modifier.size(ICON_SIZE),
+                            )
+                        }
+                    }
                 }
-            }
-            IconButton(
-                onClick = {
-                    soundsOn = !soundsOn
-                    SummeraAccount.setWaitSounds(context, soundsOn)
-                },
-                modifier = Modifier.align(Alignment.CenterEnd).padding(PADDING),
-            ) {
-                Icon(
-                    imageVector = if (soundsOn) Icons.Outlined.VolumeUp else Icons.Outlined.VolumeOff,
-                    contentDescription =
-                        stringResource(
-                            if (soundsOn) R.string.summera_wait_sounds_on else R.string.summera_wait_sounds_off,
-                        ),
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(ICON_SIZE),
-                )
+                Text(stringResource(R.string.summera_stop))
             }
         }
         OutlinedButton(
