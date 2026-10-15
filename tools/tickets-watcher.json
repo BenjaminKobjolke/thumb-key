@@ -30,5 +30,6 @@
     "run-gradle.bat :app:lintDebug --console=plain": {
       "test": "green"
     }
-  }
+  },
+  "analysis_test_timeout_seconds": 560
 }
