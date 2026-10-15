@@ -30,3 +30,4 @@ HANDOFF.md
 graphify-out/
 app/graphify-out/
 deploy_to_device.sh
+code_analysis_results/
