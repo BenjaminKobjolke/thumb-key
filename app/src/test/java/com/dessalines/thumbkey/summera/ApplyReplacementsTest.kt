@@ -25,4 +25,18 @@ class ApplyReplacementsTest {
     fun emptyListLeavesTextUnchanged() {
         assertEquals("Xeeda", applyReplacements("Xeeda", emptyList()))
     }
+
+    @Test
+    fun appliesSavedReplacementsToBothDoneTexts() {
+        val replacements = listOf(TranscriptionReplacement("okay", "OK"))
+
+        assertEquals(
+            DictationState.Done("das ist OK", "Ja, das wäre OK."),
+            DictationState.Done("das ist okay", "Ja, das wäre okay.").withReplacements(replacements),
+        )
+        assertEquals(
+            DictationState.Done("OK", null),
+            DictationState.Done("okay", null).withReplacements(replacements),
+        )
+    }
 }

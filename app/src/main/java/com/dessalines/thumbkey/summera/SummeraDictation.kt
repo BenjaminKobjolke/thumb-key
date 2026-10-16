@@ -83,6 +83,13 @@ sealed interface DictationState {
     ) : DictationState
 }
 
+/** The result with [replacements] applied to both texts, for replacements saved after it arrived. */
+internal fun DictationState.Done.withReplacements(replacements: List<TranscriptionReplacement>) =
+    DictationState.Done(
+        transcript = applyReplacements(transcript, replacements),
+        answer = answer?.let { applyReplacements(it, replacements) },
+    )
+
 fun hasMicrophonePermission(context: Context): Boolean =
     ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 
@@ -93,6 +100,11 @@ fun hasMicrophonePermission(context: Context): Boolean =
 object SummeraDictation {
     var state: DictationState by mutableStateOf(DictationState.Idle)
         private set
+
+    /** Applies replacements just saved in the settings to an open result, so it shows them right away. */
+    fun onReplacementsSaved(replacements: List<TranscriptionReplacement>) {
+        (state as? DictationState.Done)?.let { state = it.withReplacements(replacements) }
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var recorder: MediaRecorder? = null

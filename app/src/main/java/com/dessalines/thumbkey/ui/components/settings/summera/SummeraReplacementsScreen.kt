@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.summera.SummeraAccount
+import com.dessalines.thumbkey.summera.SummeraDictation
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 import de.xida.aichatapi.TranscriptionReplacement
 import de.xida.aichatapi.XidaAiException
@@ -82,6 +83,7 @@ fun SummeraReplacementsScreen(
                     SummeraAccount.client(ctx).settings.saveTranscriptionReplacements(credentials, list)
                 }
                 replacements = list
+                SummeraDictation.onReplacementsSaved(list)
                 onSaved()
             } catch (e: XidaAiException) {
                 error = e.message.orEmpty()
