@@ -409,6 +409,10 @@ fun performKeyAction(
                 }
             } else {
                 // Normal character - commit and add to buffer
+                if (text == "\n") {
+                    val textBeforeCursor = ime.currentInputConnection.getTextBeforeCursor(1000, 0)?.toString() ?: ""
+                    learnTypedWord(ime, textBeforeCursor)
+                }
                 keyboardSettings.textProcessor?.handleCommitText(ime, text)
                     ?: ime.currentInputConnection.commitText(text, 1)
                 abbrManager.onCharacterTyped(text)
@@ -1350,6 +1354,8 @@ fun performKeyAction(
         }
 
         KeyAction.IMECompleteAction -> {
+            val textBeforeCursor = ime.currentInputConnection.getTextBeforeCursor(1000, 0)?.toString() ?: ""
+            learnTypedWord(ime, textBeforeCursor)
             // A lot of apps like discord and slack use weird IME actions,
             // so its best to only check the none case
             when (val imeAction = getImeActionCode(ime)) {

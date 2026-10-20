@@ -42,4 +42,10 @@ class WordSuggestionsTest {
         assertEquals("hallo", typedLastWord("hallo", "x hallo"))
         assertEquals(null, typedLastWord("", "x pasted"))
     }
+
+    @Test
+    fun resolvesTypedWordBeforeEnterAndAfterPunctuation() {
+        assertEquals("Morgen", learnableWord(typedLastWord("Hallo Morgen", "Hallo\nMorgen")))
+        assertEquals("Morgen", learnableWord(typedLastWord("Morgen!", "Morgen!")))
+    }
 }

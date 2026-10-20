@@ -4,7 +4,7 @@ Word suggestions remembers words typed with the Thumb-Key keyboard and offers th
 
 ## Learning and privacy
 
-A word is learned when a space is typed after a word tracked by the keyboard's typed-character buffer. Trailing `.,!?;:"')` punctuation is removed. Words shorter than two characters, words made only of digits, and text containing no letters are ignored. The saved spelling keeps its case, while matching uses a lowercase key. Pasted text, words reached by moving the cursor, and abbreviation expansions are not learned.
+A word is learned when a space or Enter (the Return key action, or its long-press new line) follows a word tracked by the keyboard's typed-character buffer. Trailing `.,!?;:"')` punctuation is removed. Words shorter than two characters, words made only of digits, and text containing no letters are ignored. The saved spelling keeps its case, while matching uses a lowercase key. Pasted text, words reached by moving the cursor, and abbreviation expansions are not learned. A word followed only by an app's own send button is not learned.
 
 Learning and the suggestion bar are disabled in password, email and web address fields. Turning off **Show word suggestions** also stops learning; existing words remain saved.
 
