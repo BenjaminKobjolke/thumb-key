@@ -5,6 +5,9 @@ import android.util.Log
 import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -29,6 +32,7 @@ import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.ThumbKeyClipboardManager
+import com.dessalines.thumbkey.utils.currentPartialWord
 import com.dessalines.thumbkey.utils.resolveKeyboardDefinition
 import com.dessalines.thumbkey.utils.toBool
 
@@ -73,6 +77,8 @@ class IMEService :
         inputRedirect = connection
     }
 
+    val isInputRedirected: Boolean get() = inputRedirect != null
+
     // The framework's connection is null while no text field is bound, and the framework itself
     // calls this. Kotlin would check a platform value returned as non-null and throw, so pass it
     // through unchecked, as the Java method does. Nullable would break every caller.
@@ -80,6 +86,9 @@ class IMEService :
 
     /** The app's text field, even while the keys type into the keyboard's own field. */
     val appInputConnection: InputConnection get() = super.getCurrentInputConnection()
+
+    var suggestionPrefix by mutableStateOf("")
+        private set
 
     // Sketch mode's drawing, kept while the keyboard is closed and opened again
     val sketchState = SketchState()
@@ -97,6 +106,7 @@ class IMEService :
         // A new text field must not count old keystrokes.
         AbbreviationManager.getInstance(this).clearBuffer()
         setInputRedirect(null)
+        suggestionPrefix = currentPartialWord(appInputConnection.getTextBeforeCursor(64, 0)?.toString().orEmpty())
         // A new keyboard opens on the letters: close sketch mode's search and lists, but keep
         // its drawing
         sketchState.searching = false
@@ -155,6 +165,12 @@ class IMEService :
 
         selectionStart = cursorAnchorInfo.selectionStart
         selectionEnd = cursorAnchorInfo.selectionEnd
+        suggestionPrefix =
+            if (cursorAnchorInfo.selectionStart != cursorAnchorInfo.selectionEnd) {
+                ""
+            } else {
+                currentPartialWord(appInputConnection.getTextBeforeCursor(64, 0)?.toString().orEmpty())
+            }
     }
 
     override fun onEvaluateInputViewShown(): Boolean {

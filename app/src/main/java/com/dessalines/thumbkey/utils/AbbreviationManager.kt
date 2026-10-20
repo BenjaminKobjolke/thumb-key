@@ -89,6 +89,9 @@ class AbbreviationManager private constructor(
      * @return ExpansionResult with expansion details
      */
     @Synchronized
+    fun typedWordBeforeCursor(textBeforeCursor: String): String? = typedLastWord(typedBuffer.toString(), textBeforeCursor)
+
+    @Synchronized
     fun checkAndExpand(textBeforeCursor: String): ExpansionResult {
         val bufferStr = typedBuffer.toString()
         val word = typedLastWord(bufferStr, textBeforeCursor)

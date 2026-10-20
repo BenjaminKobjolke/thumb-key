@@ -75,6 +75,7 @@ import com.dessalines.thumbkey.db.DEFAULT_SPACEBAR_MULTITAPS
 import com.dessalines.thumbkey.db.DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
+import com.dessalines.thumbkey.db.DEFAULT_WORD_SUGGESTIONS_ENABLED
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.EMOJI_BACK_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.KB_EN_THUMBKEY_MAIN
@@ -95,6 +96,7 @@ import com.dessalines.thumbkey.utils.getAutoKeyWidth
 import com.dessalines.thumbkey.utils.getKeyboardMode
 import com.dessalines.thumbkey.utils.getModifiedKeyboardDefinition
 import com.dessalines.thumbkey.utils.isLeftHandedLayout
+import com.dessalines.thumbkey.utils.isUriOrEmailOrPasswordField
 import com.dessalines.thumbkey.utils.keyboardPositionToAlignment
 import com.dessalines.thumbkey.utils.performKeyAction
 import com.dessalines.thumbkey.utils.resolveKeyboardDefinition
@@ -251,6 +253,7 @@ fun KeyboardScreen(
         CircularDragAction.entries[settings?.counterclockwiseDragAction ?: DEFAULT_COUNTERCLOCKWISE_DRAG_ACTION]
     val ghostKeysEnabled = (settings?.ghostKeysEnabled ?: DEFAULT_GHOST_KEYS_ENABLED).toBool()
     val abbreviationBufferEnabled = (settings?.abbreviationBufferEnabled ?: DEFAULT_ABBREVIATION_BUFFER_ENABLED).toBool()
+    val wordSuggestionsEnabled = (settings?.wordSuggestionsEnabled ?: DEFAULT_WORD_SUGGESTIONS_ENABLED).toBool()
     val slideHoldEnabled = (settings?.slideHoldEnabled ?: DEFAULT_SLIDE_HOLD_ENABLED).toBool()
 
     val keyBorderWidthFloat = keyBorderWidth / 10.0f
@@ -1366,6 +1369,13 @@ fun KeyboardScreen(
                         mode = KeyboardMode.SKETCH
                     },
                 )
+                Box { drawKeyboards() }
+            }
+        } else if (wordSuggestionsEnabled && !isUriOrEmailOrPasswordField(ctx)) {
+            Column(
+                modifier = Modifier.background(if (backdropEnabled) backdropColor else MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                SuggestionBar(height = Dp(keyHeight / 2), vibrateOnTap = vibrateOnTap, soundOnTap = soundOnTap)
                 Box { drawKeyboards() }
             }
         } else {

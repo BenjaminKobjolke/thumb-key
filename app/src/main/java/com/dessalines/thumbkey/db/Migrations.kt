@@ -341,3 +341,24 @@ val MIGRATION_29_30 =
             )
         }
     }
+
+val MIGRATION_30_31 =
+    object : Migration(30, 31) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS WordUsage (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    word TEXT NOT NULL,
+                    word_key TEXT NOT NULL,
+                    use_count INTEGER NOT NULL,
+                    last_used INTEGER NOT NULL
+                )
+                """.trimIndent(),
+            )
+            db.execSQL("CREATE UNIQUE INDEX index_WordUsage_word_key ON WordUsage (word_key)")
+            db.execSQL(
+                "ALTER TABLE AppSettings ADD COLUMN word_suggestions_enabled INTEGER NOT NULL DEFAULT $DEFAULT_WORD_SUGGESTIONS_ENABLED",
+            )
+        }
+    }

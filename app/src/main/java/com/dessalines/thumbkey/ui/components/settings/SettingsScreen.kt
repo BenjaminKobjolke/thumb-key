@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.ShortText
+import androidx.compose.material.icons.outlined.Spellcheck
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,10 +49,10 @@ import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
 import com.dessalines.thumbkey.utils.openLink
+import com.dessalines.thumbkey.utils.stripCombiningMarks
 import com.dessalines.thumbkey.utils.updateLayouts
 import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
-import java.text.Normalizer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -172,6 +173,16 @@ fun SettingsScreen(
                         onClick = { navController.navigate("abbreviations") },
                     )
                     Preference(
+                        title = { Text(stringResource(R.string.word_suggestions_title)) },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Spellcheck,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = { navController.navigate("wordSuggestions") },
+                    )
+                    Preference(
                         title = { Text(stringResource(R.string.clipboard_history)) },
                         icon = {
                             Icon(
@@ -270,9 +281,3 @@ private fun matchesSearchQuery(
     if (query.isBlank()) return true
     return stripCombiningMarks(keyboardLayout.name).contains(stripCombiningMarks(query), ignoreCase = true)
 }
-
-// Unicode category Mn ("Mark, nonspacing"): accents that attach to the preceding letter.
-private val COMBINING_MARKS_REGEX = Regex("""\p{Mn}+""")
-
-// Decompose characters (é -> e + ◌́) and drop the marks, so "francais" matches "Français"
-private fun stripCombiningMarks(s: String): String = COMBINING_MARKS_REGEX.replace(Normalizer.normalize(s, Normalizer.Form.NFD), "")

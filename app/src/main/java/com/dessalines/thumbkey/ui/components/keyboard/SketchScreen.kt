@@ -665,7 +665,7 @@ fun SketchSearch(
 
 /** A search field's look, with a 🔎: the keyboard's keys, not a system keyboard, type in it. */
 @Composable
-private fun SearchField(
+internal fun SearchField(
     text: String,
     hint: String,
     modifier: Modifier = Modifier,

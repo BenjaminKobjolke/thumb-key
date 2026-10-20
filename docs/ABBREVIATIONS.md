@@ -6,6 +6,8 @@ This document describes the abbreviations feature, which is a custom addition to
 
 The abbreviations feature allows users to define short text snippets (abbreviations) that automatically expand into longer text when followed by a space. For example, typing `brb` followed by a space could automatically expand to `be right back `.
 
+The abbreviation character buffer is now always fed as the user types so word suggestions can learn consecutively typed words even when buffer-based abbreviation matching is disabled. See [Word suggestions](WORD_SUGGESTIONS.md) for details.
+
 ### Key Features
 
 - **Consecutive typing detection**: Abbreviations only expand when typed directly via the keyboard. Moving the cursor and inserting a space won't trigger expansion.

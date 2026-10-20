@@ -49,6 +49,7 @@ import com.dessalines.thumbkey.summera.hasMicrophonePermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.Normalizer
 import java.text.NumberFormat
 import java.util.regex.Pattern
 import kotlin.math.PI
@@ -59,6 +60,12 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.milliseconds
+
+// Unicode category Mn (Mark, nonspacing): accents that attach to the preceding letter.
+private val COMBINING_MARKS_REGEX = Regex("""\p{Mn}+""")
+
+// Decompose characters (é -> e + ◌́) and drop the marks, so "francais" matches "Français".
+fun stripCombiningMarks(s: String): String = COMBINING_MARKS_REGEX.replace(Normalizer.normalize(s, Normalizer.Form.NFD), "")
 
 const val TAG = "com.thumbkey"
 
@@ -395,19 +402,16 @@ fun performKeyAction(
                     abbrManager.clearBuffer()
                 } else {
                     // Normal space handling
+                    learnTypedWord(ime, textBeforeCursor)
                     keyboardSettings.textProcessor?.handleCommitText(ime, text)
                         ?: ime.currentInputConnection.commitText(" ", 1)
-                    if (abbreviationBufferEnabled) {
-                        abbrManager.onCharacterTyped(text)
-                    }
+                    abbrManager.onCharacterTyped(text)
                 }
             } else {
                 // Normal character - commit and add to buffer
                 keyboardSettings.textProcessor?.handleCommitText(ime, text)
                     ?: ime.currentInputConnection.commitText(text, 1)
-                if (abbreviationBufferEnabled) {
-                    abbrManager.onCharacterTyped(text)
-                }
+                abbrManager.onCharacterTyped(text)
             }
 
             if (autoCapitalize && keyboardSettings.autoShift) {

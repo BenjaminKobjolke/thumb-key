@@ -13,14 +13,17 @@ import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.dessalines.thumbkey.BuildConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -69,6 +72,7 @@ const val DEFAULT_IGNORE_BOTTOM_PADDING = 0
 const val DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH = 1
 const val DEFAULT_DISABLE_FULLSCREEN_EDITOR = 0
 const val DEFAULT_ABBREVIATION_BUFFER_ENABLED = 1
+const val DEFAULT_WORD_SUGGESTIONS_ENABLED = 1
 const val DEFAULT_CLIPBOARD_HISTORY_ENABLED = 0
 const val DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED = 1
 const val DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES = 120
@@ -306,6 +310,11 @@ data class AppSettings(
         defaultValue = DEFAULT_ABBREVIATION_BUFFER_ENABLED.toString(),
     )
     val abbreviationBufferEnabled: Int,
+    @ColumnInfo(
+        name = "word_suggestions_enabled",
+        defaultValue = DEFAULT_WORD_SUGGESTIONS_ENABLED.toString(),
+    )
+    val wordSuggestionsEnabled: Int,
     @ColumnInfo(
         name = "vibrate_on_slide",
         defaultValue = DEFAULT_VIBRATE_ON_SLIDE.toString(),
@@ -568,6 +577,93 @@ interface AbbreviationDao {
 }
 
 @Dao
+interface WordUsageDao {
+    @Query(
+        "SELECT * FROM WordUsage WHERE word_key LIKE :prefixKey || '%' ESCAPE '\\' AND word_key != :prefixKey ORDER BY use_count DESC, last_used DESC LIMIT :limit",
+    )
+    fun suggest(
+        prefixKey: String,
+        limit: Int,
+    ): Flow<List<WordUsage>>
+
+    @Query("SELECT * FROM WordUsage ORDER BY last_used DESC LIMIT :limit")
+    fun recent(limit: Int): Flow<List<WordUsage>>
+
+    @Query("SELECT * FROM WordUsage ORDER BY use_count DESC, last_used DESC")
+    fun all(): Flow<List<WordUsage>>
+
+    @Query("UPDATE WordUsage SET use_count = use_count + 1, last_used = :now, word = :word WHERE word_key = :key")
+    suspend fun updateUse(
+        word: String,
+        key: String,
+        now: Long,
+    ): Int
+
+    @Query("INSERT INTO WordUsage (word, word_key, use_count, last_used) VALUES (:word, :key, 1, :now)")
+    suspend fun insertUse(
+        word: String,
+        key: String,
+        now: Long,
+    )
+
+    @Transaction
+    suspend fun recordUse(
+        word: String,
+        key: String,
+        now: Long,
+    ) {
+        if (updateUse(word, key, now) == 0) insertUse(word, key, now)
+    }
+
+    @Query("SELECT * FROM WordUsage WHERE id = :id")
+    suspend fun getById(id: Int): WordUsage?
+
+    @Query("SELECT * FROM WordUsage WHERE word_key = :key AND id != :id LIMIT 1")
+    suspend fun getByKeyExceptId(
+        key: String,
+        id: Int,
+    ): WordUsage?
+
+    @Query("UPDATE WordUsage SET word = :word, word_key = :key WHERE id = :id")
+    suspend fun updateWord(
+        id: Int,
+        word: String,
+        key: String,
+    )
+
+    @Query("UPDATE WordUsage SET use_count = use_count + :useCount, last_used = MAX(last_used, :lastUsed), word = :word WHERE id = :id")
+    suspend fun mergeInto(
+        id: Int,
+        useCount: Int,
+        lastUsed: Long,
+        word: String,
+    )
+
+    @Query("DELETE FROM WordUsage WHERE id = :id")
+    suspend fun deleteById(id: Int)
+
+    @Transaction
+    suspend fun rename(
+        id: Int,
+        word: String,
+        key: String,
+    ) {
+        val existing = getById(id) ?: return
+        if (word.isBlank()) {
+            deleteById(id)
+            return
+        }
+        val clash = getByKeyExceptId(key, id)
+        if (clash == null) {
+            updateWord(id, word, key)
+        } else {
+            mergeInto(clash.id, existing.useCount, existing.lastUsed, word)
+            deleteById(id)
+        }
+    }
+}
+
+@Dao
 interface AppSettingsDao {
     @Query("SELECT * FROM AppSettings limit 1")
     fun getSettings(): LiveData<AppSettings>
@@ -601,6 +697,9 @@ interface AppSettingsDao {
 
     @Query("UPDATE AppSettings SET abbreviation_buffer_enabled = :enabled WHERE id = 1")
     fun updateAbbreviationBufferEnabled(enabled: Int)
+
+    @Query("UPDATE AppSettings SET word_suggestions_enabled = :enabled WHERE id = 1")
+    fun updateWordSuggestionsEnabled(enabled: Int)
 }
 
 // Declares the DAO as a private property in the constructor. Pass in the DAO
@@ -661,6 +760,11 @@ class AppSettingsRepository(
     }
 
     @WorkerThread
+    fun updateWordSuggestionsEnabled(enabled: Int) {
+        appSettingsDao.updateWordSuggestionsEnabled(enabled)
+    }
+
+    @WorkerThread
     suspend fun updateChangelog(ctx: Context) {
         withContext(Dispatchers.IO) {
             try {
@@ -684,15 +788,26 @@ data class Abbreviation(
     @ColumnInfo(name = "expansion") val expansion: String,
 )
 
+@Entity(indices = [Index(value = ["word_key"], unique = true)])
+data class WordUsage(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @ColumnInfo(name = "word") val word: String,
+    @ColumnInfo(name = "word_key") val wordKey: String,
+    @ColumnInfo(name = "use_count") val useCount: Int,
+    @ColumnInfo(name = "last_used") val lastUsed: Long,
+)
+
 @Database(
-    version = 30,
-    entities = [AppSettings::class, Abbreviation::class],
+    version = 31,
+    entities = [AppSettings::class, Abbreviation::class, WordUsage::class],
     exportSchema = true,
 )
 abstract class AppDB : RoomDatabase() {
     abstract fun appSettingsDao(): AppSettingsDao
 
     abstract fun abbreviationDao(): AbbreviationDao
+
+    abstract fun wordUsageDao(): WordUsageDao
 
     companion object {
         @Volatile
@@ -739,6 +854,7 @@ abstract class AppDB : RoomDatabase() {
                             MIGRATION_27_28,
                             MIGRATION_28_29,
                             MIGRATION_29_30,
+                            MIGRATION_30_31,
                         )
                         // Necessary because it can't insert data on creation
                         .addCallback(
@@ -819,6 +935,11 @@ class AppSettingsViewModel(
     fun updateAbbreviationBufferEnabled(enabled: Int) =
         viewModelScope.launch {
             repository.updateAbbreviationBufferEnabled(enabled)
+        }
+
+    fun updateWordSuggestionsEnabled(enabled: Int) =
+        viewModelScope.launch {
+            repository.updateWordSuggestionsEnabled(enabled)
         }
 
     fun updateChangelog(ctx: Context) =
