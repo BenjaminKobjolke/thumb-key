@@ -365,14 +365,13 @@ fun performKeyAction(
             val abbrManager = AbbreviationManager.getInstance(ime.applicationContext)
 
             if (text == " ") {
-                // Check for abbreviation expansion based on buffer mode setting
+                val textBeforeCursor = ime.currentInputConnection.getTextBeforeCursor(1000, 0)?.toString() ?: ""
+                // Buffer mode verifies the real word against consecutively typed characters.
                 val result =
                     if (abbreviationBufferEnabled) {
-                        // Buffer approach: check typed buffer (only expands if typed consecutively)
-                        abbrManager.checkAndExpand()
+                        abbrManager.checkAndExpand(textBeforeCursor)
                     } else {
-                        // Direct approach: read from input connection
-                        val textBeforeCursor = ime.currentInputConnection.getTextBeforeCursor(1000, 0)?.toString() ?: ""
+                        // Direct mode expands a matching word already before the cursor.
                         abbrManager.checkAndExpandText(textBeforeCursor)
                     }
 

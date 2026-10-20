@@ -7,6 +7,14 @@ import com.dessalines.thumbkey.db.AppDB
 
 private const val ABBR_TAG = "AbbreviationManager"
 private const val CURSOR_PLACEHOLDER = "$0"
+private const val MAX_BUFFER_LENGTH = 100
+
+internal fun lastWord(text: String): String? = text.split(Regex("[ \n]")).lastOrNull()?.takeIf { it.isNotEmpty() }
+
+internal fun typedLastWord(
+    buffer: String,
+    textBeforeCursor: String,
+): String? = lastWord(textBeforeCursor)?.takeIf { buffer.endsWith(it) }
 
 /**
  * Result of checking for an abbreviation expansion.
@@ -26,9 +34,9 @@ data class ExpansionResult(
 /**
  * Singleton manager for abbreviation expansion with typed character buffer tracking.
  *
- * The buffer tracks characters typed consecutively via this keyboard.
- * This ensures abbreviations only expand when typed directly, not when
- * the user moves the cursor and inserts a space in existing text.
+ * The buffer proves that the word immediately before the cursor was typed
+ * consecutively via this keyboard. The real text before the cursor determines
+ * the word to expand and how many characters to delete.
  */
 class AbbreviationManager private constructor(
     context: Context,
@@ -48,6 +56,10 @@ class AbbreviationManager private constructor(
      */
     fun onCharacterTyped(char: String) {
         typedBuffer.append(char)
+        if (typedBuffer.length > MAX_BUFFER_LENGTH) {
+            // ponytail: A single word longer than 100 characters can no longer be matched; raise the cap if that matters.
+            typedBuffer.delete(0, typedBuffer.length - MAX_BUFFER_LENGTH)
+        }
         Log.d(ABBR_TAG, "onCharacterTyped: '$char', buffer now: '$typedBuffer'")
     }
 
@@ -62,7 +74,7 @@ class AbbreviationManager private constructor(
     }
 
     /**
-     * Clears the typed buffer. Called when cursor moves externally.
+     * Clears the typed buffer. Called after expansion or when a new text field starts.
      */
     fun clearBuffer() {
         typedBuffer.clear()
@@ -70,21 +82,22 @@ class AbbreviationManager private constructor(
     }
 
     /**
-     * Returns the current buffer content (for cursor movement detection).
-     */
-    fun getBuffer(): String = typedBuffer.toString()
-
-    /**
-     * Checks if the last word in the typed buffer is an abbreviation.
+     * Checks if the real last word before the cursor was typed consecutively via this keyboard.
      * If found, returns expansion info including cursor position if $0 placeholder exists.
      *
+     * @param textBeforeCursor Real text before the cursor
      * @return ExpansionResult with expansion details
      */
     @Synchronized
-    fun checkAndExpand(): ExpansionResult {
+    fun checkAndExpand(textBeforeCursor: String): ExpansionResult {
         val bufferStr = typedBuffer.toString()
-        Log.d(ABBR_TAG, "checkAndExpand: buffer = '$bufferStr'")
-        return checkAndExpandText(bufferStr)
+        val word = typedLastWord(bufferStr, textBeforeCursor)
+        if (word == null) {
+            Log.d(ABBR_TAG, "checkAndExpand: no consecutively typed word before cursor")
+            return ExpansionResult(false, "", null, 0)
+        }
+        Log.d(ABBR_TAG, "checkAndExpand: typed last word = '$word'")
+        return checkAndExpandText(word)
     }
 
     /**
@@ -103,10 +116,8 @@ class AbbreviationManager private constructor(
             return ExpansionResult(false, "", null, 0)
         }
 
-        // Get the last word from the text
-        val words = text.split(Regex("[ \n]"))
         val lastWord =
-            words.lastOrNull()?.takeIf { it.isNotEmpty() }
+            lastWord(text)
                 ?: run {
                     Log.d(ABBR_TAG, "checkAndExpandText: no last word found")
                     return ExpansionResult(false, "", null, 0)

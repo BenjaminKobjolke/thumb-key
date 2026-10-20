@@ -109,6 +109,12 @@ fun AbbreviationsScreen(
                         appSettingsViewModel.updateAbbreviationBufferEnabled(it.toInt())
                     },
                     title = { Text("Use buffer tracking") },
+                    summary = {
+                        Text(
+                            "On: only expand abbreviations you just typed with this keyboard. " +
+                                "Off: expand any abbreviation in front of the cursor.",
+                        )
+                    },
                 )
             }
 

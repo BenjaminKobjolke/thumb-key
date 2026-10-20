@@ -23,6 +23,7 @@ import com.dessalines.thumbkey.db.DEFAULT_SWITCH_IME_MODE
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.summera.SummeraDictation
 import com.dessalines.thumbkey.ui.components.keyboard.SketchState
+import com.dessalines.thumbkey.utils.AbbreviationManager
 import com.dessalines.thumbkey.utils.ImeSwitchMode
 import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardLayout
@@ -93,6 +94,8 @@ class IMEService :
         restarting: Boolean,
     ) {
         super.onStartInput(attribute, restarting)
+        // A new text field must not count old keystrokes.
+        AbbreviationManager.getInstance(this).clearBuffer()
         setInputRedirect(null)
         // A new keyboard opens on the letters: close sketch mode's search and lists, but keep
         // its drawing
