@@ -29,7 +29,7 @@ User types "brb "
     -> Each character typed is added to AbbreviationManager's internal buffer
     -> KeyAction.CommitText(" ") triggered
     -> Utils.kt: performKeyAction() intercepts space key
-    -> AbbreviationManager.checkAndExpand() checks buffer for abbreviation
+    -> AbbreviationManager.checkAndExpand(textBeforeCursor) checks the real last word against the typed buffer
     -> If match found:
        - Delete abbreviation from text
        - Insert expansion
@@ -41,15 +41,14 @@ User types "brb "
 
 ### Consecutive Typing Detection
 
-The abbreviation manager maintains an internal buffer that tracks characters typed via the keyboard. This ensures:
+The **Use buffer tracking** switch selects how the keyboard checks for an abbreviation:
 
-- **Type `hl ` directly** → expands to `hello ` ✓
-- **Type `hl@mail.com`, move cursor before `@`, add space** → stays `hl @mail.com` ✓
+- **On (default)**: the keyboard reads the real text before the cursor and checks whether its last word is also the end of the in-memory buffer of characters typed consecutively with this keyboard. Only then can it expand. It deletes the length of that real word, so a stale buffer cannot make it delete unrelated text.
+- **Off**: the keyboard reads the real text before the cursor and expands its last word if it matches a saved abbreviation, whether or not this keyboard typed it.
 
-The buffer is cleared when:
-- An abbreviation expands
-- Word deletion operations are performed
-- Backspace removes characters from the buffer
+For example, with tracking on, typing `hl ` directly can expand to `hello `, while moving the cursor into `hl@mail.com` and pressing space does not expand. A delete gesture, cut, paste, or other untracked edit can make the buffer diverge from the text; the real-text check then prevents an incorrect expansion. Text after an untracked separator such as Enter can still expand when the real last word matches the buffer's tail.
+
+The buffer is cleared after a successful expansion and whenever a new text field starts. Backspace removes one character from it. Other deletion operations are not tracked. The buffer keeps at most the last 100 characters, so a single word longer than 100 characters cannot match in tracking mode.
 
 ### Cursor Positioning with `$0`
 
@@ -99,7 +98,7 @@ class AbbreviationManager private constructor(context: Context) {
     fun onCharacterTyped(char: String)  // Track typed characters
     fun onBackspace()                    // Remove last character from buffer
     fun clearBuffer()                    // Clear the typed buffer
-    fun checkAndExpand(): ExpansionResult // Check buffer for abbreviation
+    fun checkAndExpand(textBeforeCursor: String): ExpansionResult // Check real last word against typed buffer
 
     companion object {
         fun getInstance(context: Context): AbbreviationManager
@@ -114,8 +113,8 @@ data class ExpansionResult(
 )
 ```
 
-- **Buffer**: Tracks characters typed via this keyboard
-- **Matching**: Case-insensitive lookup of the last word in buffer
+- **Buffer**: Tracks up to 100 recent characters typed via this keyboard; it is evidence of consecutive typing
+- **Matching**: Reads the real last word before the cursor, then checks whether it ends the buffer; abbreviation lookup is case-insensitive
 - **Cursor Offset**: Returns position of `$0` placeholder if present
 
 #### 2. AbbreviationDao (`db/AppDb.kt`)
@@ -197,7 +196,7 @@ suspend fun importFromJson(json: String) {
 
 To preserve the case of the typed abbreviation in the expansion:
 
-1. Modify `AbbreviationManager.checkAndExpand()`:
+1. Modify `AbbreviationManager.checkAndExpand(textBeforeCursor: String)`:
 
 ```kotlin
 fun checkAndExpand(text: String): Pair<Boolean, String> {
