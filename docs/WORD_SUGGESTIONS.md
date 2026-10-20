@@ -12,8 +12,10 @@ Learning and the suggestion bar are disabled in password, email and web address 
 
 Open **Settings > Word suggestions** to turn the feature on or off and manage remembered words. The list shows all remembered words, most used first, with each word's use count. Search is case- and accent-insensitive. A query matches a prefix first, then a substring, then letters found in order with gaps allowed (for example, `mrgn` matches `Morgen`). Tapping a word opens its editor. Saving a blank value deletes the word; changing it to a spelling already in the list merges the counts. The bin button deletes a word directly.
 
+Use **Ignore** next to a word and confirm to remove it from the list and prevent it from being learned again. Ignored words are hidden from suggestions and the settings list. **Reset ignored words** removes all ignored entries; if you type one again afterward, it is learned as a new word.
+
 ## Storage and code
 
-Words are stored in the `WordUsage` table in the same Room database as app settings and abbreviations. The table stores the displayed spelling, a unique lowercase key, use count and last-used timestamp. Database migration 30→31 creates the table and the `word_suggestions_enabled` setting.
+Words are stored in the `WordUsage` table in the same Room database as app settings and abbreviations. The table stores the displayed spelling, a unique lowercase key, use count, last-used timestamp and ignore state. Database migration 30→31 creates the table and the `word_suggestions_enabled` setting; migration 31→32 adds the ignore state.
 
 The feature is implemented in `db/AppDb.kt`, `db/Migrations.kt`, `utils/WordSuggestions.kt`, `IMEService.kt`, `ui/components/keyboard/SuggestionBar.kt`, `ui/components/keyboard/KeyboardScreen.kt`, and `ui/screens/WordSuggestionsScreen.kt`. The pure matching and learning helpers are covered by `app/src/test/java/com/dessalines/thumbkey/utils/WordSuggestionsTest.kt`.
