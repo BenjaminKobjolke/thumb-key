@@ -118,6 +118,7 @@ fun SuggestionBar(
         LazyRow(
             state = listState,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
             contentPadding = PaddingValues(horizontal = 4.dp),
             modifier = Modifier.fillMaxWidth().height(height),
         ) {
