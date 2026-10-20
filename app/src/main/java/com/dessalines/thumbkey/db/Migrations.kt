@@ -362,3 +362,10 @@ val MIGRATION_30_31 =
             )
         }
     }
+
+val MIGRATION_31_32 =
+    object : Migration(31, 32) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE WordUsage ADD COLUMN ignored INTEGER NOT NULL DEFAULT 0")
+        }
+    }

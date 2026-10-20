@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
@@ -66,7 +67,10 @@ fun WordSuggestionsScreen(
     }
     var query by remember { mutableStateOf("") }
     var wordToEdit by remember { mutableStateOf<WordUsage?>(null) }
+    var wordToIgnore by remember { mutableStateOf<WordUsage?>(null) }
+    var confirmReset by remember { mutableStateOf(false) }
     val words by remember(dao) { dao.all() }.collectAsState(initial = emptyList())
+    val ignoredCount by remember(dao) { dao.ignoredCount() }.collectAsState(initial = 0)
     val shown =
         remember(words, query) {
             words
@@ -120,6 +124,12 @@ fun WordSuggestionsScreen(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp),
             )
 
+            if (ignoredCount > 0) {
+                TextButton(onClick = { confirmReset = true }) {
+                    Text(stringResource(R.string.word_suggestions_reset_ignored, ignoredCount))
+                }
+            }
+
             if (shown.isEmpty()) {
                 Text(
                     text = stringResource(if (words.isEmpty()) R.string.word_suggestions_empty else R.string.word_suggestions_no_match),
@@ -134,6 +144,7 @@ fun WordSuggestionsScreen(
                         WordSuggestionItem(
                             word = word,
                             onEdit = { wordToEdit = word },
+                            onIgnore = { wordToIgnore = word },
                             onDelete = { scope.launch(Dispatchers.IO) { dao.deleteById(word.id) } },
                         )
                     }
@@ -159,6 +170,51 @@ fun WordSuggestionsScreen(
             },
         )
     }
+
+    wordToIgnore?.let { word ->
+        AlertDialog(
+            onDismissRequest = { wordToIgnore = null },
+            title = { Text(stringResource(R.string.word_suggestion_ignore_confirm_title)) },
+            text = { Text(stringResource(R.string.word_suggestion_ignore_confirm, word.word)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch(Dispatchers.IO) { dao.ignoreById(word.id) }
+                        wordToIgnore = null
+                    },
+                ) {
+                    Text(stringResource(R.string.word_suggestion_ignore))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { wordToIgnore = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
+    if (confirmReset) {
+        AlertDialog(
+            onDismissRequest = { confirmReset = false },
+            text = { Text(stringResource(R.string.word_suggestions_reset_ignored_confirm, ignoredCount)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch(Dispatchers.IO) { dao.deleteIgnored() }
+                        confirmReset = false
+                    },
+                ) {
+                    Text(stringResource(R.string.word_suggestions_reset))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmReset = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -166,6 +222,7 @@ fun WordSuggestionsScreen(
 private fun WordSuggestionItem(
     word: WordUsage,
     onEdit: () -> Unit,
+    onIgnore: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Card(
@@ -184,8 +241,13 @@ private fun WordSuggestionItem(
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.word_suggestion_delete))
+            Row {
+                IconButton(onClick = onIgnore) {
+                    Icon(Icons.Default.Block, contentDescription = stringResource(R.string.word_suggestion_ignore))
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.word_suggestion_delete))
+                }
             }
         }
     }

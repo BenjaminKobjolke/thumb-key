@@ -579,27 +579,27 @@ interface AbbreviationDao {
 @Dao
 interface WordUsageDao {
     @Query(
-        "SELECT * FROM WordUsage WHERE word_key LIKE :prefixKey || '%' ESCAPE '\\' AND word_key != :prefixKey ORDER BY use_count DESC, last_used DESC LIMIT :limit",
+        "SELECT * FROM WordUsage WHERE ignored = 0 AND word_key LIKE :prefixKey || '%' ESCAPE '\\' AND word_key != :prefixKey ORDER BY use_count DESC, last_used DESC LIMIT :limit",
     )
     fun suggest(
         prefixKey: String,
         limit: Int,
     ): Flow<List<WordUsage>>
 
-    @Query("SELECT * FROM WordUsage ORDER BY last_used DESC LIMIT :limit")
+    @Query("SELECT * FROM WordUsage WHERE ignored = 0 ORDER BY last_used DESC LIMIT :limit")
     fun recent(limit: Int): Flow<List<WordUsage>>
 
-    @Query("SELECT * FROM WordUsage ORDER BY use_count DESC, last_used DESC")
+    @Query("SELECT * FROM WordUsage WHERE ignored = 0 ORDER BY use_count DESC, last_used DESC")
     fun all(): Flow<List<WordUsage>>
 
-    @Query("UPDATE WordUsage SET use_count = use_count + 1, last_used = :now, word = :word WHERE word_key = :key")
+    @Query("UPDATE WordUsage SET use_count = use_count + 1, last_used = :now, word = :word WHERE word_key = :key AND ignored = 0")
     suspend fun updateUse(
         word: String,
         key: String,
         now: Long,
     ): Int
 
-    @Query("INSERT INTO WordUsage (word, word_key, use_count, last_used) VALUES (:word, :key, 1, :now)")
+    @Query("INSERT OR IGNORE INTO WordUsage (word, word_key, use_count, last_used) VALUES (:word, :key, 1, :now)")
     suspend fun insertUse(
         word: String,
         key: String,
@@ -607,6 +607,7 @@ interface WordUsageDao {
     )
 
     @Transaction
+    // Ignored words are skipped by the unique word_key index and INSERT OR IGNORE.
     suspend fun recordUse(
         word: String,
         key: String,
@@ -614,6 +615,15 @@ interface WordUsageDao {
     ) {
         if (updateUse(word, key, now) == 0) insertUse(word, key, now)
     }
+
+    @Query("UPDATE WordUsage SET ignored = 1 WHERE id = :id")
+    suspend fun ignoreById(id: Int)
+
+    @Query("SELECT COUNT(*) FROM WordUsage WHERE ignored = 1")
+    fun ignoredCount(): Flow<Int>
+
+    @Query("DELETE FROM WordUsage WHERE ignored = 1")
+    suspend fun deleteIgnored()
 
     @Query("SELECT * FROM WordUsage WHERE id = :id")
     suspend fun getById(id: Int): WordUsage?
@@ -795,10 +805,11 @@ data class WordUsage(
     @ColumnInfo(name = "word_key") val wordKey: String,
     @ColumnInfo(name = "use_count") val useCount: Int,
     @ColumnInfo(name = "last_used") val lastUsed: Long,
+    @ColumnInfo(name = "ignored", defaultValue = "0") val ignored: Int = 0,
 )
 
 @Database(
-    version = 31,
+    version = 32,
     entities = [AppSettings::class, Abbreviation::class, WordUsage::class],
     exportSchema = true,
 )
@@ -855,6 +866,7 @@ abstract class AppDB : RoomDatabase() {
                             MIGRATION_28_29,
                             MIGRATION_29_30,
                             MIGRATION_30_31,
+                            MIGRATION_31_32,
                         )
                         // Necessary because it can't insert data on creation
                         .addCallback(

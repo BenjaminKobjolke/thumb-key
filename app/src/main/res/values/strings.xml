@@ -127,6 +127,12 @@
     <string name="word_suggestions_no_match">No word matches the search.</string>
     <string name="word_suggestion_edit">Edit</string>
     <string name="word_suggestion_delete">Delete</string>
+    <string name="word_suggestion_ignore">Ignore</string>
+    <string name="word_suggestion_ignore_confirm_title">Ignore word?</string>
+    <string name="word_suggestion_ignore_confirm">&quot;%1$s&quot; is removed and will not be learned again until you reset ignored words.</string>
+    <string name="word_suggestions_reset_ignored">Reset ignored words (%1$d)</string>
+    <string name="word_suggestions_reset_ignored_confirm">All %1$d ignored words can be learned again.</string>
+    <string name="word_suggestions_reset">Reset</string>
     <string name="word_suggestion_edit_hint">Word</string>
     <string name="edit_word_suggestion">Edit</string>
     <string name="delete_word_suggestion">Delete</string>
