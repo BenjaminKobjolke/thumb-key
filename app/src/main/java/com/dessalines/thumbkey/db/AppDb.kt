@@ -78,6 +78,7 @@ const val MIN_CLIPBOARD_MAX_SIZE = 2
 const val MAX_CLIPBOARD_MAX_SIZE = 100
 const val DEFAULT_USE_PRIVATE_CLIPBOARD = 0
 const val DEFAULT_SHOW_ON_SCREEN_KEYBOARD = 0
+const val DEFAULT_SWITCH_IME_MODE = 0
 
 @Entity
 data class AppSettings(
@@ -355,6 +356,11 @@ data class AppSettings(
         defaultValue = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE.toString(),
     )
     val switchToLettersAfterSpace: Int = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE,
+    @ColumnInfo(
+        name = "switch_ime_mode",
+        defaultValue = DEFAULT_SWITCH_IME_MODE.toString(),
+    )
+    val switchImeMode: Int = DEFAULT_SWITCH_IME_MODE,
 )
 
 data class LayoutsUpdate(
@@ -497,6 +503,8 @@ data class BehaviorUpdate(
     val ghostKeysEnabled: Int,
     @ColumnInfo(name = "slide_hold_enabled")
     val slideHoldEnabled: Int,
+    @ColumnInfo(name = "switch_ime_mode")
+    val switchImeMode: Int = DEFAULT_SWITCH_IME_MODE,
 )
 
 data class KeyModificationsUpdate(
@@ -677,7 +685,7 @@ data class Abbreviation(
 )
 
 @Database(
-    version = 29,
+    version = 30,
     entities = [AppSettings::class, Abbreviation::class],
     exportSchema = true,
 )
@@ -730,6 +738,7 @@ abstract class AppDB : RoomDatabase() {
                             MIGRATION_26_27,
                             MIGRATION_27_28,
                             MIGRATION_28_29,
+                            MIGRATION_29_30,
                         )
                         // Necessary because it can't insert data on creation
                         .addCallback(

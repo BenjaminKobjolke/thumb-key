@@ -4,7 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
-    kotlin("plugin.serialization") version "2.4.20"
+    kotlin("plugin.serialization") version "2.4.21"
 }
 
 kotlin {
@@ -21,8 +21,8 @@ android {
         applicationId = "com.dessalines.thumbkey"
         minSdk = 24
         targetSdk = 37
-        versionCode = 187
-        versionName = "5.1.17"
+        versionCode = 188
+        versionName = "5.1.18"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -126,13 +126,13 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose")
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.10.1")
+    implementation("androidx.navigation:navigation-compose:2.10.2")
 
     // Emoji Picker
-    implementation("androidx.emoji2:emoji2-emojipicker:1.6.0")
+    implementation("androidx.emoji2:emoji2-emojipicker:1.7.0")
 
     // Markdown
-    implementation("com.github.jeziellago:compose-markdown:0.7.2")
+    implementation("com.github.jeziellago:compose-markdown:0.7.3")
 
     // Preferences
     implementation("me.zhanghai.compose.preference:library:1.1.1")
@@ -157,9 +157,12 @@ dependencies {
     implementation("com.charleskorn.kaml:kaml:0.104.0")
 
     // Kotlin Reflect
-    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.20")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.21")
 
     // Arrow-kt for mutating deeply nested data classes
     implementation("io.arrow-kt:arrow-optics:2.2.3")
     ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.2.3")
+
+    // Handwriting recognition for sketch mode, fully offline
+    implementation("io.github.toldry:glyphsketch:0.1.1")
 }

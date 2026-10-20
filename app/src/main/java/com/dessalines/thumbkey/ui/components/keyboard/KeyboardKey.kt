@@ -138,6 +138,7 @@ fun KeyboardKey(
     onToggleEmojiMode: (enable: Boolean) -> Unit,
     onToggleClipboardMode: (enable: Boolean) -> Unit,
     onToggleTranscriptHistoryMode: (enable: Boolean) -> Unit,
+    onToggleSketchMode: (enable: Boolean) -> Unit,
     onToggleCapsLock: () -> Unit,
     onToggleHideLetters: () -> Unit,
     onAutoCapitalize: (enable: Boolean) -> Unit,
@@ -152,6 +153,7 @@ fun KeyboardKey(
     counterclockwiseDragAction: CircularDragAction,
     abbreviationBufferEnabled: Boolean,
     slideHoldEnabled: Boolean,
+    onSketchAction: (action: KeyAction.Sketch) -> Unit = {},
 ) {
     // Necessary for swipe settings to get updated correctly
     val id =
@@ -425,6 +427,7 @@ fun KeyboardKey(
                         onToggleEmojiMode = onToggleEmojiMode,
                         onToggleClipboardMode = onToggleClipboardMode,
                         onToggleTranscriptHistoryMode = onToggleTranscriptHistoryMode,
+                        onToggleSketchMode = onToggleSketchMode,
                         onToggleCapsLock = onToggleCapsLock,
                         onToggleHideLetters = onToggleHideLetters,
                         onAutoCapitalize = onAutoCapitalize,
@@ -432,6 +435,7 @@ fun KeyboardKey(
                         onChangePosition = onChangePosition,
                         onKeyEvent = onKeyEvent,
                         abbreviationBufferEnabled = abbreviationBufferEnabled,
+                        onSketchAction = onSketchAction,
                     )
                     doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
                 },
@@ -449,6 +453,7 @@ fun KeyboardKey(
                             onToggleEmojiMode = onToggleEmojiMode,
                             onToggleClipboardMode = onToggleClipboardMode,
                             onToggleTranscriptHistoryMode = onToggleTranscriptHistoryMode,
+                            onToggleSketchMode = onToggleSketchMode,
                             onToggleCapsLock = onToggleCapsLock,
                             onToggleHideLetters = onToggleHideLetters,
                             onAutoCapitalize = onAutoCapitalize,
@@ -456,6 +461,7 @@ fun KeyboardKey(
                             onChangePosition = onChangePosition,
                             onKeyEvent = onKeyEvent,
                             abbreviationBufferEnabled = abbreviationBufferEnabled,
+                            onSketchAction = onSketchAction,
                         )
                         doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
                         if (vibrateOnTap) {
@@ -748,6 +754,7 @@ fun KeyboardKey(
                                 onToggleEmojiMode = onToggleEmojiMode,
                                 onToggleClipboardMode = onToggleClipboardMode,
                                 onToggleTranscriptHistoryMode = onToggleTranscriptHistoryMode,
+                                onToggleSketchMode = onToggleSketchMode,
                                 onToggleCapsLock = onToggleCapsLock,
                                 onToggleHideLetters = onToggleHideLetters,
                                 onAutoCapitalize = onAutoCapitalize,
@@ -755,6 +762,7 @@ fun KeyboardKey(
                                 onChangePosition = onChangePosition,
                                 onKeyEvent = onKeyEvent,
                                 abbreviationBufferEnabled = abbreviationBufferEnabled,
+                                onSketchAction = onSketchAction,
                             )
                             doneKeyAction(
                                 scope,
@@ -788,6 +796,7 @@ fun KeyboardKey(
                                         onToggleEmojiMode = onToggleEmojiMode,
                                         onToggleClipboardMode = onToggleClipboardMode,
                                         onToggleTranscriptHistoryMode = onToggleTranscriptHistoryMode,
+                                        onToggleSketchMode = onToggleSketchMode,
                                         onToggleCapsLock = onToggleCapsLock,
                                         onToggleHideLetters = onToggleHideLetters,
                                         onAutoCapitalize = onAutoCapitalize,
@@ -795,6 +804,7 @@ fun KeyboardKey(
                                         onChangePosition = onChangePosition,
                                         onKeyEvent = onKeyEvent,
                                         abbreviationBufferEnabled = abbreviationBufferEnabled,
+                                        onSketchAction = onSketchAction,
                                     )
                                 }
                                 // Play an extra haptic effect on supported devices when slide deleting text

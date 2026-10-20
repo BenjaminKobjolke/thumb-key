@@ -11,6 +11,7 @@ import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEYC
 import com.dessalines.thumbkey.keyboards.BACKSPACE_TEXT_MANIPULATION_KEYC
+import com.dessalines.thumbkey.keyboards.COMPOSE_COMBO_KEYC
 import com.dessalines.thumbkey.keyboards.COPY_KEYC
 import com.dessalines.thumbkey.keyboards.CUT_KEYC
 import com.dessalines.thumbkey.keyboards.DELETE_CHARACTER_AFTER_CURSOR_KEYC
@@ -43,13 +44,36 @@ import com.dessalines.thumbkey.keyboards.TOGGLE_NUMERIC_MODE_FALSE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_NUMERIC_MODE_TRUE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_SHIFT_FALSE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_SHIFT_TRUE_KEYC
+import com.dessalines.thumbkey.keyboards.TOGGLE_SKETCH_MODE_TRUE_KEYC
 import com.dessalines.thumbkey.keyboards.UNDO_KEYC
+import com.dessalines.thumbkey.textprocessors.ComposeComboProcessor
 import com.dessalines.thumbkey.utils.KeyAction.CommitText
 import com.dessalines.thumbkey.utils.KeyAction.Noop
+import com.dessalines.thumbkey.utils.KeyAction.StartComposeCombo
 import com.dessalines.thumbkey.utils.KeyDisplay.TextDisplay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+
+/**
+ * Shared by every layout whose compose key comes from key modifications. Modified definitions
+ * are rebuilt on each recomposition, so a fresh processor per build would lose a sequence
+ * that is still being typed.
+ */
+private val modificationsComposeComboProcessor = ComposeComboProcessor()
+
+/**
+ * The definition the keyboard should use for [keyboardLayout]: the modified one if
+ * [keyModifications] has entries for it and they apply cleanly, else the built-in one.
+ */
+fun resolveKeyboardDefinition(
+    keyboardLayout: KeyboardLayout,
+    keyModifications: String?,
+): KeyboardDefinition =
+    keyModifications
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { getModifiedKeyboardDefinition(keyboardLayout, it) }
+        ?: keyboardLayout.keyboardDefinition
 
 /**
  * @param keyboardLayout The layout of the keyboard to be modified.
@@ -119,16 +143,53 @@ fun modifyKeyboardDefinition(
     val mainModifications = if (!mainShiftedSame) modifications.main else modifications.main ?: modifications.shifted
     val shiftedModifications = if (!mainShiftedSame) modifications.shifted else modifications.shifted ?: modifications.main
 
-    return originalKeyboardDefinition.copy {
-        inside(KeyboardDefinition.modes) {
-            KeyboardDefinitionModes.main transform { modifyKeyboardC(it, mainModifications) ?: it }
-            KeyboardDefinitionModes.shifted transform { modifyKeyboardC(it, shiftedModifications) ?: it }
-            KeyboardDefinitionModes.numeric transform { modifyKeyboardC(it, modifications.numeric) ?: it }
-            KeyboardDefinitionModes.ctrled transform { modifyKeyboardC(it, modifications.ctrled) ?: it }
-            KeyboardDefinitionModes.alted transform { modifyKeyboardC(it, modifications.alted) ?: it }
+    val modifiedKeyboardDefinition =
+        originalKeyboardDefinition.copy {
+            inside(KeyboardDefinition.modes) {
+                KeyboardDefinitionModes.main transform { modifyKeyboardC(it, mainModifications) ?: it }
+                KeyboardDefinitionModes.shifted transform { modifyKeyboardC(it, shiftedModifications) ?: it }
+                KeyboardDefinitionModes.numeric transform { modifyKeyboardC(it, modifications.numeric) ?: it }
+                KeyboardDefinitionModes.ctrled transform { modifyKeyboardC(it, modifications.ctrled) ?: it }
+                KeyboardDefinitionModes.alted transform { modifyKeyboardC(it, modifications.alted) ?: it }
+            }
         }
-    }
+
+    return attachComposeComboProcessor(layout, modifiedKeyboardDefinition)
 }
+
+/**
+ * A compose key only arms a [ComposeComboProcessor], which then reads the keystrokes that follow.
+ * If the modifications put a compose key on a layout without a text processor, attach one.
+ */
+fun attachComposeComboProcessor(
+    layout: KeyboardLayout,
+    keyboardDefinition: KeyboardDefinition,
+): KeyboardDefinition {
+    val textProcessor = keyboardDefinition.settings.textProcessor
+    if (textProcessor is ComposeComboProcessor || !usesComposeCombo(keyboardDefinition)) {
+        return keyboardDefinition
+    }
+    if (textProcessor != null) {
+        throw IllegalArgumentException(
+            "`StartComposeCombo` cannot be used on ${layout.name}, which has its own text processor.",
+        )
+    }
+    return keyboardDefinition.copy(
+        settings = keyboardDefinition.settings.copy(textProcessor = modificationsComposeComboProcessor),
+    )
+}
+
+private fun usesComposeCombo(keyboardDefinition: KeyboardDefinition): Boolean =
+    with(keyboardDefinition.modes) { listOfNotNull(main, shifted, numeric, ctrled, alted, emoji) }
+        .flatMap { it.arr.flatten() }
+        .any { keyItemC ->
+            val keyCs =
+                with(keyItemC) {
+                    listOfNotNull(center, left, topLeft, top, topRight, right, bottomRight, bottom, bottomLeft)
+                }
+            keyItemC.longPress == StartComposeCombo ||
+                keyCs.any { it.action == StartComposeCombo || it.swipeReturnAction == StartComposeCombo }
+        }
 
 fun modifyKeyboardC(
     keyboardC: KeyboardC?,
@@ -195,6 +256,7 @@ fun modifyKeyC(
         keyCSerializable.text?.let {
             KeyC.action.set(CommitText(it))
             KeyC.display.set(TextDisplay(it))
+            KeyC.capsModeDisplay.set(null)
         }
 
         keyActionKeyC?.let {
@@ -214,6 +276,7 @@ fun modifyKeyC(
 
         keyCSerializable.displayText?.let {
             KeyC.display.set(TextDisplay(it))
+            KeyC.capsModeDisplay.set(null)
         }
         keyCSerializable.color?.let {
             KeyC.color.set(it)
@@ -284,6 +347,7 @@ fun getCommonKeyCFromKeyAction(keyActionSerializable: KeyActionSerializable?): K
         KeyActionSerializable.ToggleABCMode -> TOGGLE_NUMERIC_MODE_FALSE_KEYC
         KeyActionSerializable.ToggleEmojiMode -> TOGGLE_EMOJI_MODE_TRUE_KEYC
         KeyActionSerializable.ToggleClipboardMode -> TOGGLE_CLIPBOARD_MODE_TRUE_KEYC
+        KeyActionSerializable.ToggleSketchMode -> TOGGLE_SKETCH_MODE_TRUE_KEYC
         KeyActionSerializable.ToggleCapsLock -> TOGGLE_CAPS_KEYC
         KeyActionSerializable.ToggleShiftModeTrue -> TOGGLE_SHIFT_TRUE_KEYC
         KeyActionSerializable.ToggleShiftModeFalse -> TOGGLE_SHIFT_FALSE_KEYC
@@ -314,6 +378,7 @@ fun getCommonKeyCFromKeyAction(keyActionSerializable: KeyActionSerializable?): K
         KeyActionSerializable.SwitchIME -> SWITCH_IME_KEYC
         KeyActionSerializable.SwitchIMEVoice -> SWITCH_IME_VOICE_KEYC
         KeyActionSerializable.HideKeyboard -> HIDE_KEYBOARD_KEYC
+        KeyActionSerializable.StartComposeCombo -> COMPOSE_COMBO_KEYC
         KeyActionSerializable.Noop -> NOOP_KEYC
         null -> null
     }
@@ -485,6 +550,7 @@ enum class KeyActionSerializable {
     ToggleABCMode,
     ToggleEmojiMode,
     ToggleClipboardMode,
+    ToggleSketchMode,
     ToggleCapsLock,
     ToggleShiftModeFalse,
     ToggleShiftModeTrue,
@@ -515,5 +581,6 @@ enum class KeyActionSerializable {
     DeleteViaTextManipulation,
     DeleteWordBeforeCursor,
     DeleteWordAfterCursor,
+    StartComposeCombo,
     Noop,
 }

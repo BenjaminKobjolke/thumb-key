@@ -28,7 +28,6 @@
   <p align="center">
     <a href="https://apt.izzysoft.de/fdroid/index/apk/com.dessalines.thumbkey"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80"></a>
     <a href="https://f-droid.org/packages/com.dessalines.thumbkey"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
-    <a href="https://play.google.com/store/apps/details?id=com.dessalines.thumbkey"><img src="https://cdn.rawgit.com/steverichey/google-play-badge-svg/master/img/en_get.svg" alt="Get it on the Google play store" height="80"></a>
     <a href="https://github.com/dessalines/thumb-key/releases/latest"><img src="https://raw.githubusercontent.com/andOTP/andOTP/master/assets/badges/get-it-on-github.png" alt="Get it on Github" height="80"></a>
   </p>
 </p>
@@ -59,6 +58,7 @@
   - [Clipboard](#clipboard)
     - [Clipboard history](#clipboard-history)
     - [Private clipboard](#private-clipboard)
+  - [Sketch mode](#sketch-mode)
   - [Other](#other)
 - [Thumb-Key Design](#thumb-key-design)
   - [A History of Phone Keyboards](#a-history-of-phone-keyboards)
@@ -114,6 +114,7 @@ This project is a follow-up to the now unmaintained (and closed-source) [MessagE
 - **Swipe right** to change keyboard position.
 - **Swipe down** to access IME switcher (switch between Thumb-key and other keyboards).
 - **Swipe left** to cycle between selected layouts (languages).
+- **Swipe to bottom-right** to open [sketch mode](#sketch-mode) and draw a character.
 - **Swipe to bottom-left** to toggle voice input. Requires [FUTO Voice Input](https://play.google.com/store/apps/details?id=org.futo.voiceinput), [Transcribro](https://github.com/soupslurpr/Transcribro), or [Whisper IME](https://github.com/woheller69/whisperIME).
 
 ### Symbols / Letters Key
@@ -349,6 +350,7 @@ This swaps the 'switch language' and 'toggle emoji' actions on the top-right key
 - `ToggleABCMode`
 - `ToggleEmojiMode`
 - `ToggleClipboardMode`
+- `ToggleSketchMode`
 - `ToggleCapsLock`
 - `ToggleShiftModeTrue`
 - `ToggleShiftModeFalse`
@@ -378,9 +380,12 @@ This swaps the 'switch language' and 'toggle emoji' actions on the top-right key
 - `SwitchIME`
 - `SwitchIMEVoice`
 - `HideKeyboard`
+- `StartComposeCombo` # The compose key. See [Compose combo](#compose-combo).
 - `Noop` # No operation. Does nothing.
 
 `keyAction` and `text` cannot be used together.
+
+`StartComposeCombo` works on any layout except the Korean ones, which already process their own input.
 
 #### Example 4
 
@@ -456,6 +461,22 @@ Note that using cut/copy/paste controls from outside the keyboard will use the s
 This ensures more privacy, as data added to the system clipboard can actually be accessed by any app.
 In some Android devices such as _samsung_ devices, it is also automatically retrieved and stored by a proprietary application, without any option to disable it.
 
+### Sketch mode
+
+Draw a character with your finger to type it: symbols, accented letters, and letters of other scripts that aren't on your keyboard. Recognition runs entirely on your phone, and nothing you draw leaves it.
+
+https://github.com/user-attachments/assets/1d702012-37f5-4b30-8811-3ee9aaf301b7
+
+- **Swipe to bottom-right** on the emoji key to open sketch mode.
+- Draw a character on the pad. After each stroke, the three keys below it fill with candidate characters.
+- **Tap** a key to type its center candidate, or _swipe_ for the radial characters.
+- **Long press** a key, or **swipe-return** on it, to see the characters that look like it, such as Latin `A`, Greek `Α` and Cyrillic `А`.
+- The undo key: **tap** to undo the last stroke, **swipe down** to clear the pad, and **swipe up** for a list of the 100 best candidate characters, with their names and code points. Search the list by name or code point.
+- Only characters your phone's fonts can show are suggested. Chinese, Japanese and Korean characters are currently not supported.
+- To put sketch mode on another key, use the `ToggleSketchMode` key action in [Modify keys](#modify-keys).
+
+Handwriting recognition is powered by [glyphsketch](https://github.com/Toldry/glyphsketch).
+
 ### Other
 
 - Practice typing, and check your words per minute, using [monkeytype.com](https://monkeytype.com)
@@ -506,7 +527,6 @@ MessagEase is unfortunately unmaintained, and Thumb-Key uses a better alternatin
 - [Releases](https://github.com/dessalines/thumb-key/releases)
 - [IzzyOnDroid](https://apt.izzysoft.de/fdroid/index/apk/com.dessalines.thumbkey)
 - [F-Droid](https://f-droid.org/en/packages/com.dessalines.thumbkey/)
-- [Google Play](https://play.google.com/store/apps/details?id=com.dessalines.thumbkey)
 
 ### Verifying Fingerprints
 

@@ -4,6 +4,7 @@ import android.inputmethodservice.InputMethodService
 import android.util.Log
 import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputConnection
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -18,12 +19,16 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_HISTORY_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_DISABLE_FULLSCREEN_EDITOR
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
+import com.dessalines.thumbkey.db.DEFAULT_SWITCH_IME_MODE
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.summera.SummeraDictation
+import com.dessalines.thumbkey.ui.components.keyboard.SketchState
+import com.dessalines.thumbkey.utils.ImeSwitchMode
 import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.ThumbKeyClipboardManager
+import com.dessalines.thumbkey.utils.resolveKeyboardDefinition
 import com.dessalines.thumbkey.utils.toBool
 
 class IMEService :
@@ -36,9 +41,11 @@ class IMEService :
         val settingsRepo = app.appSettingsRepository
         val clipboardRepo = app.clipboardRepository
 
-        val layoutIndex = settingsRepo.appSettings.value?.keyboardLayout
+        val appSettings = settingsRepo.appSettings.value
+        val layoutIndex = appSettings?.keyboardLayout
         if (layoutIndex != null) {
-            currentKeyboardDefinition = KeyboardLayout.entries[layoutIndex].keyboardDefinition
+            currentKeyboardDefinition =
+                resolveKeyboardDefinition(KeyboardLayout.entries[layoutIndex], appSettings.keyModifications)
         }
 
         val view = ComposeKeyboardView(this, settingsRepo, clipboardRepo)
@@ -56,6 +63,25 @@ class IMEService :
     }
 
     var currentKeyboardDefinition: KeyboardDefinition? = null
+
+    // While set, the keys type into this field of the keyboard's own, like sketch mode's
+    // search, instead of the app's
+    private var inputRedirect: InputConnection? = null
+
+    fun setInputRedirect(connection: InputConnection?) {
+        inputRedirect = connection
+    }
+
+    // The framework's connection is null while no text field is bound, and the framework itself
+    // calls this. Kotlin would check a platform value returned as non-null and throw, so pass it
+    // through unchecked, as the Java method does. Nullable would break every caller.
+    override fun getCurrentInputConnection(): InputConnection = inputRedirect ?: unchecked(super.getCurrentInputConnection())
+
+    /** The app's text field, even while the keys type into the keyboard's own field. */
+    val appInputConnection: InputConnection get() = super.getCurrentInputConnection()
+
+    // Sketch mode's drawing, kept while the keyboard is closed and opened again
+    val sketchState = SketchState()
     private var clipboardManager: ThumbKeyClipboardManager? = null
 
     /**
@@ -67,6 +93,11 @@ class IMEService :
         restarting: Boolean,
     ) {
         super.onStartInput(attribute, restarting)
+        setInputRedirect(null)
+        // A new keyboard opens on the letters: close sketch mode's search and lists, but keep
+        // its drawing
+        sketchState.searching = false
+        sketchState.list = null
         val view = this.setupView()
         this.setInputView(view)
     }
@@ -158,8 +189,14 @@ class IMEService :
         // Never keep the microphone open behind a hidden keyboard; a running transcription finishes
         // into the transcript history
         SummeraDictation.onKeyboardHidden(this)
-        currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(this)
         super.onWindowHidden()
+    }
+
+    override fun onFinishInputView(finishingInput: Boolean) {
+        // Must run before super, which commits any composing text as it stands.
+        // Running after it would let the processor write its pending text a second time.
+        currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(this)
+        super.onFinishInputView(finishingInput)
     }
 
     private var ignoreCursorMove: Boolean = false
@@ -183,9 +220,19 @@ class IMEService :
         return clipboardHistoryEnabled && usePrivateClipboard
     }
 
+    fun switchImeMode(): ImeSwitchMode {
+        val settingsRepo = (application as ThumbkeyApplication).appSettingsRepository
+        val settings = settingsRepo.appSettings.getValue()
+        return ImeSwitchMode.entries[settings?.switchImeMode ?: DEFAULT_SWITCH_IME_MODE]
+    }
+
     fun clipboardAddPrivateClip(text: String): Unit? = clipboardManager?.addPrivateClip(text)
 
     fun clipboardWasLastCopyDoneViaSystem(): Boolean = clipboardManager?.wasLastCopyOperationDoneViaSystem() ?: true
 
     fun clipboardGetLastClip(): String? = clipboardManager?.getLastClip()
 }
+
+// Returns `value` without Kotlin's null check, for a platform value that may be null
+@Suppress("UNCHECKED_CAST")
+private fun <T> unchecked(value: T?): T = value as T

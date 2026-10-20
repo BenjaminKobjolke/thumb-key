@@ -347,6 +347,7 @@ fun performKeyAction(
     onToggleEmojiMode: (enable: Boolean) -> Unit,
     onToggleClipboardMode: (enable: Boolean) -> Unit,
     onToggleTranscriptHistoryMode: (enable: Boolean) -> Unit,
+    onToggleSketchMode: (enable: Boolean) -> Unit,
     onToggleCapsLock: () -> Unit,
     onToggleHideLetters: () -> Unit,
     onAutoCapitalize: (enable: Boolean) -> Unit,
@@ -354,6 +355,7 @@ fun performKeyAction(
     onChangePosition: ((old: KeyboardPosition) -> KeyboardPosition) -> Unit,
     onKeyEvent: (action: KeyAction) -> Unit,
     abbreviationBufferEnabled: Boolean,
+    onSketchAction: (action: KeyAction.Sketch) -> Unit = {},
 ) {
     when (action) {
         is KeyAction.CommitText -> {
@@ -1326,6 +1328,17 @@ fun performKeyAction(
             onToggleTranscriptHistoryMode(action.enable)
         }
 
+        is KeyAction.ToggleSketchMode -> {
+            val enable = action.enable
+            Log.d(TAG, "Toggling Sketch: $enable")
+            keyboardSettings.textProcessor?.handleFinishInput(ime)
+            onToggleSketchMode(enable)
+        }
+
+        is KeyAction.Sketch -> {
+            onSketchAction(action)
+        }
+
         KeyAction.GotoSettings -> {
             val mainActivityIntent = Intent(ime, MainActivity::class.java)
             mainActivityIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -1530,9 +1543,39 @@ fun performKeyAction(
         }
 
         KeyAction.SwitchIME -> {
-            val imeManager =
-                ime.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imeManager.showInputMethodPicker()
+            when (ime.switchImeMode()) {
+                ImeSwitchMode.Picker -> {
+                    val imeManager =
+                        ime.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imeManager.showInputMethodPicker()
+                }
+
+                ImeSwitchMode.Previous -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        ime.switchToPreviousInputMethod()
+                    } else {
+                        ime.window.window?.attributes?.token?.let { token ->
+                            val imeManager =
+                                ime.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            @Suppress("DEPRECATION")
+                            imeManager.switchToLastInputMethod(token)
+                        }
+                    }
+                }
+
+                ImeSwitchMode.Next -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        ime.switchToNextInputMethod(false)
+                    } else {
+                        ime.window.window?.attributes?.token?.let { token ->
+                            val imeManager =
+                                ime.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            @Suppress("DEPRECATION")
+                            imeManager.switchToNextInputMethod(token, false)
+                        }
+                    }
+                }
+            }
         }
 
         KeyAction.SwitchIMEVoice -> {
@@ -1859,6 +1902,10 @@ fun doneKeyAction(
         when (action) {
             is KeyAction.CommitText -> {
                 action.text
+            }
+
+            is KeyAction.Sketch.CommitCandidate -> {
+                action.displayText
             }
 
             else -> {

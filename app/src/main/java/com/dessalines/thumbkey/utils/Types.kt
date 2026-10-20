@@ -227,12 +227,37 @@ sealed class KeyAction {
         val enable: Boolean,
     ) : KeyAction()
 
+    class ToggleSketchMode(
+        val enable: Boolean,
+    ) : KeyAction()
+
+    // The keys of sketch mode, handled by its screen
+    sealed class Sketch : KeyAction() {
+        // Types a recognized character. displayText shows a combining mark on a dotted circle.
+        class CommitCandidate(
+            val text: String,
+            val displayText: String,
+        ) : Sketch()
+
+        // Opens the look-alikes of a candidate, the candidate first
+        class ShowLookAlikes(
+            val codePoints: List<Int>,
+        ) : Sketch()
+
+        data object UndoStroke : Sketch()
+
+        data object ClearPad : Sketch()
+
+        data object ShowCandidateList : Sketch()
+    }
+
     class ComposeLastKey(
         val text: String,
     ) : KeyAction()
 
     // Starts a desktop-style compose sequence. Requires the layout to set a
-    // ComposeComboProcessor as its textProcessor.
+    // ComposeComboProcessor as its textProcessor. Key modifications that add this
+    // action get one attached automatically, see attachComposeComboProcessor.
     data object StartComposeCombo : KeyAction()
 
     class NormalizeLastKey(
@@ -338,6 +363,7 @@ enum class KeyboardMode {
     ALTED,
     CLIPBOARD,
     TRANSCRIPTS,
+    SKETCH,
 }
 
 enum class SwipeDirection {
@@ -436,6 +462,14 @@ data class Selection(
     fun right(index: Int) {
         end += index
     }
+}
+
+enum class ImeSwitchMode(
+    @param:StringRes val resId: Int,
+) {
+    Picker(R.string.ime_switch_mode_picker),
+    Previous(R.string.ime_switch_mode_previous),
+    Next(R.string.ime_switch_mode_next),
 }
 
 enum class CircularDirection {
