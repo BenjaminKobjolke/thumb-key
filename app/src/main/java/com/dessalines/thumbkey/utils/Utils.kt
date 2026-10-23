@@ -383,22 +383,7 @@ fun performKeyAction(
                     }
 
                 if (result.shouldExpand) {
-                    // Delete the abbreviation
-                    ime.currentInputConnection.deleteSurroundingText(result.abbreviationLength, 0)
-
-                    // Insert the expansion
-                    ime.currentInputConnection.commitText(result.expandedText, 1)
-
-                    // Position cursor if $0 placeholder was used
-                    if (result.cursorOffset != null) {
-                        // Move cursor back from end to the placeholder position
-                        val moveBack = result.expandedText.length - result.cursorOffset
-                        ime.currentInputConnection.commitText("", -moveBack)
-                    } else {
-                        // No placeholder - add space after expansion (cursor at end)
-                        ime.currentInputConnection.commitText(" ", 1)
-                    }
-
+                    applyExpansion(ime.currentInputConnection, result)
                     abbrManager.clearBuffer()
                 } else {
                     // Normal space handling

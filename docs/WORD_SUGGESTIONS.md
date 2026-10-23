@@ -2,6 +2,8 @@
 
 Word suggestions remembers words typed with the Thumb-Key keyboard and offers them in a small bar above the keys. The bar shows up to 50 matches, ordered by use count and then recency. With no partial word, it shows the most recently used words. Swipe sideways to see more suggestions. Tapping a suggestion replaces the partial word and inserts a space. Long-press a suggestion to edit or delete it.
 
+When the partial word exactly matches a saved abbreviation, its expansion appears first in the bar. Tap it to expand the abbreviation; a `$0` placeholder places the cursor at that position.
+
 ## Learning and privacy
 
 A word is learned when a space or Enter (the Return key action, or its long-press new line) follows a word tracked by the keyboard's typed-character buffer. Trailing `.,!?;:"')` punctuation is removed. Words shorter than two characters, words made only of digits, and text containing no letters are ignored. The saved spelling keeps its case, while matching uses a lowercase key. Pasted text, words reached by moving the cursor, and abbreviation expansions are not learned. A word followed only by an app's own send button is not learned.

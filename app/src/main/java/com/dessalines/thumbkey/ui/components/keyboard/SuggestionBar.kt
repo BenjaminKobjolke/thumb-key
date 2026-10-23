@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.AudioManager
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -41,17 +42,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.R
+import com.dessalines.thumbkey.db.Abbreviation
 import com.dessalines.thumbkey.db.AppDB
 import com.dessalines.thumbkey.db.WordUsage
 import com.dessalines.thumbkey.utils.AbbreviationManager
 import com.dessalines.thumbkey.utils.KeyboardFieldConnection
 import com.dessalines.thumbkey.utils.SUGGESTION_LIMIT
+import com.dessalines.thumbkey.utils.applyExpansion
 import com.dessalines.thumbkey.utils.escapeLike
+import com.dessalines.thumbkey.utils.expansionResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -64,10 +70,14 @@ fun SuggestionBar(
     val ctx = LocalContext.current as IMEService
     val view = LocalView.current
     val dao = remember { AppDB.getDatabase(ctx).wordUsageDao() }
+    val abbreviationDao = remember { AppDB.getDatabase(ctx).abbreviationDao() }
     val prefix = ctx.suggestionPrefix
     val words by remember(prefix) {
         if (prefix.isEmpty()) dao.recent(SUGGESTION_LIMIT) else dao.suggest(escapeLike(prefix.lowercase()), SUGGESTION_LIMIT)
     }.collectAsState(initial = emptyList())
+    val abbreviation by remember(prefix) {
+        if (prefix.isEmpty()) flowOf<Abbreviation?>(null) else abbreviationDao.observeAbbreviation(prefix)
+    }.collectAsState(initial = null)
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val audioManager = remember(ctx) { ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
@@ -122,6 +132,32 @@ fun SuggestionBar(
             contentPadding = PaddingValues(horizontal = 4.dp),
             modifier = Modifier.fillMaxWidth().height(height),
         ) {
+            abbreviation?.let { abbr ->
+                item(key = "abbreviation-${abbr.id}") {
+                    Box(
+                        modifier =
+                            Modifier
+                                .clickable {
+                                    tapFeedback()
+                                    ctx.ignoreNextCursorMove()
+                                    applyExpansion(
+                                        ctx.appInputConnection,
+                                        expansionResult(abbr.expansion, prefix.length),
+                                    )
+                                    AbbreviationManager.getInstance(ctx).clearBuffer()
+                                }.padding(horizontal = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = expansionResult(abbr.expansion, prefix.length).expandedText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 200.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
             items(words, key = { it.id }) { word ->
                 var menuExpanded by remember(word.id) { mutableStateOf(false) }
                 Box(contentAlignment = Alignment.Center) {

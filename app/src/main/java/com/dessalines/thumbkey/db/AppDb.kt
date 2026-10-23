@@ -557,6 +557,9 @@ interface AbbreviationDao {
     fun getAbbreviation(abbr: String): Abbreviation?
 
     @Query("SELECT * FROM Abbreviation WHERE lower(abbreviation) = lower(:abbr) LIMIT 1")
+    fun observeAbbreviation(abbr: String): Flow<Abbreviation?>
+
+    @Query("SELECT * FROM Abbreviation WHERE lower(abbreviation) = lower(:abbr) LIMIT 1")
     suspend fun getAbbreviationAsync(abbr: String): Abbreviation?
 
     @Query("UPDATE Abbreviation SET abbreviation = :newAbbr, expansion = :expansion WHERE id = :id")

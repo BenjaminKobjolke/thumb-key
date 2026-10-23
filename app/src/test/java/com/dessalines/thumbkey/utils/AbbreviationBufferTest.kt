@@ -33,4 +33,20 @@ class AbbreviationBufferTest {
     fun preservesTypedWordCase() {
         assertEquals("Gm", typedLastWord("Gm", "Gm"))
     }
+
+    @Test
+    fun expansionWithoutCursorPlaceholderKeepsExpansionText() {
+        assertEquals(
+            ExpansionResult(true, "good morning", null, 2),
+            expansionResult("good morning", 2),
+        )
+    }
+
+    @Test
+    fun expansionWithCursorPlaceholderRemovesPlaceholderAndKeepsOffset() {
+        assertEquals(
+            ExpansionResult(true, "Dear ,", 5, 2),
+            expansionResult("Dear \$0,", 2),
+        )
+    }
 }

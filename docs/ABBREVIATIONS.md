@@ -8,6 +8,8 @@ The abbreviations feature allows users to define short text snippets (abbreviati
 
 The abbreviation character buffer is now always fed as the user types so word suggestions can learn consecutively typed words even when buffer-based abbreviation matching is disabled. See [Word suggestions](WORD_SUGGESTIONS.md) for details.
 
+With **Show word suggestions** enabled, an exact abbreviation match also shows its expansion first in the suggestion bar; tap it to expand.
+
 ### Key Features
 
 - **Consecutive typing detection**: Abbreviations only expand when typed directly via the keyboard. Moving the cursor and inserting a space won't trigger expansion.

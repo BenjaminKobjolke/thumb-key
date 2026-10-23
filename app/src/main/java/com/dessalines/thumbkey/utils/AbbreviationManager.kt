@@ -2,6 +2,7 @@ package com.dessalines.thumbkey.utils
 
 import android.content.Context
 import android.util.Log
+import android.view.inputmethod.InputConnection
 import com.dessalines.thumbkey.db.AbbreviationDao
 import com.dessalines.thumbkey.db.AppDB
 
@@ -30,6 +31,30 @@ data class ExpansionResult(
     val cursorOffset: Int? = null,
     val abbreviationLength: Int = 0,
 )
+
+internal fun expansionResult(
+    expansion: String,
+    abbreviationLength: Int,
+): ExpansionResult {
+    val cursorOffset = expansion.indexOf(CURSOR_PLACEHOLDER).takeIf { it >= 0 }
+    val expandedText = expansion.replace(CURSOR_PLACEHOLDER, "")
+    return ExpansionResult(true, expandedText, cursorOffset, abbreviationLength)
+}
+
+// Keep space-triggered and tapped abbreviation replacements behavior aligned.
+internal fun applyExpansion(
+    ic: InputConnection,
+    result: ExpansionResult,
+) {
+    ic.deleteSurroundingText(result.abbreviationLength, 0)
+    ic.commitText(result.expandedText, 1)
+    if (result.cursorOffset != null) {
+        val moveBack = result.expandedText.length - result.cursorOffset
+        ic.commitText("", -moveBack)
+    } else {
+        ic.commitText(" ", 1)
+    }
+}
 
 /**
  * Singleton manager for abbreviation expansion with typed character buffer tracking.
@@ -138,16 +163,11 @@ class AbbreviationManager private constructor(
 
         val expansion = abbreviation.expansion
         Log.d(ABBR_TAG, "checkAndExpandText: found expansion = '$expansion'")
-
-        // Check for cursor placeholder
-        return if (expansion.contains(CURSOR_PLACEHOLDER)) {
-            val cursorOffset = expansion.indexOf(CURSOR_PLACEHOLDER)
-            val cleanExpansion = expansion.replace(CURSOR_PLACEHOLDER, "")
-            Log.d(ABBR_TAG, "checkAndExpandText: cursor placeholder at $cursorOffset, clean expansion = '$cleanExpansion'")
-            ExpansionResult(true, cleanExpansion, cursorOffset, lastWord.length)
-        } else {
-            ExpansionResult(true, expansion, null, lastWord.length)
+        val result = expansionResult(expansion, lastWord.length)
+        if (result.cursorOffset != null) {
+            Log.d(ABBR_TAG, "checkAndExpandText: cursor placeholder at ${result.cursorOffset}, clean expansion = '${result.expandedText}'")
         }
+        return result
     }
 
     companion object {
