@@ -120,7 +120,7 @@
     <string name="word_suggestions_title">Word suggestions</string>
     <string name="word_suggestions_description">Words you type are remembered and shown in a bar above the keyboard. Nothing is learned in password, email or web address fields.</string>
     <string name="word_suggestions">Show word suggestions</string>
-    <string name="word_suggestions_summary">A bar above the keyboard suggests words you typed before. Swipe it sideways to see more. Long-press a word to edit or delete it.</string>
+    <string name="word_suggestions_summary">A bar above the keyboard suggests words you typed before. Swipe it sideways to see more. Long-press a word to edit, ignore or delete it.</string>
     <string name="word_suggestions_search">Search words</string>
     <string name="word_suggestions_used_count">Used %1$d times</string>
     <string name="word_suggestions_empty">No words remembered yet.</string>

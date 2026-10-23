@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
@@ -83,6 +84,7 @@ fun SuggestionBar(
     val audioManager = remember(ctx) { ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 
     var editingWord by remember { mutableStateOf<WordUsage?>(null) }
+    var ignoringWord by remember { mutableStateOf<WordUsage?>(null) }
     var editText by remember(editingWord?.id) { mutableStateOf(editingWord?.word.orEmpty()) }
     val field =
         remember(editingWord?.id) {
@@ -122,6 +124,32 @@ fun SuggestionBar(
             }
             IconButton(onClick = { editingWord = null }) {
                 Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.cancel))
+            }
+        }
+    } else if (ignoringWord != null) {
+        ignoringWord?.let { word ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().height(height),
+            ) {
+                Text(
+                    stringResource(R.string.word_suggestion_ignore_confirm, word.word),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
+                )
+                IconButton(onClick = {
+                    val id = word.id
+                    scope.launch(Dispatchers.IO) { dao.ignoreById(id) }
+                    ignoringWord = null
+                }) {
+                    Icon(Icons.Outlined.Check, contentDescription = stringResource(R.string.word_suggestion_ignore))
+                }
+                IconButton(onClick = { ignoringWord = null }) {
+                    Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.cancel))
+                }
             }
         }
     } else {
@@ -188,6 +216,14 @@ fun SuggestionBar(
                             onClick = {
                                 menuExpanded = false
                                 editingWord = word
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.word_suggestion_ignore)) },
+                            leadingIcon = { Icon(Icons.Outlined.Block, contentDescription = null) },
+                            onClick = {
+                                menuExpanded = false
+                                ignoringWord = word
                             },
                         )
                         DropdownMenuItem(
