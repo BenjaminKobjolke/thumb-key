@@ -76,6 +76,7 @@ import com.dessalines.thumbkey.db.DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
 import com.dessalines.thumbkey.db.DEFAULT_WORD_SUGGESTIONS_ENABLED
+import com.dessalines.thumbkey.db.WordUsage
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.EMOJI_BACK_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.KB_EN_THUMBKEY_MAIN
@@ -1372,11 +1373,26 @@ fun KeyboardScreen(
                 Box { drawKeyboards() }
             }
         } else if (wordSuggestionsEnabled && !isUriOrEmailOrPasswordField(ctx)) {
-            Column(
-                modifier = Modifier.background(if (backdropEnabled) backdropColor else MaterialTheme.colorScheme.surfaceVariant),
-            ) {
-                SuggestionBar(height = Dp(keyHeight / 2), vibrateOnTap = vibrateOnTap, soundOnTap = soundOnTap)
-                Box { drawKeyboards() }
+            var ignoringWord by remember { mutableStateOf<WordUsage?>(null) }
+            Box {
+                Column(
+                    modifier = Modifier.background(if (backdropEnabled) backdropColor else MaterialTheme.colorScheme.surfaceVariant),
+                ) {
+                    SuggestionBar(
+                        height = Dp(keyHeight / 2),
+                        vibrateOnTap = vibrateOnTap,
+                        soundOnTap = soundOnTap,
+                        onIgnoreRequest = { ignoringWord = it },
+                    )
+                    Box { drawKeyboards() }
+                }
+                ignoringWord?.let { word ->
+                    IgnoreWordOverlay(
+                        word = word,
+                        onDismiss = { ignoringWord = null },
+                        modifier = Modifier.matchParentSize(),
+                    )
+                }
             }
         } else {
             drawKeyboards()
