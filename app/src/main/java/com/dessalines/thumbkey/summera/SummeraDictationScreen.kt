@@ -24,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -137,72 +136,74 @@ private fun RecordingView(
         return
     }
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(PADDING),
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(PADDING),
-    ) {
-        Button(
-            onClick = onStop,
-            shape = RoundedCornerShape(PADDING),
-            modifier = Modifier.fillMaxWidth().weight(1f),
+    DictationPanel(padding = PADDING) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(PADDING),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(PADDING),
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(PADDING),
-                modifier = Modifier.fillMaxWidth(),
+            Button(
+                onClick = onStop,
+                shape = RoundedCornerShape(PADDING),
+                modifier = Modifier.fillMaxWidth().weight(1f),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(PADDING),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Mic,
-                        contentDescription = stringResource(R.string.summera_recording),
-                    )
-                    Text(
-                        text = DateUtils.formatElapsedTime(elapsedSeconds),
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(PADDING),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Spacer(Modifier.weight(1f))
-                    Icon(
-                        imageVector = Icons.Outlined.Stop,
-                        contentDescription = null,
-                        modifier = Modifier.size(ICON_SIZE),
-                    )
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                        IconButton(
-                            onClick = {
-                                soundsOn = !soundsOn
-                                SummeraAccount.setWaitSounds(context, soundsOn)
-                            },
-                        ) {
-                            Icon(
-                                imageVector = if (soundsOn) Icons.Outlined.VolumeUp else Icons.Outlined.VolumeOff,
-                                contentDescription =
-                                    stringResource(
-                                        if (soundsOn) R.string.summera_wait_sounds_on else R.string.summera_wait_sounds_off,
-                                    ),
-                                modifier = Modifier.size(ICON_SIZE),
-                            )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(PADDING),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Mic,
+                            contentDescription = stringResource(R.string.summera_recording),
+                        )
+                        Text(
+                            text = DateUtils.formatElapsedTime(elapsedSeconds),
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Spacer(Modifier.weight(1f))
+                        Icon(
+                            imageVector = Icons.Outlined.Stop,
+                            contentDescription = null,
+                            modifier = Modifier.size(ICON_SIZE),
+                        )
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                            IconButton(
+                                onClick = {
+                                    soundsOn = !soundsOn
+                                    SummeraAccount.setWaitSounds(context, soundsOn)
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = if (soundsOn) Icons.Outlined.VolumeUp else Icons.Outlined.VolumeOff,
+                                    contentDescription =
+                                        stringResource(
+                                            if (soundsOn) R.string.summera_wait_sounds_on else R.string.summera_wait_sounds_off,
+                                        ),
+                                    modifier = Modifier.size(ICON_SIZE),
+                                )
+                            }
                         }
                     }
+                    Text(stringResource(R.string.summera_stop))
                 }
-                Text(stringResource(R.string.summera_stop))
             }
-        }
-        OutlinedButton(
-            onClick = { confirmCancel = true },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.summera_cancel))
+            OutlinedButton(
+                onClick = { confirmCancel = true },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.summera_cancel))
+            }
         }
     }
 }
@@ -216,14 +217,7 @@ private fun ResultView(
     onDismiss: () -> Unit,
 ) {
     val answer = state.answer
-    Surface(
-        shape = RoundedCornerShape(PADDING),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(PADDING),
-    ) {
+    DictationPanel(padding = PADDING) {
         Column(
             verticalArrangement = Arrangement.spacedBy(PADDING / 2),
             modifier = Modifier.padding(PADDING),
@@ -318,15 +312,7 @@ private fun StatusView(
     showProgress: Boolean = false,
     buttons: @Composable () -> Unit,
 ) {
-    // Solid panel like RecordingView: without it the app behind the keyboard shows through
-    Surface(
-        shape = RoundedCornerShape(PADDING),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(PADDING),
-    ) {
+    DictationPanel(padding = PADDING) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(PADDING, Alignment.CenterVertically),
