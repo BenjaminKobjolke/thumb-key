@@ -41,3 +41,10 @@ When the user asks for changes to "the keyboard" / "my keyboard", the file to ed
 It defines the `deutsch type-split-ben` layout in three modes: `KB_DE_TYPESPLITBEN_MAIN`,
 `KB_DE_TYPESPLITBEN_SHIFTED`, `KB_DE_TYPESPLITBEN_NUMERIC`. Apply matching changes across the
 relevant modes (main + shifted usually mirror each other).
+
+## Code Analysis
+
+Run `tools/analyze_changed_and_new_files.bat` after implementation work. It checks changed and
+new Kotlin files with the shared CLI code analyzer and returns a non-zero exit code for configured
+findings. Use `tools/analyze_code.bat` for a full source-file audit. The analyzer location is set
+in `tools/analyze_code_config.bat`.

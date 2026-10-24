@@ -5,15 +5,25 @@
   "analysis_commands": [
     "run-gradle.bat testDebugUnitTest --console=plain",
     "run-gradle.bat :app:lintKotlin --console=plain",
-    "run-gradle.bat :app:lintDebug --console=plain"
+    "run-gradle.bat :app:lintDebug --console=plain",
+    "tools\\analyze_changed_and_new_files.bat"
   ],
+  "analysis_command_kinds": {
+    "tools\\analyze_changed_and_new_files.bat": "code_quality"
+  },
   "command_check_scripts": [
     "build_and_upload_debug.bat",
     "graphify_update.bat",
-    "upload_apk_to_ftp.bat"
+    "upload_apk_to_ftp.bat",
+    "analyze_changed_and_new_files.bat",
+    "analyze_code.bat",
+    "analyze_code_config.bat"
   ],
   "analysis_commands_seen": {
     "scripts": [
+      "analyze_changed_and_new_files.bat",
+      "analyze_code.bat",
+      "analyze_code_config.bat",
       "build_and_upload_debug.bat",
       "graphify_update.bat",
       "upload_apk_to_ftp.bat"
@@ -29,6 +39,9 @@
     },
     "run-gradle.bat :app:lintDebug --console=plain": {
       "test": "green"
+    },
+    "tools\\analyze_changed_and_new_files.bat": {
+      "code_quality": "green"
     }
   },
   "analysis_test_timeout_seconds": 800,
