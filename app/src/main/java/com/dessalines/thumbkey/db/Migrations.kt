@@ -369,3 +369,26 @@ val MIGRATION_31_32 =
             db.execSQL("ALTER TABLE WordUsage ADD COLUMN ignored INTEGER NOT NULL DEFAULT 0")
         }
     }
+
+val MIGRATION_32_33 =
+    object : Migration(32, 33) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE AppSettings ADD COLUMN word_combinations_enabled INTEGER NOT NULL DEFAULT $DEFAULT_WORD_COMBINATIONS_ENABLED",
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS WordPair (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    previous_key TEXT NOT NULL,
+                    next_word_key TEXT NOT NULL,
+                    use_count INTEGER NOT NULL,
+                    last_used INTEGER NOT NULL
+                )
+                """.trimIndent(),
+            )
+            db.execSQL(
+                "CREATE UNIQUE INDEX index_WordPair_previous_key_next_word_key ON WordPair (previous_key, next_word_key)",
+            )
+        }
+    }

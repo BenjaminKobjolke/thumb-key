@@ -73,6 +73,7 @@ const val DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH = 1
 const val DEFAULT_DISABLE_FULLSCREEN_EDITOR = 0
 const val DEFAULT_ABBREVIATION_BUFFER_ENABLED = 1
 const val DEFAULT_WORD_SUGGESTIONS_ENABLED = 1
+const val DEFAULT_WORD_COMBINATIONS_ENABLED = 1
 const val DEFAULT_CLIPBOARD_HISTORY_ENABLED = 0
 const val DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED = 1
 const val DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES = 120
@@ -315,6 +316,11 @@ data class AppSettings(
         defaultValue = DEFAULT_WORD_SUGGESTIONS_ENABLED.toString(),
     )
     val wordSuggestionsEnabled: Int,
+    @ColumnInfo(
+        name = "word_combinations_enabled",
+        defaultValue = DEFAULT_WORD_COMBINATIONS_ENABLED.toString(),
+    )
+    val wordCombinationsEnabled: Int,
     @ColumnInfo(
         name = "vibrate_on_slide",
         defaultValue = DEFAULT_VIBRATE_ON_SLIDE.toString(),
@@ -713,6 +719,9 @@ interface AppSettingsDao {
 
     @Query("UPDATE AppSettings SET word_suggestions_enabled = :enabled WHERE id = 1")
     fun updateWordSuggestionsEnabled(enabled: Int)
+
+    @Query("UPDATE AppSettings SET word_combinations_enabled = :enabled WHERE id = 1")
+    fun updateWordCombinationsEnabled(enabled: Int)
 }
 
 // Declares the DAO as a private property in the constructor. Pass in the DAO
@@ -778,6 +787,11 @@ class AppSettingsRepository(
     }
 
     @WorkerThread
+    fun updateWordCombinationsEnabled(enabled: Int) {
+        appSettingsDao.updateWordCombinationsEnabled(enabled)
+    }
+
+    @WorkerThread
     suspend fun updateChangelog(ctx: Context) {
         withContext(Dispatchers.IO) {
             try {
@@ -812,8 +826,8 @@ data class WordUsage(
 )
 
 @Database(
-    version = 32,
-    entities = [AppSettings::class, Abbreviation::class, WordUsage::class],
+    version = 33,
+    entities = [AppSettings::class, Abbreviation::class, WordUsage::class, WordPair::class],
     exportSchema = true,
 )
 abstract class AppDB : RoomDatabase() {
@@ -822,6 +836,8 @@ abstract class AppDB : RoomDatabase() {
     abstract fun abbreviationDao(): AbbreviationDao
 
     abstract fun wordUsageDao(): WordUsageDao
+
+    abstract fun wordPairDao(): WordPairDao
 
     companion object {
         @Volatile
@@ -870,6 +886,7 @@ abstract class AppDB : RoomDatabase() {
                             MIGRATION_29_30,
                             MIGRATION_30_31,
                             MIGRATION_31_32,
+                            MIGRATION_32_33,
                         )
                         // Necessary because it can't insert data on creation
                         .addCallback(
@@ -955,6 +972,11 @@ class AppSettingsViewModel(
     fun updateWordSuggestionsEnabled(enabled: Int) =
         viewModelScope.launch {
             repository.updateWordSuggestionsEnabled(enabled)
+        }
+
+    fun updateWordCombinationsEnabled(enabled: Int) =
+        viewModelScope.launch {
+            repository.updateWordCombinationsEnabled(enabled)
         }
 
     fun updateChangelog(ctx: Context) =

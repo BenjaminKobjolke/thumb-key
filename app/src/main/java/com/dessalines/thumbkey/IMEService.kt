@@ -27,14 +27,15 @@ import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.summera.SummeraDictation
 import com.dessalines.thumbkey.ui.components.keyboard.SketchState
 import com.dessalines.thumbkey.utils.AbbreviationManager
+import com.dessalines.thumbkey.utils.EMPTY_SUGGESTION_CONTEXT
 import com.dessalines.thumbkey.utils.ImeSwitchMode
 import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.ThumbKeyClipboardManager
-import com.dessalines.thumbkey.utils.currentPartialWord
 import com.dessalines.thumbkey.utils.resolveKeyboardDefinition
 import com.dessalines.thumbkey.utils.toBool
+import com.dessalines.thumbkey.utils.suggestionContext as extractSuggestionContext
 
 class IMEService :
     InputMethodService(),
@@ -87,7 +88,7 @@ class IMEService :
     /** The app's text field, even while the keys type into the keyboard's own field. */
     val appInputConnection: InputConnection get() = super.getCurrentInputConnection()
 
-    var suggestionPrefix by mutableStateOf("")
+    var suggestionContext by mutableStateOf(EMPTY_SUGGESTION_CONTEXT)
         private set
 
     // Sketch mode's drawing, kept while the keyboard is closed and opened again
@@ -106,7 +107,7 @@ class IMEService :
         // A new text field must not count old keystrokes.
         AbbreviationManager.getInstance(this).clearBuffer()
         setInputRedirect(null)
-        suggestionPrefix = currentPartialWord(appInputConnection.getTextBeforeCursor(64, 0)?.toString().orEmpty())
+        suggestionContext = extractSuggestionContext(appInputConnection.getTextBeforeCursor(128, 0)?.toString().orEmpty())
         // A new keyboard opens on the letters: close sketch mode's search and lists, but keep
         // its drawing
         sketchState.searching = false
@@ -165,11 +166,11 @@ class IMEService :
 
         selectionStart = cursorAnchorInfo.selectionStart
         selectionEnd = cursorAnchorInfo.selectionEnd
-        suggestionPrefix =
+        suggestionContext =
             if (cursorAnchorInfo.selectionStart != cursorAnchorInfo.selectionEnd) {
-                ""
+                EMPTY_SUGGESTION_CONTEXT
             } else {
-                currentPartialWord(appInputConnection.getTextBeforeCursor(64, 0)?.toString().orEmpty())
+                extractSuggestionContext(appInputConnection.getTextBeforeCursor(128, 0)?.toString().orEmpty())
             }
     }
 

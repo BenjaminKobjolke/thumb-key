@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppDB
 import com.dessalines.thumbkey.db.AppSettingsViewModel
+import com.dessalines.thumbkey.db.DEFAULT_WORD_COMBINATIONS_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_WORD_SUGGESTIONS_ENABLED
 import com.dessalines.thumbkey.db.WordUsage
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
@@ -64,6 +65,9 @@ fun WordSuggestionsScreen(
     val settings by appSettingsViewModel.appSettings.observeAsState()
     var enabled by remember(settings?.wordSuggestionsEnabled) {
         mutableStateOf((settings?.wordSuggestionsEnabled ?: DEFAULT_WORD_SUGGESTIONS_ENABLED).toBool())
+    }
+    var combinationsEnabled by remember(settings?.wordCombinationsEnabled) {
+        mutableStateOf((settings?.wordCombinationsEnabled ?: DEFAULT_WORD_COMBINATIONS_ENABLED).toBool())
     }
     var query by remember { mutableStateOf("") }
     var wordToEdit by remember { mutableStateOf<WordUsage?>(null) }
@@ -105,6 +109,16 @@ fun WordSuggestionsScreen(
                     },
                     title = { Text(stringResource(R.string.word_suggestions)) },
                     summary = { Text(stringResource(R.string.word_suggestions_summary)) },
+                )
+                SwitchPreference(
+                    value = combinationsEnabled,
+                    onValueChange = {
+                        combinationsEnabled = it
+                        appSettingsViewModel.updateWordCombinationsEnabled(it.toInt())
+                    },
+                    title = { Text(stringResource(R.string.word_combinations)) },
+                    summary = { Text(stringResource(R.string.word_combinations_summary)) },
+                    enabled = enabled,
                 )
             }
 

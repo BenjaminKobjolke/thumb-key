@@ -75,6 +75,7 @@ import com.dessalines.thumbkey.db.DEFAULT_SPACEBAR_MULTITAPS
 import com.dessalines.thumbkey.db.DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
+import com.dessalines.thumbkey.db.DEFAULT_WORD_COMBINATIONS_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_WORD_SUGGESTIONS_ENABLED
 import com.dessalines.thumbkey.db.WordUsage
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEY_ITEM
@@ -256,6 +257,8 @@ fun KeyboardScreen(
     val ghostKeysEnabled = (settings?.ghostKeysEnabled ?: DEFAULT_GHOST_KEYS_ENABLED).toBool()
     val abbreviationBufferEnabled = (settings?.abbreviationBufferEnabled ?: DEFAULT_ABBREVIATION_BUFFER_ENABLED).toBool()
     val wordSuggestionsEnabled = (settings?.wordSuggestionsEnabled ?: DEFAULT_WORD_SUGGESTIONS_ENABLED).toBool()
+    val wordCombinationsEnabled =
+        (settings?.wordCombinationsEnabled ?: DEFAULT_WORD_COMBINATIONS_ENABLED).toBool()
     val slideHoldEnabled = (settings?.slideHoldEnabled ?: DEFAULT_SLIDE_HOLD_ENABLED).toBool()
 
     val keyBorderWidthFloat = keyBorderWidth / 10.0f
@@ -956,6 +959,7 @@ fun KeyboardScreen(
                         height = Dp(keyHeight / 2),
                         vibrateOnTap = vibrateOnTap,
                         soundOnTap = soundOnTap,
+                        wordCombinationsEnabled = wordCombinationsEnabled,
                         onIgnoreRequest = { ignoringWord = it },
                     )
                     Box { drawKeyboards() }

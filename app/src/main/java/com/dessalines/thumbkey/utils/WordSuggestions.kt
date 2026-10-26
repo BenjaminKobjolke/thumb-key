@@ -3,6 +3,7 @@ package com.dessalines.thumbkey.utils
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.ThumbkeyApplication
 import com.dessalines.thumbkey.db.AppDB
+import com.dessalines.thumbkey.db.DEFAULT_WORD_COMBINATIONS_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_WORD_SUGGESTIONS_ENABLED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -10,12 +11,22 @@ import kotlinx.coroutines.launch
 
 const val SUGGESTION_LIMIT = 50
 
-fun learnableWord(word: String?): String? {
+fun learnableWord(
+    word: String?,
+    minimumLength: Int = 2,
+): String? {
     val cleaned = word?.trimEnd('.', ',', '!', '?', ';', ':', '"', '\'', ')') ?: return null
     return cleaned.takeIf { value ->
-        value.length >= 2 && value.any(Char::isLetter) && !value.all(Char::isDigit)
+        value.length >= minimumLength && value.any(Char::isLetter) && !value.all(Char::isDigit)
     }
 }
+
+data class SuggestionContext(
+    val prefix: String,
+    val previousKey: String?,
+)
+
+val EMPTY_SUGGESTION_CONTEXT = SuggestionContext(prefix = "", previousKey = null)
 
 fun currentPartialWord(textBeforeCursor: String): String =
     if (textBeforeCursor.isEmpty() || textBeforeCursor.last().isWhitespace()) {
@@ -23,6 +34,25 @@ fun currentPartialWord(textBeforeCursor: String): String =
     } else {
         lastWord(textBeforeCursor).orEmpty()
     }
+
+fun suggestionContext(textBeforeCursor: String): SuggestionContext {
+    if (textBeforeCursor.isEmpty()) return EMPTY_SUGGESTION_CONTEXT
+
+    val prefix = currentPartialWord(textBeforeCursor)
+    val textBeforeCurrentWord = if (prefix.isEmpty()) textBeforeCursor else textBeforeCursor.dropLast(prefix.length)
+    val sentenceBoundary =
+        textBeforeCurrentWord.indexOfLast { it == '\n' || it == '.' || it == '!' || it == '?' }
+    val currentSentence = textBeforeCurrentWord.substring(sentenceBoundary + 1)
+    val previousText =
+        if (prefix.isEmpty() && ',' in currentSentence) {
+            currentSentence.substringBeforeLast(',')
+        } else {
+            currentSentence
+        }
+    val previousKey = learnableWord(lastWord(previousText.trimEnd()), minimumLength = 1)?.lowercase()
+
+    return SuggestionContext(prefix = prefix, previousKey = previousKey)
+}
 
 fun escapeLike(prefix: String): String = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
@@ -59,7 +89,18 @@ fun learnTypedWord(
     }
 
     val word = learnableWord(AbbreviationManager.getInstance(ime).typedWordBeforeCursor(textBeforeCursor)) ?: return
+    val previousKey =
+        if ((settings?.wordCombinationsEnabled ?: DEFAULT_WORD_COMBINATIONS_ENABLED) == 0) {
+            null
+        } else {
+            suggestionContext(textBeforeCursor).previousKey
+        }
     CoroutineScope(Dispatchers.IO).launch {
-        AppDB.getDatabase(ime).wordUsageDao().recordUse(word, word.lowercase(), System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        val db = AppDB.getDatabase(ime)
+        db.wordUsageDao().recordUse(word, word.lowercase(), now)
+        if (previousKey != null) {
+            db.wordPairDao().recordUse(previousKey, word.lowercase(), now)
+        }
     }
 }

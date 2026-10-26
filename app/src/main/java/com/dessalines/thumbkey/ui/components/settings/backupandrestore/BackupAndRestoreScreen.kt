@@ -85,6 +85,7 @@ import com.dessalines.thumbkey.db.DEFAULT_THEME_COLOR
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
+import com.dessalines.thumbkey.db.DEFAULT_WORD_COMBINATIONS_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_WORD_SUGGESTIONS_ENABLED
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
@@ -313,6 +314,7 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             disableFullscreenEditor = DEFAULT_DISABLE_FULLSCREEN_EDITOR,
             abbreviationBufferEnabled = DEFAULT_ABBREVIATION_BUFFER_ENABLED,
             wordSuggestionsEnabled = DEFAULT_WORD_SUGGESTIONS_ENABLED,
+            wordCombinationsEnabled = DEFAULT_WORD_COMBINATIONS_ENABLED,
             clipboardHistoryEnabled = DEFAULT_CLIPBOARD_HISTORY_ENABLED,
             clipboardAutoCleanupEnabled = DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED,
             clipboardCleanupAfterMinutes = DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES,

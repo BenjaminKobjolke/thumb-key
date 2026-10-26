@@ -58,6 +58,7 @@ import com.dessalines.thumbkey.utils.applyExpansion
 import com.dessalines.thumbkey.utils.escapeLike
 import com.dessalines.thumbkey.utils.expansionResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
@@ -67,15 +68,33 @@ fun SuggestionBar(
     height: Dp,
     vibrateOnTap: Boolean,
     soundOnTap: Boolean,
+    wordCombinationsEnabled: Boolean,
     onIgnoreRequest: (WordUsage) -> Unit,
 ) {
     val ctx = LocalContext.current as IMEService
     val view = LocalView.current
     val dao = remember { AppDB.getDatabase(ctx).wordUsageDao() }
+    val wordPairDao = remember { AppDB.getDatabase(ctx).wordPairDao() }
     val abbreviationDao = remember { AppDB.getDatabase(ctx).abbreviationDao() }
-    val prefix = ctx.suggestionPrefix
-    val words by remember(prefix) {
-        if (prefix.isEmpty()) dao.recent(SUGGESTION_LIMIT) else dao.suggest(escapeLike(prefix.lowercase()), SUGGESTION_LIMIT)
+    val prefix = ctx.suggestionContext.prefix
+    val previousKey = ctx.suggestionContext.previousKey
+    val words by remember(prefix, previousKey, wordCombinationsEnabled) {
+        val normalWords =
+            if (prefix.isEmpty()) {
+                dao.recent(SUGGESTION_LIMIT)
+            } else {
+                dao.suggest(escapeLike(prefix.lowercase()), SUGGESTION_LIMIT)
+            }
+        val pairWords =
+            if (wordCombinationsEnabled && previousKey != null) {
+                wordPairDao.nextWords(previousKey, escapeLike(prefix.lowercase()), SUGGESTION_LIMIT)
+            } else {
+                flowOf(emptyList<WordUsage>())
+            }
+
+        combine(pairWords, normalWords) { pairs, normal ->
+            (pairs + normal).distinctBy { it.id }.take(SUGGESTION_LIMIT)
+        }
     }.collectAsState(initial = emptyList())
     val abbreviation by remember(prefix) {
         if (prefix.isEmpty()) flowOf<Abbreviation?>(null) else abbreviationDao.observeAbbreviation(prefix)
@@ -174,7 +193,11 @@ fun SuggestionBar(
                                         ctx.appInputConnection.commitText(word.word + " ", 1)
                                         AbbreviationManager.getInstance(ctx).clearBuffer()
                                         scope.launch(Dispatchers.IO) {
-                                            dao.recordUse(word.word, word.wordKey, System.currentTimeMillis())
+                                            val now = System.currentTimeMillis()
+                                            dao.recordUse(word.word, word.wordKey, now)
+                                            if (wordCombinationsEnabled && previousKey != null) {
+                                                wordPairDao.recordUse(previousKey, word.wordKey, now)
+                                            }
                                         }
                                     },
                                     onLongClick = { menuExpanded = true },
