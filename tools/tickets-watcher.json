@@ -1,6 +1,6 @@
 {
   "files": {
-    "TICKETS_WATCHER_COMMANDS.md": 2
+    "TICKETS_WATCHER_COMMANDS.md": 3
   },
   "analysis_commands": [
     "run-gradle.bat testDebugUnitTest --console=plain",
@@ -41,7 +41,7 @@
       "test": "green"
     },
     "tools\\analyze_changed_and_new_files.bat": {
-      "code_quality": "failed"
+      "code_quality": "green"
     }
   },
   "analysis_test_timeout_seconds": 800,
