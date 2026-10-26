@@ -46,7 +46,17 @@
   "kotlin_complexity": {
     "enabled": true,
     "cyclomatic_complexity": {"warning": 10, "error": 15, "exceptions": []},
-    "function_length": {"warning": 50, "error": 100, "exceptions": []},
+    "function_length": {
+      "warning": 50,
+      "error": 100,
+      "exceptions": [
+        {
+          "file": "app/src/main/java/com/dessalines/thumbkey/ui/components/keyboard/KeyboardKeys.kt",
+          "warning": 60,
+          "reason": "ScreenKey adapts the extracted keyboard environment to the existing KeyboardKey call API."
+        }
+      ]
+    },
     "parameter_count": {"warning": 5, "error": 8, "exceptions": []}
   }
 }
