@@ -56,8 +56,17 @@ internal data class KeyboardEnvironmentInput(
     val keyboardDefinition: KeyboardDefinition,
     val modeState: KeyboardModeState,
     val lastAction: MutableState<Pair<KeyAction, TimeMark>?>,
-    val onModeStateChange: (KeyboardModeState) -> Unit,
+    val onModeStateChange: ModeStateUpdate,
     val sketchSearching: Boolean,
+    val onSwitchLanguage: () -> Unit,
+    val onChangePosition: ((KeyboardPosition) -> KeyboardPosition) -> Unit,
+    val onToggleHideLetters: () -> Unit,
+)
+
+internal data class KeyboardCallbacksInput(
+    val update: ModeStateUpdate,
+    val sketchSearching: Boolean,
+    val switchToLettersAfterSpace: Boolean,
     val onSwitchLanguage: () -> Unit,
     val onChangePosition: ((KeyboardPosition) -> KeyboardPosition) -> Unit,
     val onToggleHideLetters: () -> Unit,
@@ -65,7 +74,17 @@ internal data class KeyboardEnvironmentInput(
 
 internal fun keyboardEnvironment(input: KeyboardEnvironmentInput): KeyboardEnvironment {
     val config = input.config
-    val callbacks = keyboardCallbacks(input)
+    val callbacks =
+        keyboardCallbacks(
+            KeyboardCallbacksInput(
+                update = input.onModeStateChange,
+                sketchSearching = input.sketchSearching,
+                switchToLettersAfterSpace = config.switchToLettersAfterSpace,
+                onSwitchLanguage = input.onSwitchLanguage,
+                onChangePosition = input.onChangePosition,
+                onToggleHideLetters = input.onToggleHideLetters,
+            ),
+        )
     val keyHeight = config.legendHeight.toFloat()
     val keyWidth = config.legendWidth.toFloat()
     return KeyboardEnvironment(
@@ -83,28 +102,27 @@ internal fun keyboardEnvironment(input: KeyboardEnvironmentInput): KeyboardEnvir
     )
 }
 
-private fun keyboardCallbacks(input: KeyboardEnvironmentInput): KeyboardCallbacks {
-    val modeState = input.modeState
-    val update: (KeyboardModeState) -> Unit = input.onModeStateChange
+internal fun keyboardCallbacks(input: KeyboardCallbacksInput): KeyboardCallbacks {
+    val update = input.update
     return KeyboardCallbacks(
-        onToggleShiftMode = { update(modeState.toggleShiftMode(it)) },
-        onToggleCtrlMode = { update(modeState.toggleCtrlMode(it)) },
-        onToggleAltMode = { update(modeState.toggleAltMode(it)) },
-        onToggleNumericMode = { update(modeState.toggleNumericMode(it)) },
-        onToggleEmojiMode = { update(modeState.toggleEmojiMode(it)) },
-        onToggleClipboardMode = { update(modeState.toggleClipboardMode(it)) },
-        onToggleTranscriptHistoryMode = { update(modeState.toggleTranscriptHistoryMode(it)) },
-        onToggleSketchMode = { update(modeState.toggleSketchMode(it, input.sketchSearching)) },
-        onToggleCapsLock = { update(modeState.toggleCapsLock()) },
-        onToggleCapsLockFromEmojiPicker = { update(modeState.toggleCapsLockFromEmojiPicker()) },
+        onToggleShiftMode = { enable -> update { it.toggleShiftMode(enable) } },
+        onToggleCtrlMode = { enable -> update { it.toggleCtrlMode(enable) } },
+        onToggleAltMode = { enable -> update { it.toggleAltMode(enable) } },
+        onToggleNumericMode = { enable -> update { it.toggleNumericMode(enable) } },
+        onToggleEmojiMode = { enable -> update { it.toggleEmojiMode(enable) } },
+        onToggleClipboardMode = { enable -> update { it.toggleClipboardMode(enable) } },
+        onToggleTranscriptHistoryMode = { enable -> update { it.toggleTranscriptHistoryMode(enable) } },
+        onToggleSketchMode = { enable -> update { it.toggleSketchMode(enable, input.sketchSearching) } },
+        onToggleCapsLock = { update { it.toggleCapsLock() } },
+        onToggleCapsLockFromEmojiPicker = { update { it.toggleCapsLockFromEmojiPicker() } },
         onToggleHideLetters = input.onToggleHideLetters,
-        onAutoCapitalize = { update(modeState.onAutoCapitalize(it)) },
+        onAutoCapitalize = { enable -> update { it.onAutoCapitalize(enable) } },
         onSwitchLanguage = {
             input.onSwitchLanguage()
-            update(modeState.onLanguageSwitched())
+            update { it.onLanguageSwitched() }
         },
         onChangePosition = input.onChangePosition,
-        onKeyEvent = { update(modeState.onKeyAction(it, input.config.switchToLettersAfterSpace)) },
+        onKeyEvent = { action -> update { it.onKeyAction(action, input.switchToLettersAfterSpace) } },
     )
 }
 

@@ -71,7 +71,7 @@ private data class KeyboardScreenSetup(
     val modeState: KeyboardModeState,
     val sketch: SketchState,
     val environment: KeyboardEnvironment,
-    val onModeStateChange: (KeyboardModeState) -> Unit,
+    val onModeStateChange: ModeStateUpdate,
 )
 
 @Composable
@@ -109,7 +109,7 @@ private fun rememberKeyboardScreenSetup(
                 keyboardDefinition = keyboardDefinition,
                 modeState = modeState,
                 lastAction = lastAction,
-                onModeStateChange = { modeState = it },
+                onModeStateChange = { transform -> modeState = transform(modeState) },
                 sketchSearching = sketch.searching,
                 onSwitchLanguage = data.actions::onSwitchLanguage,
                 onChangePosition = { change ->
@@ -123,7 +123,7 @@ private fun rememberKeyboardScreenSetup(
         modeState = modeState,
         sketch = sketch,
         environment = environment,
-        onModeStateChange = { modeState = it },
+        onModeStateChange = { transform -> modeState = transform(modeState) },
     )
 }
 
@@ -136,7 +136,7 @@ private data class KeyboardScreenContentData(
     val sketch: SketchState,
     val clipboardItems: List<com.dessalines.thumbkey.db.ClipboardItem>,
     val transcripts: List<com.dessalines.thumbkey.db.ClipboardItem>,
-    val onModeStateChange: (KeyboardModeState) -> Unit,
+    val onModeStateChange: ModeStateUpdate,
 )
 
 private data class KeyboardScreenModeContentData(
@@ -224,7 +224,7 @@ private fun ClipboardKeyboardForMode(input: KeyboardScreenModeContentData) {
                 clipboardItems = data.clipboardItems,
                 transcripts = data.transcripts,
                 keyboardRowCount = data.keyboardDefinition.modes.main.arr.size,
-                onReturnToKeyboard = { data.onModeStateChange(data.modeState.copy(mode = KeyboardMode.MAIN)) },
+                onReturnToKeyboard = { data.onModeStateChange { it.copy(mode = KeyboardMode.MAIN) } },
             ),
         environment = data.environment,
         onGoToClipboardSettings = input.onGoToClipboardSettings,

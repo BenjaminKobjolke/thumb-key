@@ -3,6 +3,8 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import com.dessalines.thumbkey.utils.KeyAction
 import com.dessalines.thumbkey.utils.KeyboardMode
 
+typealias ModeStateUpdate = ((KeyboardModeState) -> KeyboardModeState) -> Unit
+
 /** Tracks mode and caps-lock changes shared by keyboard mode handlers. */
 data class KeyboardModeState(
     val mode: KeyboardMode = KeyboardMode.MAIN,

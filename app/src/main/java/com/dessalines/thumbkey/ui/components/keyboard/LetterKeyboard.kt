@@ -38,7 +38,7 @@ internal data class LetterKeyboardData(
     val keyboardDefinition: KeyboardDefinition,
     val modeState: KeyboardModeState,
     val sketch: SketchState,
-    val onModeStateChange: (KeyboardModeState) -> Unit,
+    val onModeStateChange: ModeStateUpdate,
 )
 
 private data class LetterKeyboardDrawing(
@@ -55,7 +55,7 @@ internal fun LetterKeyboard(
 ) {
     val keyboard =
         modeKeyboard(data.modeState.mode, data.keyboardDefinition, data.ime) {
-            data.onModeStateChange(data.modeState.copy(mode = KeyboardMode.MAIN))
+            data.onModeStateChange { it.copy(mode = KeyboardMode.MAIN) }
         }
     requestLetterCursorUpdates(data.ime)
     val drawing = LetterKeyboardDrawing(keyboard, data.keyboardDefinition, data.modeState.mode, environment)
@@ -142,7 +142,7 @@ private fun SketchSearchKeyboard(
             vibrateOnTap = environment.config.vibrateOnTap,
             soundOnTap = environment.config.soundOnTap,
             onPick = { text -> pickSketchSearchResult(data, text) },
-            onClose = { data.onModeStateChange(data.modeState.copy(mode = KeyboardMode.SKETCH)) },
+            onClose = { data.onModeStateChange { it.copy(mode = KeyboardMode.SKETCH) } },
         )
         Box { LetterKeyboardLayouts(drawing) }
     }
@@ -157,7 +157,7 @@ private fun pickSketchSearchResult(
     data.ime.setInputRedirect(null)
     data.ime.ignoreNextCursorMove()
     data.ime.appInputConnection.commitText(text, 1)
-    data.onModeStateChange(data.modeState.copy(mode = KeyboardMode.SKETCH))
+    data.onModeStateChange { it.copy(mode = KeyboardMode.SKETCH) }
 }
 
 @Composable

@@ -18,7 +18,7 @@ internal data class SketchKeyboardData(
     val state: SketchState,
     val rowCount: Int,
     val modeState: KeyboardModeState,
-    val onModeStateChange: (KeyboardModeState) -> Unit,
+    val onModeStateChange: ModeStateUpdate,
 )
 
 @Composable
@@ -51,7 +51,7 @@ internal fun SketchKeyboard(
                 onCommit = { commitSketchText(data.ime, it) },
                 onSearch = {
                     data.state.searching = true
-                    data.onModeStateChange(data.modeState.copy(mode = KeyboardMode.MAIN))
+                    data.onModeStateChange { it.copy(mode = KeyboardMode.MAIN) }
                 },
                 key = { key, onSketchAction -> SketchKey(key, onSketchAction, keyEnvironment) },
             )
@@ -77,7 +77,7 @@ private fun sketchKeyboardEnvironment(
                 onToggleClipboardMode = {},
                 onToggleTranscriptHistoryMode = {},
                 onToggleSketchMode = { enable ->
-                    if (!enable) data.onModeStateChange(data.modeState.copy(mode = KeyboardMode.MAIN))
+                    if (!enable) data.onModeStateChange { it.copy(mode = KeyboardMode.MAIN) }
                 },
                 onToggleCapsLock = {},
                 onAutoCapitalize = {},
