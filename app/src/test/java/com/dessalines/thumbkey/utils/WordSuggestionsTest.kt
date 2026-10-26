@@ -23,21 +23,21 @@ class WordSuggestionsTest {
 
     @Test
     fun extractsSuggestionContext() {
-        assertEquals(SuggestionContext("", "i"), suggestionContext("I "))
-        assertEquals(SuggestionContext("gr", "am"), suggestionContext("I am gr"))
-        assertEquals(SuggestionContext("", "hello"), suggestionContext("Hello, how "))
-        assertEquals(SuggestionContext("", "next"), suggestionContext("Done. Next "))
-        assertEquals(SuggestionContext("", "next"), suggestionContext("Done! Next "))
-        assertEquals(SuggestionContext("", null), suggestionContext("Done. "))
-        assertEquals(SuggestionContext("", null), suggestionContext("Done? "))
-        assertEquals(SuggestionContext("", null), suggestionContext("line\n"))
-        assertEquals(SuggestionContext("ab", null), suggestionContext("line\nab"))
-        assertEquals(SuggestionContext("", null), suggestionContext(""))
-        assertEquals(SuggestionContext("am", null), suggestionContext("am"))
-        assertEquals(SuggestionContext("", "am"), suggestionContext("I  am "))
-        assertEquals(SuggestionContext("", "word"), suggestionContext("word, "))
-        assertEquals(SuggestionContext("", "école"), suggestionContext("ÉCOLE "))
-        assertEquals(SuggestionContext("", null), suggestionContext("123 "))
+        assertEquals(SuggestionContext("", "i", "i"), suggestionContext("I "))
+        assertEquals(SuggestionContext("gr", "am", null), suggestionContext("I am gr"))
+        assertEquals(SuggestionContext("", "hello", "how"), suggestionContext("Hello, how "))
+        assertEquals(SuggestionContext("", "next", "next"), suggestionContext("Done. Next "))
+        assertEquals(SuggestionContext("", "next", "next"), suggestionContext("Done! Next "))
+        assertEquals(SuggestionContext("", null, "done"), suggestionContext("Done. "))
+        assertEquals(SuggestionContext("", null, "done"), suggestionContext("Done? "))
+        assertEquals(SuggestionContext("", null, "line"), suggestionContext("line\n"))
+        assertEquals(SuggestionContext("ab", null, null), suggestionContext("line\nab"))
+        assertEquals(SuggestionContext("", null, null), suggestionContext(""))
+        assertEquals(SuggestionContext("am", null, null), suggestionContext("am"))
+        assertEquals(SuggestionContext("", "am", "am"), suggestionContext("I  am "))
+        assertEquals(SuggestionContext("", "word", "word"), suggestionContext("word, "))
+        assertEquals(SuggestionContext("", "école", "école"), suggestionContext("ÉCOLE "))
+        assertEquals(SuggestionContext("", null, null), suggestionContext("123 "))
     }
 
     @Test

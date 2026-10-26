@@ -50,10 +50,20 @@ internal data class SuggestedWordsQuery(
     val prefix: String,
     val previousKey: String?,
     val combinationsEnabled: Boolean,
+    val lastWordKey: String?,
 )
 
+internal fun mergeSuggestions(
+    pairs: List<WordUsage>,
+    recent: List<WordUsage>,
+    lastWordKey: String?,
+): List<WordUsage> =
+    (pairs + recent.filterNot { it.wordKey == lastWordKey })
+        .distinctBy { it.id }
+        .take(SUGGESTION_LIMIT)
+
 internal fun observeSuggestedWords(query: SuggestedWordsQuery): Flow<List<WordUsage>> {
-    val (dao, wordPairDao, prefix, previousKey, combinationsEnabled) = query
+    val (dao, wordPairDao, prefix, previousKey, combinationsEnabled, lastWordKey) = query
     val normalWords =
         if (prefix.isEmpty()) {
             dao.recent(SUGGESTION_LIMIT)
@@ -68,7 +78,8 @@ internal fun observeSuggestedWords(query: SuggestedWordsQuery): Flow<List<WordUs
         }
 
     return combine(pairWords, normalWords) { pairs, normal ->
-        (pairs + normal).distinctBy { it.id }.take(SUGGESTION_LIMIT)
+        // The word just typed is the least likely next word.
+        mergeSuggestions(pairs, normal, lastWordKey)
     }
 }
 

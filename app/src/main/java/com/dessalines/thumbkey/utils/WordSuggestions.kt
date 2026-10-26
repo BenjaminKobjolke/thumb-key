@@ -24,9 +24,10 @@ fun learnableWord(
 data class SuggestionContext(
     val prefix: String,
     val previousKey: String?,
+    val lastWordKey: String?,
 )
 
-val EMPTY_SUGGESTION_CONTEXT = SuggestionContext(prefix = "", previousKey = null)
+val EMPTY_SUGGESTION_CONTEXT = SuggestionContext(prefix = "", previousKey = null, lastWordKey = null)
 
 fun currentPartialWord(textBeforeCursor: String): String =
     if (textBeforeCursor.isEmpty() || textBeforeCursor.last().isWhitespace()) {
@@ -50,8 +51,14 @@ fun suggestionContext(textBeforeCursor: String): SuggestionContext {
             currentSentence
         }
     val previousKey = learnableWord(lastWord(previousText.trimEnd()), minimumLength = 1)?.lowercase()
+    val lastWordKey =
+        if (prefix.isEmpty()) {
+            learnableWord(lastWord(textBeforeCursor.trimEnd()), minimumLength = 1)?.lowercase()
+        } else {
+            null
+        }
 
-    return SuggestionContext(prefix = prefix, previousKey = previousKey)
+    return SuggestionContext(prefix = prefix, previousKey = previousKey, lastWordKey = lastWordKey)
 }
 
 fun escapeLike(prefix: String): String = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")

@@ -144,9 +144,17 @@ private fun rememberSuggestionBarData(
     val abbreviationDao = remember(database) { database.abbreviationDao() }
     val prefix = context.suggestionContext.prefix
     val previousKey = context.suggestionContext.previousKey
-    val words by remember(prefix, previousKey, options.wordCombinationsEnabled) {
+    val lastWordKey = context.suggestionContext.lastWordKey
+    val words by remember(prefix, previousKey, options.wordCombinationsEnabled, lastWordKey) {
         observeSuggestedWords(
-            SuggestedWordsQuery(wordUsageDao, wordPairDao, prefix, previousKey, options.wordCombinationsEnabled),
+            SuggestedWordsQuery(
+                wordUsageDao,
+                wordPairDao,
+                prefix,
+                previousKey,
+                options.wordCombinationsEnabled,
+                lastWordKey,
+            ),
         )
     }.collectAsState(initial = emptyList())
     val abbreviation by remember(prefix) {
