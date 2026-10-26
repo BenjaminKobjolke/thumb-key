@@ -3,32 +3,16 @@ package com.dessalines.thumbkey.ui.components.keyboard
 import android.content.Context
 import android.media.AudioManager
 import android.view.HapticFeedbackConstants
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
+import android.view.View
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,67 +26,85 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.Abbreviation
 import com.dessalines.thumbkey.db.AppDB
+import com.dessalines.thumbkey.db.WordPairDao
 import com.dessalines.thumbkey.db.WordUsage
+import com.dessalines.thumbkey.db.WordUsageDao
 import com.dessalines.thumbkey.utils.AbbreviationManager
 import com.dessalines.thumbkey.utils.KeyboardFieldConnection
-import com.dessalines.thumbkey.utils.SUGGESTION_LIMIT
 import com.dessalines.thumbkey.utils.applyExpansion
-import com.dessalines.thumbkey.utils.escapeLike
 import com.dessalines.thumbkey.utils.expansionResult
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
+data class SuggestionBarOptions(
+    val height: Dp,
+    val vibrateOnTap: Boolean,
+    val soundOnTap: Boolean,
+    val wordCombinationsEnabled: Boolean,
+    val onIgnoreRequest: (WordUsage) -> Unit,
+)
+
+private data class SuggestionBarData(
+    val context: IMEService,
+    val view: View,
+    val audioManager: AudioManager,
+    val wordUsageDao: WordUsageDao,
+    val wordPairDao: WordPairDao,
+    val prefix: String,
+    val previousKey: String?,
+    val words: List<WordUsage>,
+    val abbreviation: Abbreviation?,
+    val listState: LazyListState,
+)
+
+private data class SuggestionBarEditor(
+    val word: WordUsage?,
+    val text: String,
+    val field: KeyboardFieldConnection?,
+)
+
+private data class SuggestionBarEditorActions(
+    val onSave: () -> Unit,
+    val onCancel: () -> Unit,
+    val onEdit: (WordUsage) -> Unit,
+)
+
+private data class SuggestionBarEditing(
+    val editor: SuggestionBarEditor,
+    val actions: SuggestionBarEditorActions,
+)
+
+private data class SuggestionBarActionContext(
+    val data: SuggestionBarData,
+    val options: SuggestionBarOptions,
+    val scope: CoroutineScope,
+    val onEdit: (WordUsage) -> Unit,
+)
+
 @Composable
-fun SuggestionBar(
-    height: Dp,
-    vibrateOnTap: Boolean,
-    soundOnTap: Boolean,
-    wordCombinationsEnabled: Boolean,
-    onIgnoreRequest: (WordUsage) -> Unit,
-) {
+fun SuggestionBar(options: SuggestionBarOptions) {
     val ctx = LocalContext.current as IMEService
     val view = LocalView.current
-    val dao = remember { AppDB.getDatabase(ctx).wordUsageDao() }
-    val wordPairDao = remember { AppDB.getDatabase(ctx).wordPairDao() }
-    val abbreviationDao = remember { AppDB.getDatabase(ctx).abbreviationDao() }
-    val prefix = ctx.suggestionContext.prefix
-    val previousKey = ctx.suggestionContext.previousKey
-    val words by remember(prefix, previousKey, wordCombinationsEnabled) {
-        val normalWords =
-            if (prefix.isEmpty()) {
-                dao.recent(SUGGESTION_LIMIT)
-            } else {
-                dao.suggest(escapeLike(prefix.lowercase()), SUGGESTION_LIMIT)
-            }
-        val pairWords =
-            if (wordCombinationsEnabled && previousKey != null) {
-                wordPairDao.nextWords(previousKey, escapeLike(prefix.lowercase()), SUGGESTION_LIMIT)
-            } else {
-                flowOf(emptyList<WordUsage>())
-            }
+    val data = rememberSuggestionBarData(ctx, view, options)
+    val editing = rememberSuggestionBarEditing(ctx, view, data.wordUsageDao)
+    SuggestionBarContent(data, options, editing.editor, editing.actions)
+}
 
-        combine(pairWords, normalWords) { pairs, normal ->
-            (pairs + normal).distinctBy { it.id }.take(SUGGESTION_LIMIT)
-        }
-    }.collectAsState(initial = emptyList())
-    val abbreviation by remember(prefix) {
-        if (prefix.isEmpty()) flowOf<Abbreviation?>(null) else abbreviationDao.observeAbbreviation(prefix)
-    }.collectAsState(initial = null)
-    val listState = rememberLazyListState()
+@Composable
+private fun rememberSuggestionBarEditing(
+    context: IMEService,
+    view: View,
+    dao: WordUsageDao,
+): SuggestionBarEditing {
     val scope = rememberCoroutineScope()
-    val audioManager = remember(ctx) { ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
-
     var editingWord by remember { mutableStateOf<WordUsage?>(null) }
     var editText by remember(editingWord?.id) { mutableStateOf(editingWord?.word.orEmpty()) }
     val field =
@@ -110,130 +112,148 @@ fun SuggestionBar(
             editingWord?.let { KeyboardFieldConnection(view, it.word) { editText = it } }
         }
     DisposableEffect(field) {
-        if (field != null) ctx.setInputRedirect(field)
-        onDispose { if (field != null) ctx.setInputRedirect(null) }
+        if (field != null) context.setInputRedirect(field)
+        onDispose { if (field != null) context.setInputRedirect(null) }
     }
+    return SuggestionBarEditing(
+        editor = SuggestionBarEditor(editingWord, editText, field),
+        actions =
+            SuggestionBarEditorActions(
+                onSave = {
+                    val word = editText.trim()
+                    val key = word.lowercase()
+                    val id = editingWord!!.id
+                    scope.launch(Dispatchers.IO) { dao.rename(id, word, key) }
+                    editingWord = null
+                },
+                onCancel = { editingWord = null },
+                onEdit = { editingWord = it },
+            ),
+    )
+}
 
-    fun tapFeedback() {
-        if (vibrateOnTap) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-        if (soundOnTap) audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
-    }
+@Composable
+private fun rememberSuggestionBarData(
+    context: IMEService,
+    view: View,
+    options: SuggestionBarOptions,
+): SuggestionBarData {
+    val database = remember(context) { AppDB.getDatabase(context) }
+    val wordUsageDao = remember(database) { database.wordUsageDao() }
+    val wordPairDao = remember(database) { database.wordPairDao() }
+    val abbreviationDao = remember(database) { database.abbreviationDao() }
+    val prefix = context.suggestionContext.prefix
+    val previousKey = context.suggestionContext.previousKey
+    val words by remember(prefix, previousKey, options.wordCombinationsEnabled) {
+        observeSuggestedWords(
+            SuggestedWordsQuery(wordUsageDao, wordPairDao, prefix, previousKey, options.wordCombinationsEnabled),
+        )
+    }.collectAsState(initial = emptyList())
+    val abbreviation by remember(prefix) {
+        if (prefix.isEmpty()) flowOf<Abbreviation?>(null) else abbreviationDao.observeAbbreviation(prefix)
+    }.collectAsState(initial = null)
+    val listState = rememberLazyListState()
+    val audioManager = remember(context) { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 
     LaunchedEffect(prefix) { listState.scrollToItem(0) }
+    return SuggestionBarData(
+        context,
+        view,
+        audioManager,
+        wordUsageDao,
+        wordPairDao,
+        prefix,
+        previousKey,
+        words,
+        abbreviation,
+        listState,
+    )
+}
 
-    if (editingWord != null && field != null) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().height(height),
-        ) {
-            SearchField(
-                text = editText,
-                hint = stringResource(R.string.word_suggestion_edit_hint),
-                cursor = true,
-                modifier = Modifier.weight(1f),
-            )
-            IconButton(onClick = {
-                val word = editText.trim()
-                val key = word.lowercase()
-                val id = editingWord!!.id
-                scope.launch(Dispatchers.IO) { dao.rename(id, word, key) }
-                editingWord = null
-            }) {
-                Icon(Icons.Outlined.Check, contentDescription = stringResource(R.string.save))
-            }
-            IconButton(onClick = { editingWord = null }) {
-                Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.cancel))
+@Composable
+private fun SuggestionBarContent(
+    data: SuggestionBarData,
+    options: SuggestionBarOptions,
+    editor: SuggestionBarEditor,
+    actions: SuggestionBarEditorActions,
+) {
+    if (editor.word != null && editor.field != null) {
+        SuggestionBarEditField(options.height, editor.text, actions.onSave, actions.onCancel)
+    } else {
+        SuggestionBarWordList(data, options, actions.onEdit)
+    }
+}
+
+@Composable
+private fun SuggestionBarWordList(
+    data: SuggestionBarData,
+    options: SuggestionBarOptions,
+    onEdit: (WordUsage) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val actionContext = SuggestionBarActionContext(data, options, scope, onEdit)
+    LazyRow(
+        state = data.listState,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        contentPadding = PaddingValues(horizontal = 4.dp),
+        modifier = Modifier.fillMaxWidth().height(options.height),
+    ) {
+        data.abbreviation?.let { abbreviation ->
+            item(key = "abbreviation-${abbreviation.id}") {
+                AbbreviationSuggestionItem(abbreviation, data.prefix.length) {
+                    tapFeedback(data.view, data.audioManager, options)
+                    data.context.ignoreNextCursorMove()
+                    applyExpansion(
+                        data.context.appInputConnection,
+                        expansionResult(abbreviation.expansion, data.prefix.length),
+                    )
+                    AbbreviationManager.getInstance(data.context).clearBuffer()
+                }
             }
         }
-    } else {
-        LazyRow(
-            state = listState,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            contentPadding = PaddingValues(horizontal = 4.dp),
-            modifier = Modifier.fillMaxWidth().height(height),
-        ) {
-            abbreviation?.let { abbr ->
-                item(key = "abbreviation-${abbr.id}") {
-                    Box(
-                        modifier =
-                            Modifier
-                                .clickable {
-                                    tapFeedback()
-                                    ctx.ignoreNextCursorMove()
-                                    applyExpansion(
-                                        ctx.appInputConnection,
-                                        expansionResult(abbr.expansion, prefix.length),
-                                    )
-                                    AbbreviationManager.getInstance(ctx).clearBuffer()
-                                }.padding(horizontal = 10.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = expansionResult(abbr.expansion, prefix.length).expandedText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 200.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            }
-            items(words, key = { it.id }) { word ->
-                var menuExpanded by remember(word.id) { mutableStateOf(false) }
-                Box(contentAlignment = Alignment.Center) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .combinedClickable(
-                                    onClick = {
-                                        tapFeedback()
-                                        ctx.ignoreNextCursorMove()
-                                        ctx.appInputConnection.deleteSurroundingText(prefix.length, 0)
-                                        ctx.appInputConnection.commitText(word.word + " ", 1)
-                                        AbbreviationManager.getInstance(ctx).clearBuffer()
-                                        scope.launch(Dispatchers.IO) {
-                                            val now = System.currentTimeMillis()
-                                            dao.recordUse(word.word, word.wordKey, now)
-                                            if (wordCombinationsEnabled && previousKey != null) {
-                                                wordPairDao.recordUse(previousKey, word.wordKey, now)
-                                            }
-                                        }
-                                    },
-                                    onLongClick = { menuExpanded = true },
-                                ).padding(horizontal = 10.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(word.word, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.edit_word_suggestion)) },
-                            leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
-                            onClick = {
-                                menuExpanded = false
-                                editingWord = word
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.word_suggestion_ignore)) },
-                            leadingIcon = { Icon(Icons.Outlined.Block, contentDescription = null) },
-                            onClick = {
-                                menuExpanded = false
-                                onIgnoreRequest(word)
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.delete_word_suggestion)) },
-                            leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
-                            onClick = {
-                                menuExpanded = false
-                                scope.launch(Dispatchers.IO) { dao.deleteById(word.id) }
-                            },
-                        )
-                    }
-                }
-            }
+        items(data.words, key = { it.id }) { word ->
+            WordSuggestionItem(
+                word = word,
+                actions = suggestionActions(actionContext, word),
+            )
         }
     }
+}
+
+private fun suggestionActions(
+    context: SuggestionBarActionContext,
+    word: WordUsage,
+): WordSuggestionActions {
+    val data = context.data
+    val options = context.options
+    val scope = context.scope
+    return WordSuggestionActions(
+        onSelect = {
+            tapFeedback(data.view, data.audioManager, options)
+            data.context.ignoreNextCursorMove()
+            data.context.appInputConnection.deleteSurroundingText(data.prefix.length, 0)
+            data.context.appInputConnection.commitText(word.word + " ", 1)
+            AbbreviationManager.getInstance(data.context).clearBuffer()
+            scope.launch(Dispatchers.IO) {
+                val now = System.currentTimeMillis()
+                data.wordUsageDao.recordUse(word.word, word.wordKey, now)
+                if (options.wordCombinationsEnabled && data.previousKey != null) {
+                    data.wordPairDao.recordUse(data.previousKey, word.wordKey, now)
+                }
+            }
+        },
+        onEdit = { context.onEdit(word) },
+        onIgnore = { options.onIgnoreRequest(word) },
+        onDelete = { scope.launch(Dispatchers.IO) { data.wordUsageDao.deleteById(word.id) } },
+    )
+}
+
+private fun tapFeedback(
+    view: android.view.View,
+    audioManager: AudioManager,
+    options: SuggestionBarOptions,
+) {
+    if (options.vibrateOnTap) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+    if (options.soundOnTap) audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
 }
