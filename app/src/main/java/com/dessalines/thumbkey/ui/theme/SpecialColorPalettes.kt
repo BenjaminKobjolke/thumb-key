@@ -1,0 +1,152 @@
+package com.dessalines.thumbkey.ui.theme
+
+// Provides special purpose color palettes.
+
+import androidx.compose.material3.ColorScheme
+
+fun highContrastColorful(): Pair<ColorScheme, ColorScheme> =
+    Pair(
+        lightSchemeFrom(
+            longArrayOf(
+                0xFF133558,
+                0xFFFFFFFF,
+                0xFFDDE1FF,
+                0xFF001257,
+                0xFF1A446F,
+                0xFFFFFFFF,
+                0xFFDFE1F9,
+                0xFF171B2C,
+                0xFFFF9901,
+                0xFFFFFFFF,
+                0xFF1AFFFF,
+                0xFF2D1228,
+                0xFFBA1A1A,
+                0xFFFFDAD6,
+                0xFFFFFFFF,
+                0xFF410002,
+                0xFFFFDD00,
+                0xFFFFFFFF,
+                0xFFFFF4BE,
+                0xFF000000,
+                0xFFFFE38C,
+                0xFF124369,
+                0xFFFF871B,
+                0xFFF3F0F4,
+                0xFF303034,
+                0xFFC1FFFF,
+                0xFF4758A9,
+                0xFFC6C5D0,
+                0xFF000000,
+            ),
+        ),
+        darkSchemeFrom(
+            longArrayOf(
+                0xFFFFF192,
+                0xFF281646,
+                0xFF2E4090,
+                0xFFDDE1FF,
+                0xFFFFF8C9,
+                0xFF2C2F42,
+                0xFF434659,
+                0xFFDFE1F9,
+                0xFF825BAD,
+                0xFF44263E,
+                0xFFDF995B,
+                0xFFFFD7F2,
+                0xFFFFB4AB,
+                0xFF93000A,
+                0xFF690005,
+                0xFFFFDAD6,
+                0xFF181320,
+                0xFFE4E1E6,
+                0xFF241B33,
+                0xFFFFFAD8,
+                0xFF1F1927,
+                0xFFFFF192,
+                0xFF62537A,
+                0xFF1B1B1F,
+                0xFFE4E1E6,
+                0xFFFFF200,
+                0xFFB9C3FF,
+                0xFF45464F,
+                0xFF000000,
+            ),
+        ),
+    )
+
+fun matrix(): Pair<ColorScheme, ColorScheme> {
+    val scheme =
+        darkSchemeFrom(
+            longArrayOf(
+                0xFF00E630,
+                0xFF003A05,
+                0xFF00530A,
+                0xFF74FF6C,
+                0xFF69DF8C,
+                0xFF003A03,
+                0xFF005306,
+                0xFF85FD75,
+                0xFF96D784,
+                0xFF003A00,
+                0xFF102D0F,
+                0xFFB1F49D,
+                0xFFFFB4AB,
+                0xFF93000A,
+                0xFF690005,
+                0xFFFFDAD6,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF001000,
+                0xFFC2C8BC,
+                0xFF42493F,
+                0xFF000000,
+                0xFFFFD9E4,
+                0xFF002006,
+                0xFF00E630,
+                0xFF32392F,
+                0xFF000000,
+            ),
+        )
+    return Pair(scheme, scheme)
+}
+
+fun neon(): Pair<ColorScheme, ColorScheme> {
+    val scheme =
+        darkSchemeFrom(
+            longArrayOf(
+                0xFF3991F1,
+                0xFF271446,
+                0xFF2E4090,
+                0xFFDDE1FF,
+                0xFF644ab3,
+                0xFF2C2F42,
+                0xFF434659,
+                0xFFDFE1F9,
+                0xFF3991F1,
+                0xFF44263E,
+                0x800E539F,
+                0xFFFFD7F2,
+                0xFFFFB4AB,
+                0xFF93000A,
+                0xFF690005,
+                0xFFFFDAD6,
+                0xFF000000,
+                0xFFE4E1E6,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF000000,
+                0xFFFFFFFF,
+                0xFF0E539F,
+                0xFF000000,
+                0xFFE4E1E6,
+                0x800E539F,
+                0xFFB9C3FF,
+                0xFF191825,
+                0xFF000000,
+            ),
+            useDefaultTertiary = true,
+        )
+    return Pair(scheme, scheme)
+}
