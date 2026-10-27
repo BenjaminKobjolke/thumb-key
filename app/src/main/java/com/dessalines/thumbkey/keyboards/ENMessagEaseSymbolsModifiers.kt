@@ -35,29 +35,6 @@ import com.dessalines.thumbkey.utils.KeyboardDefinitionSettings
 import com.dessalines.thumbkey.utils.autoCapitalizeI
 import com.dessalines.thumbkey.utils.autoCapitalizeIApostrophe
 
-fun keyCModifier(
-    flagCode: Int,
-    keyCode: Int,
-    displayText: String,
-    swipeReturnAction: KeyAction? = null,
-    display: KeyDisplay = KeyDisplay.TextDisplay(displayText),
-    capsModeDisplay: KeyDisplay? = null,
-    size: FontSizeVariant = FontSizeVariant.SMALL,
-    color: ColorVariant =
-        when (size) {
-            LARGE -> ColorVariant.PRIMARY
-            else -> ColorVariant.SECONDARY
-        },
-): KeyC =
-    KeyC(
-        KeyAction.SendEvent(KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0, flagCode)),
-        swipeReturnAction,
-        display,
-        capsModeDisplay,
-        size,
-        color,
-    )
-
 val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_MAIN =
     KeyboardC(
         listOf(
@@ -68,17 +45,7 @@ val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_MAIN =
                     right = KeyC("-", color = MUTED),
                     bottomLeft = KeyC("$", color = MUTED),
                 ),
-                KeyItemC(
-                    center = KeyC("n", size = LARGE),
-                    bottom = KeyC("l"),
-                    topLeft = KeyC("`", color = MUTED),
-                    top = KeyC("^", color = MUTED),
-                    topRight = KeyC("´", color = MUTED),
-                    right = KeyC("!", color = MUTED),
-                    bottomRight = KeyC("\\", color = MUTED),
-                    bottomLeft = KeyC("/", color = MUTED),
-                    left = KeyC("+", color = MUTED),
-                ),
+                messageaseNKey(shifted = false),
                 KeyItemC(
                     center = KeyC("i", size = LARGE),
                     bottomLeft = KeyC("x"),
@@ -89,15 +56,7 @@ val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_MAIN =
                 EMOJI_KEY_ITEM,
             ),
             listOf(
-                KeyItemC(
-                    center = KeyC("h", size = LARGE),
-                    right = KeyC("k"),
-                    topLeft = KeyC("{", color = MUTED),
-                    topRight = KeyC("%", color = MUTED),
-                    bottomRight = KeyC("_", color = MUTED),
-                    bottomLeft = KeyC("[", color = MUTED),
-                    left = KeyC("(", color = MUTED),
-                ),
+                messageaseHKey(shifted = false),
                 KeyItemC(
                     center = KeyC("o", size = LARGE),
                     topLeft = KeyC("q"),
@@ -138,7 +97,7 @@ val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_MAIN =
                     topRight = KeyC("y"),
                     topLeft = KeyC("~", color = MUTED),
                     right = KeyC("*", color = MUTED),
-                    bottomRight = keyCModifier(0, KeyEvent.KEYCODE_TAB, displayText = "⇥", color = MUTED),
+                    bottomRight = keyCModifier(0, KeyEvent.KEYCODE_TAB, displayText = "⇥", style = KeyModifierStyle(color = MUTED)),
                     left = KeyC("<", color = MUTED),
                     bottomLeft =
                         KeyC(
@@ -191,17 +150,7 @@ val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_SHIFTED =
                     right = KeyC("-", color = MUTED),
                     bottomLeft = KeyC("$", color = MUTED),
                 ),
-                KeyItemC(
-                    center = KeyC("N", size = LARGE),
-                    bottom = KeyC("L"),
-                    topLeft = KeyC("`", color = MUTED),
-                    top = KeyC("^", color = MUTED),
-                    topRight = KeyC("´", color = MUTED),
-                    right = KeyC("!", color = MUTED),
-                    bottomRight = KeyC("\\", color = MUTED),
-                    bottomLeft = KeyC("/", color = MUTED),
-                    left = KeyC("+", color = MUTED),
-                ),
+                messageaseNKey(shifted = true),
                 KeyItemC(
                     center = KeyC("I", size = LARGE),
                     bottomLeft = KeyC("X"),
@@ -212,15 +161,7 @@ val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_SHIFTED =
                 EMOJI_KEY_ITEM,
             ),
             listOf(
-                KeyItemC(
-                    center = KeyC("H", size = LARGE),
-                    right = KeyC("K"),
-                    topLeft = KeyC("{", color = MUTED),
-                    topRight = KeyC("%", color = MUTED),
-                    bottomRight = KeyC("_", color = MUTED),
-                    bottomLeft = KeyC("[", color = MUTED),
-                    left = KeyC("(", color = MUTED),
-                ),
+                messageaseHKey(shifted = true),
                 KeyItemC(
                     center = KeyC("O", size = LARGE),
                     topLeft = KeyC("Q"),
@@ -265,7 +206,13 @@ val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_SHIFTED =
                     topLeft = KeyC("~", color = MUTED),
                     right = KeyC("*", color = MUTED),
                     left = KeyC("<", color = MUTED),
-                    bottomRight = keyCModifier(KeyEvent.META_SHIFT_ON, KeyEvent.KEYCODE_TAB, displayText = "⇥", color = MUTED),
+                    bottomRight =
+                        keyCModifier(
+                            KeyEvent.META_SHIFT_ON,
+                            KeyEvent.KEYCODE_TAB,
+                            displayText = "⇥",
+                            style = KeyModifierStyle(color = MUTED),
+                        ),
                 ),
                 KeyItemC(
                     center = KeyC("E", size = LARGE),
@@ -292,13 +239,11 @@ val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_SHIFTED =
                 SPACEBAR_PROGRAMMING_KEY_ITEM,
                 KeyItemC(
                     center =
-                        keyCModifier(
+                        keyCModifierWithDisplay(
                             KeyEvent.META_SHIFT_ON,
                             KeyEvent.KEYCODE_ENTER,
-                            "",
-                            size = LARGE,
-                            display = KeyDisplay.IconDisplay(Icons.AutoMirrored.Outlined.KeyboardReturn),
-                            color = SECONDARY,
+                            KeyDisplay.IconDisplay(Icons.AutoMirrored.Outlined.KeyboardReturn),
+                            style = KeyModifierStyle(size = LARGE, color = SECONDARY),
                         ),
                     backgroundColor = SURFACE_VARIANT,
                     longPress = CommitText("\n"),
@@ -307,191 +252,33 @@ val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_SHIFTED =
         ),
     )
 
-val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_CTRLED =
-    KeyboardC(
-        listOf(
-            listOf(
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_A, "a", size = LARGE),
-                    bottomRight = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_V, "v"),
-                    right = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_MINUS, "-", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_N, "n", size = LARGE),
-                    bottom = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_L, "l"),
-                    topLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_GRAVE, "`", color = MUTED),
-                    bottomRight = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_BACKSLASH, "\\", color = MUTED),
-                    bottomLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_SLASH, "/", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_I, "i", size = LARGE),
-                    bottomLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_X, "x"),
-                    bottom = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_EQUALS, "=", color = MUTED),
-                ),
-                EMOJI_KEY_ITEM,
-            ),
-            listOf(
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_H, "h", size = LARGE),
-                    right = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_K, "k"),
-                    bottomLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_LEFT_BRACKET, "[", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_O, "o", size = LARGE),
-                    topLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_Q, "q"),
-                    top = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_U, "u"),
-                    topRight = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_P, "p"),
-                    right = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_B, "b"),
-                    bottomRight = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_J, "j"),
-                    bottom = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_D, "d"),
-                    bottomLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_G, "g"),
-                    left = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_C, "c"),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_R, "r", size = LARGE),
-                    left = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_M, "m"),
-                    bottomRight = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_RIGHT_BRACKET, "]", color = MUTED),
-                ),
-                NUMERIC_KEY_ITEM,
-            ),
-            listOf(
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_T, "t", size = LARGE),
-                    topRight = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_Y, "y"),
-                    bottomRight = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_TAB, displayText = "⇥", color = MUTED),
-                    bottomLeft =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.KeyboardDoubleArrowDown),
-                            action = ToggleCtrlMode(false),
-                            color = MUTED,
-                        ),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_E, "e", size = LARGE),
-                    top = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_W, "w"),
-                    topRight = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_APOSTROPHE, "'", color = MUTED),
-                    right = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_Z, "z"),
-                    bottom = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_PERIOD, ".", color = MUTED),
-                    bottomLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_COMMA, ",", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_S, "s", size = LARGE),
-                    topLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_F, "f"),
-                    bottomLeft = keyCModifier(KeyEvent.META_CTRL_ON, KeyEvent.KEYCODE_SEMICOLON, ";", color = MUTED),
-                ),
-                BACKSPACE_KEY_ITEM,
-            ),
-            listOf(
-                SPACEBAR_PROGRAMMING_KEY_ITEM,
-                KeyItemC(
-                    center =
-                        keyCModifier(
-                            KeyEvent.META_CTRL_ON,
-                            KeyEvent.KEYCODE_ENTER,
-                            "",
-                            size = LARGE,
-                            display = KeyDisplay.IconDisplay(Icons.AutoMirrored.Outlined.KeyboardReturn),
-                            color = SECONDARY,
-                        ),
-                    backgroundColor = SURFACE_VARIANT,
-                    longPress = CommitText("\n"),
-                ),
-            ),
-        ),
+private fun messageaseHKey(shifted: Boolean): KeyItemC {
+    fun letter(value: String) = if (shifted) value.uppercase() else value
+    return KeyItemC(
+        center = KeyC(letter("h"), size = LARGE),
+        right = KeyC(letter("k")),
+        topLeft = KeyC("{", color = MUTED),
+        topRight = KeyC("%", color = MUTED),
+        bottomRight = KeyC("_", color = MUTED),
+        bottomLeft = KeyC("[", color = MUTED),
+        left = KeyC("(", color = MUTED),
     )
+}
 
-val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS_ALTED =
-    KeyboardC(
-        listOf(
-            listOf(
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_A, "a", size = LARGE),
-                    bottomRight = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_V, "v"),
-                    right = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_MINUS, "-", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_N, "n", size = LARGE),
-                    bottom = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_L, "l"),
-                    topLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_GRAVE, "`", color = MUTED),
-                    bottomRight = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_BACKSLASH, "\\", color = MUTED),
-                    bottomLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_SLASH, "/", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_I, "i", size = LARGE),
-                    bottomLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_X, "x"),
-                    bottom = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_EQUALS, "=", color = MUTED),
-                ),
-                EMOJI_KEY_ITEM,
-            ),
-            listOf(
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_H, "h", size = LARGE),
-                    right = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_K, "k"),
-                    bottomLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_LEFT_BRACKET, "[", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_O, "o", size = LARGE),
-                    topLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_Q, "q"),
-                    top = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_U, "u"),
-                    topRight = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_P, "p"),
-                    right = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_B, "b"),
-                    bottomRight = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_J, "j"),
-                    bottom = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_D, "d"),
-                    bottomLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_G, "g"),
-                    left = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_C, "c"),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_R, "r", size = LARGE),
-                    left = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_M, "m"),
-                    bottomRight = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_RIGHT_BRACKET, "]", color = MUTED),
-                ),
-                NUMERIC_KEY_ITEM,
-            ),
-            listOf(
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_T, "t", size = LARGE),
-                    topRight = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_Y, "y"),
-                    bottomRight = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_TAB, displayText = "⇥", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_E, "e", size = LARGE),
-                    top = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_W, "w"),
-                    topRight = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_APOSTROPHE, "'", color = MUTED),
-                    right = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_Z, "z"),
-                    bottom = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_PERIOD, ".", color = MUTED),
-                    bottomLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_COMMA, ",", color = MUTED),
-                ),
-                KeyItemC(
-                    center = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_S, "s", size = LARGE),
-                    topLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_F, "f"),
-                    bottomLeft = keyCModifier(KeyEvent.META_ALT_ON, KeyEvent.KEYCODE_SEMICOLON, ";", color = MUTED),
-                    bottomRight =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.KeyboardDoubleArrowDown),
-                            action = ToggleAltMode(false),
-                            color = MUTED,
-                        ),
-                ),
-                BACKSPACE_KEY_ITEM,
-            ),
-            listOf(
-                SPACEBAR_PROGRAMMING_KEY_ITEM,
-                KeyItemC(
-                    center =
-                        keyCModifier(
-                            KeyEvent.META_ALT_ON,
-                            KeyEvent.KEYCODE_ENTER,
-                            "",
-                            size = LARGE,
-                            display = KeyDisplay.IconDisplay(Icons.AutoMirrored.Outlined.KeyboardReturn),
-                            color = SECONDARY,
-                        ),
-                    backgroundColor = SURFACE_VARIANT,
-                    longPress = CommitText("\n"),
-                ),
-            ),
-        ),
+private fun messageaseNKey(shifted: Boolean): KeyItemC {
+    fun letter(value: String) = if (shifted) value.uppercase() else value
+    return KeyItemC(
+        center = KeyC(letter("n"), size = LARGE),
+        bottom = KeyC(letter("l")),
+        topLeft = KeyC("`", color = MUTED),
+        top = KeyC("^", color = MUTED),
+        topRight = KeyC("´", color = MUTED),
+        right = KeyC("!", color = MUTED),
+        bottomRight = KeyC("\\", color = MUTED),
+        bottomLeft = KeyC("/", color = MUTED),
+        left = KeyC("+", color = MUTED),
     )
+}
 
 val KB_EN_MESSAGEASE_SYMBOLS_MODIFIERS: KeyboardDefinition =
     KeyboardDefinition(
