@@ -7,23 +7,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpCenter
-import androidx.compose.material.icons.outlined.AppRegistration
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.InstallMobile
-import androidx.compose.material.icons.outlined.KeyboardAlt
-import androidx.compose.material.icons.outlined.Mic
-import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Restore
-import androidx.compose.material.icons.outlined.ShortText
-import androidx.compose.material.icons.outlined.Spellcheck
-import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -34,24 +19,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_LAYOUT
-import com.dessalines.thumbkey.ui.components.common.SearchableMultiSelectListPreference
 import com.dessalines.thumbkey.ui.components.common.TestOutTextField
 import com.dessalines.thumbkey.ui.components.settings.about.SettingsDivider
-import com.dessalines.thumbkey.ui.components.settings.about.USER_GUIDE_URL
-import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
-import com.dessalines.thumbkey.utils.openLink
-import com.dessalines.thumbkey.utils.stripCombiningMarks
 import com.dessalines.thumbkey.utils.updateLayouts
-import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.ProvidePreferenceTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,8 +42,6 @@ fun SettingsScreen(
     Log.d(TAG, "Got to settings activity")
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val ctx = LocalContext.current
-
     val settings by appSettingsViewModel.appSettings.observeAsState()
 
     val scrollState = rememberScrollState()
@@ -90,194 +65,26 @@ fun SettingsScreen(
                         .imePadding(),
             ) {
                 ProvidePreferenceTheme {
-                    if (!(thumbkeyEnabled || thumbkeySelected)) {
-                        Preference(
-                            title = {
-                                val setupStr = stringResource(R.string.setup)
-                                Text(setupStr)
+                    SettingsFeatureItems(
+                        SettingsFeatureState(
+                            navController = navController,
+                            thumbkeyEnabled = thumbkeyEnabled,
+                            thumbkeySelected = thumbkeySelected,
+                            layoutsState = layoutsState,
+                            onLayoutsChange = { layouts ->
+                                val selectedLayouts =
+                                    layouts.ifEmpty {
+                                        keyboardLayoutsSetFromDbIndexString(DEFAULT_KEYBOARD_LAYOUT.toString())
+                                    }
+                                updateLayouts(appSettingsViewModel, selectedLayouts)
                             },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.InstallMobile,
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = { navController.navigate("setup") },
-                        )
-                    }
-
-                    SearchableMultiSelectListPreference(
-                        value = layoutsState,
-                        values = KeyboardLayout.entries.sortedBy { it.keyboardDefinition.title },
-                        valueToText = {
-                            AnnotatedString(it.keyboardDefinition.title)
-                        },
-                        searchFilter = ::matchesSearchQuery,
-                        searchPlaceholder = stringResource(R.string.search_layouts),
-                        emptySearchText = stringResource(R.string.no_layouts_found),
-                        onValueChange = {
-                            val update =
-                                it.ifEmpty {
-                                    keyboardLayoutsSetFromDbIndexString(DEFAULT_KEYBOARD_LAYOUT.toString())
-                                }
-
-                            updateLayouts(
-                                appSettingsViewModel,
-                                update,
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.KeyboardAlt,
-                                contentDescription = null,
-                            )
-                        },
-                        title = {
-                            Text(stringResource(R.string.layouts))
-                        },
-                        summary = {
-                            val layoutsStr =
-                                layoutsState.joinToString(", ") { it.keyboardDefinition.title }
-                            Text(layoutsStr)
-                        },
+                        ),
                     )
-                    Preference(
-                        title = { Text(stringResource(R.string.look_and_feel)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Palette,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("lookAndFeel") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.behavior)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.TouchApp,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("behavior") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.abbreviations)) },
-                        icon = {
-                            @Suppress("DEPRECATION")
-                            Icon(
-                                imageVector = Icons.Outlined.ShortText,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("abbreviations") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.word_suggestions_title)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Spellcheck,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("wordSuggestions") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.clipboard_history)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.ContentPaste,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("clipboardSettings") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.summera_title)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Mic,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("summera") },
-                    )
-                    Preference(
-                        title = {
-                            Text(
-                                text = stringResource(R.string.modify_keys),
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.AppRegistration,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("modifyKeys") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.backup_and_restore)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Restore,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("backupAndRestore") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.other)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Build,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("otherSettings") },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.user_guide)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.HelpCenter,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = {
-                            openLink(USER_GUIDE_URL, ctx)
-                        },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.about)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = { navController.navigate("about") },
-                    )
+                    SettingsAppItems(navController)
                     SettingsDivider()
                     TestOutTextField()
                 }
             }
         },
     )
-}
-
-/**
- * Decides whether an item should be shown in a searchable list for the current search query.
- *
- * @param keyboardLayout The keyboard layout that is being matched against
- * @param text The display text of the item
- * @param query The raw text typed into the search box (may be blank).
- */
-private fun matchesSearchQuery(
-    keyboardLayout: KeyboardLayout,
-    text: String,
-    query: String,
-): Boolean {
-    if (query.isBlank()) return true
-    return stripCombiningMarks(keyboardLayout.name).contains(stripCombiningMarks(query), ignoreCase = true)
 }

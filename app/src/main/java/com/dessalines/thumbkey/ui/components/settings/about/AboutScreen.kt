@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.settings.about
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -81,129 +82,158 @@ fun AboutScreen(navController: NavController) {
                         .verticalScroll(scrollState)
                         .background(color = MaterialTheme.colorScheme.surface),
             ) {
-                ProvidePreferenceTheme {
-                    Preference(
-                        title = { Text(stringResource(R.string.whats_new)) },
-                        summary = { Text(stringResource(R.string.version, version.orEmpty())) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.NewReleases,
-                                contentDescription = stringResource(R.string.releases),
-                            )
-                        },
-                        onClick = {
-                            openLink("$GITHUB_URL/blob/main/RELEASES.md", ctx)
-                        },
-                    )
-                    SettingsDivider()
-                    PreferenceCategory(
-                        title = { Text(stringResource(R.string.support)) },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.issue_tracker)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.BugReport,
-                                contentDescription = stringResource(R.string.issue_tracker),
-                            )
-                        },
-                        onClick = {
-                            openLink("$GITHUB_URL/issues", ctx)
-                        },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.developer_matrix_chatroom)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.Chat,
-                                contentDescription = stringResource(R.string.developer_matrix_chatroom),
-                            )
-                        },
-                        onClick = {
-                            openLink(MATRIX_CHAT_URL, ctx)
-                        },
-                    )
-
-                    Preference(
-                        title = { Text(stringResource(R.string.donate_to_thumbkey)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.AttachMoney,
-                                contentDescription = stringResource(R.string.donate_to_thumbkey),
-                            )
-                        },
-                        onClick = {
-                            openLink(DONATE_URL, ctx)
-                        },
-                    )
-                    SettingsDivider()
-                    PreferenceCategory(
-                        title = { Text(stringResource(R.string.social)) },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.join_c_thumbkey)) },
-                        icon = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.thumb_key_icon),
-                                modifier = Modifier.size(32.dp),
-                                contentDescription = stringResource(R.string.join_c_thumbkey),
-                            )
-                        },
-                        onClick = {
-                            openLink(LEMMY_URL, ctx)
-                        },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.follow_me_mastodon)) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.TravelExplore,
-                                contentDescription = stringResource(R.string.follow_me_mastodon),
-                            )
-                        },
-                        onClick = {
-                            openLink(MASTODON_URL, ctx)
-                        },
-                    )
-                    SettingsDivider()
-                    PreferenceCategory(
-                        title = { Text(stringResource(R.string.open_source)) },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.source_code)) },
-                        summary = {
-                            Text(stringResource(R.string.source_code_subtitle))
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Code,
-                                contentDescription = stringResource(R.string.source_code),
-                            )
-                        },
-                        onClick = {
-                            openLink(GITHUB_URL, ctx)
-                        },
-                    )
-                    Preference(
-                        title = { Text(stringResource(R.string.handwriting_recognition)) },
-                        summary = {
-                            Text(
-                                (
-                                    listOf(stringResource(R.string.handwriting_recognition_summary)) +
-                                        handwritingAttribution.orEmpty()
-                                ).joinToString("\n\n"),
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Draw,
-                                contentDescription = stringResource(R.string.handwriting_recognition),
-                            )
-                        },
-                    )
-                }
+                AboutContent(version.orEmpty(), ctx, handwritingAttribution.orEmpty())
             }
         },
+    )
+}
+
+@Composable
+private fun AboutContent(
+    version: String,
+    context: Context,
+    handwritingAttribution: List<String>,
+) {
+    ProvidePreferenceTheme {
+        WhatsNewItem(version, context)
+        SettingsDivider()
+        AboutSupportSection()
+        SettingsDivider()
+        AboutSocialSection()
+        SettingsDivider()
+        AboutOpenSourceSection(context, handwritingAttribution)
+    }
+}
+
+@Composable
+private fun WhatsNewItem(
+    version: String,
+    context: Context,
+) {
+    Preference(
+        title = { Text(stringResource(R.string.whats_new)) },
+        summary = { Text(stringResource(R.string.version, version)) },
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.NewReleases,
+                contentDescription = stringResource(R.string.releases),
+            )
+        },
+        onClick = { openLink("$GITHUB_URL/blob/main/RELEASES.md", context) },
+    )
+}
+
+@Composable
+private fun AboutSupportSection() {
+    PreferenceCategory(title = { Text(stringResource(R.string.support)) })
+    AboutSupportItems()
+}
+
+@Composable
+private fun AboutSocialSection() {
+    PreferenceCategory(title = { Text(stringResource(R.string.social)) })
+    AboutSocialItems()
+}
+
+@Composable
+private fun AboutOpenSourceSection(
+    context: Context,
+    handwritingAttribution: List<String>,
+) {
+    PreferenceCategory(title = { Text(stringResource(R.string.open_source)) })
+    AboutSourceCodeItem(context)
+    HandwritingRecognitionItem(handwritingAttribution)
+}
+
+@Composable
+private fun AboutSourceCodeItem(context: Context) {
+    Preference(
+        title = { Text(stringResource(R.string.source_code)) },
+        summary = { Text(stringResource(R.string.source_code_subtitle)) },
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Code,
+                contentDescription = stringResource(R.string.source_code),
+            )
+        },
+        onClick = { openLink(GITHUB_URL, context) },
+    )
+}
+
+@Composable
+private fun HandwritingRecognitionItem(attribution: List<String>) {
+    Preference(
+        title = { Text(stringResource(R.string.handwriting_recognition)) },
+        summary = {
+            Text((listOf(stringResource(R.string.handwriting_recognition_summary)) + attribution).joinToString("\n\n"))
+        },
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Draw,
+                contentDescription = stringResource(R.string.handwriting_recognition),
+            )
+        },
+    )
+}
+
+@Composable
+private fun AboutSupportItems() {
+    val context = LocalContext.current
+    Preference(
+        title = { Text(stringResource(R.string.issue_tracker)) },
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.BugReport,
+                contentDescription = stringResource(R.string.issue_tracker),
+            )
+        },
+        onClick = { openLink("$GITHUB_URL/issues", context) },
+    )
+    Preference(
+        title = { Text(stringResource(R.string.developer_matrix_chatroom)) },
+        icon = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.Chat,
+                contentDescription = stringResource(R.string.developer_matrix_chatroom),
+            )
+        },
+        onClick = { openLink(MATRIX_CHAT_URL, context) },
+    )
+    Preference(
+        title = { Text(stringResource(R.string.donate_to_thumbkey)) },
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.AttachMoney,
+                contentDescription = stringResource(R.string.donate_to_thumbkey),
+            )
+        },
+        onClick = { openLink(DONATE_URL, context) },
+    )
+}
+
+@Composable
+private fun AboutSocialItems() {
+    val context = LocalContext.current
+    Preference(
+        title = { Text(stringResource(R.string.join_c_thumbkey)) },
+        icon = {
+            Icon(
+                painter = painterResource(id = R.drawable.thumb_key_icon),
+                modifier = Modifier.size(32.dp),
+                contentDescription = stringResource(R.string.join_c_thumbkey),
+            )
+        },
+        onClick = { openLink(LEMMY_URL, context) },
+    )
+    Preference(
+        title = { Text(stringResource(R.string.follow_me_mastodon)) },
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.TravelExplore,
+                contentDescription = stringResource(R.string.follow_me_mastodon),
+            )
+        },
+        onClick = { openLink(MASTODON_URL, context) },
     )
 }
 

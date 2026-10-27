@@ -4,14 +4,9 @@ import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Login
-import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.outlined.FindReplace
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.Mic
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,7 +73,12 @@ internal fun SettingsPreferences(
     Column(modifier = modifier) {
         ProvidePreferenceTheme {
             if (state.account.credentials != null) {
-                SignedInPreferences(state.account)
+                SummeraSignedInItems(
+                    credentials = state.account.credentials,
+                    activePrompt = state.account.activePrompt,
+                    navController = state.account.navController,
+                    onSignOut = state.account.onSignOut,
+                )
             } else {
                 SignInPreference(state.account)
             }
@@ -134,51 +134,5 @@ private fun DebugLogPreference(navController: NavController) {
         title = { Text(stringResource(R.string.summera_debug_log)) },
         icon = { Icon(Icons.Outlined.BugReport, contentDescription = null) },
         onClick = { navController.navigate("summeraLog") },
-    )
-}
-
-@Composable
-private fun SignedInPreferences(state: SummeraAccountPreferenceState) {
-    SignedInAccountPreferences(state.credentials?.email.orEmpty(), state.onSignOut)
-    SummeraFeaturePreferences(state.activePrompt, state.navController)
-}
-
-@Composable
-private fun SignedInAccountPreferences(
-    email: String,
-    onSignOut: () -> Unit,
-) {
-    Preference(
-        title = { Text(stringResource(R.string.summera_signed_in_as, email)) },
-        icon = { Icon(Icons.Outlined.AccountCircle, contentDescription = null) },
-    )
-    Preference(
-        title = { Text(stringResource(R.string.summera_sign_out)) },
-        icon = { Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null) },
-        onClick = onSignOut,
-    )
-}
-
-@Composable
-private fun SummeraFeaturePreferences(
-    activePrompt: String?,
-    navController: NavController,
-) {
-    Preference(
-        title = { Text(stringResource(R.string.summera_prompts)) },
-        summary = { Text(activePrompt ?: stringResource(R.string.summera_no_prompt)) },
-        icon = { Icon(Icons.Outlined.Tune, contentDescription = null) },
-        onClick = { navController.navigate("summeraPrompts") },
-    )
-    Preference(
-        title = { Text(stringResource(R.string.summera_replacements)) },
-        summary = { Text(stringResource(R.string.summera_replacements_summary)) },
-        icon = { Icon(Icons.Outlined.FindReplace, contentDescription = null) },
-        onClick = { navController.navigate("summeraReplacements") },
-    )
-    Preference(
-        title = { Text(stringResource(R.string.summera_history)) },
-        icon = { Icon(Icons.Outlined.History, contentDescription = null) },
-        onClick = { navController.navigate("summeraHistory") },
     )
 }
