@@ -99,115 +99,171 @@ fun SummeraReplacementsScreen(
             )
         },
         content = { padding ->
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier =
-                    Modifier
-                        .padding(padding)
-                        .imePadding()
-                        .verticalScroll(rememberScrollState())
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(vertical = 12.dp),
-            ) {
-                ProvidePreferenceTheme {
-                    Text(
-                        text = stringResource(R.string.summera_replacements_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                    error?.let {
-                        Preference(title = { Text(stringResource(R.string.summera_failed, it)) })
-                    }
-                    if (credentials == null) {
-                        Preference(title = { Text(stringResource(R.string.summera_sign_in_first)) })
-                        return@ProvidePreferenceTheme
-                    }
-                    val list = replacements
-                    if (list == null) {
-                        if (error == null) {
-                            Preference(
-                                title = { Text(stringResource(R.string.summera_loading)) },
-                                icon = { CircularProgressIndicator() },
-                            )
-                        }
-                        return@ProvidePreferenceTheme
-                    }
-
-                    if (!transcript.isNullOrBlank()) {
-                        Text(
-                            text = stringResource(R.string.summera_replacements_pick_word),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        )
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        ) {
-                            transcript
-                                .split(Regex("\\s+"))
-                                .map { it.trim { character -> !character.isLetterOrDigit() } }
-                                .filter { it.isNotBlank() }
-                                .forEach { word ->
-                                    FilterChip(
-                                        selected = from == word,
-                                        onClick = { from = word },
-                                        label = { Text(word) },
-                                    )
-                                }
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = from,
-                        onValueChange = { from = it },
-                        label = { Text(stringResource(R.string.summera_replacement_from)) },
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                    )
-                    OutlinedTextField(
-                        value = to,
-                        onValueChange = { to = it },
-                        label = { Text(stringResource(R.string.summera_replacement_to)) },
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                    )
-                    Button(
-                        enabled = from.isNotBlank() && to.isNotBlank(),
-                        onClick = {
-                            val saved = TranscriptionReplacement(from.trim(), to.trim())
-                            save(list.filterNot { it.from.equals(saved.from, ignoreCase = true) } + saved) {
-                                from = ""
-                                to = ""
-                            }
-                        },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    ) {
-                        Text(stringResource(R.string.summera_save))
-                    }
-
-                    list.forEach { replacement ->
-                        Preference(
-                            title = { Text("${replacement.from} → ${replacement.to}") },
-                            widgetContainer = {
-                                IconButton(onClick = { save(list - replacement) }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Delete,
-                                        contentDescription = stringResource(R.string.summera_delete_replacement),
-                                    )
-                                }
-                            },
-                            onClick = {
-                                from = replacement.from
-                                to = replacement.to
-                            },
-                        )
-                    }
-                }
-            }
+            ReplacementsContent(
+                modifier = Modifier.padding(padding),
+                state =
+                    ReplacementContentState(
+                        credentialsAvailable = credentials != null,
+                        transcript = transcript,
+                        replacements = replacements,
+                        error = error,
+                        from = from,
+                        to = to,
+                        onFromChange = { from = it },
+                        onToChange = { to = it },
+                        onSave = ::save,
+                    ),
+            )
         },
     )
+}
+
+private data class ReplacementContentState(
+    val credentialsAvailable: Boolean,
+    val transcript: String?,
+    val replacements: List<TranscriptionReplacement>?,
+    val error: String?,
+    val from: String,
+    val to: String,
+    val onFromChange: (String) -> Unit,
+    val onToChange: (String) -> Unit,
+    val onSave: (List<TranscriptionReplacement>, () -> Unit) -> Unit,
+)
+
+@Composable
+private fun ReplacementsContent(
+    modifier: Modifier,
+    state: ReplacementContentState,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier =
+            modifier
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(vertical = 12.dp),
+    ) {
+        ProvidePreferenceTheme {
+            Text(
+                text = stringResource(R.string.summera_replacements_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+            state.error?.let { Preference(title = { Text(stringResource(R.string.summera_failed, it)) }) }
+            if (!state.credentialsAvailable) {
+                Preference(title = { Text(stringResource(R.string.summera_sign_in_first)) })
+            } else if (state.replacements == null) {
+                if (state.error == null) LoadingReplacements()
+            } else {
+                ReplacementListContent(state, state.replacements)
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingReplacements() {
+    Preference(
+        title = { Text(stringResource(R.string.summera_loading)) },
+        icon = { CircularProgressIndicator() },
+    )
+}
+
+@Composable
+private fun ReplacementListContent(
+    state: ReplacementContentState,
+    replacements: List<TranscriptionReplacement>,
+) {
+    if (!state.transcript.isNullOrBlank()) {
+        TranscriptWordChips(state.transcript, state.from, state.onFromChange)
+    }
+    ReplacementEditor(state, replacements)
+    replacements.forEach { replacement ->
+        SavedReplacement(replacement, replacements, state)
+    }
+}
+
+@Composable
+private fun ReplacementEditor(
+    state: ReplacementContentState,
+    replacements: List<TranscriptionReplacement>,
+) {
+    OutlinedTextField(
+        value = state.from,
+        onValueChange = state.onFromChange,
+        label = { Text(stringResource(R.string.summera_replacement_from)) },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    )
+    OutlinedTextField(
+        value = state.to,
+        onValueChange = state.onToChange,
+        label = { Text(stringResource(R.string.summera_replacement_to)) },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    )
+    Button(
+        enabled = state.from.isNotBlank() && state.to.isNotBlank(),
+        onClick = {
+            val saved = TranscriptionReplacement(state.from.trim(), state.to.trim())
+            state.onSave(replacements.filterNot { it.from.equals(saved.from, ignoreCase = true) } + saved) {
+                state.onFromChange("")
+                state.onToChange("")
+            }
+        },
+        modifier = Modifier.padding(horizontal = 16.dp),
+    ) {
+        Text(stringResource(R.string.summera_save))
+    }
+}
+
+@Composable
+private fun SavedReplacement(
+    replacement: TranscriptionReplacement,
+    replacements: List<TranscriptionReplacement>,
+    state: ReplacementContentState,
+) {
+    Preference(
+        title = { Text("${replacement.from} → ${replacement.to}") },
+        widgetContainer = {
+            IconButton(onClick = { state.onSave(replacements - replacement) {} }) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(R.string.summera_delete_replacement),
+                )
+            }
+        },
+        onClick = {
+            state.onFromChange(replacement.from)
+            state.onToChange(replacement.to)
+        },
+    )
+}
+
+@Composable
+private fun TranscriptWordChips(
+    transcript: String,
+    selectedWord: String,
+    onPick: (String) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.summera_replacements_pick_word),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(horizontal = 16.dp),
+    )
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
+    ) {
+        transcript
+            .split(Regex("\\s+"))
+            .map { it.trim { character -> !character.isLetterOrDigit() } }
+            .filter { it.isNotBlank() }
+            .forEach { word ->
+                FilterChip(
+                    selected = selectedWord == word,
+                    onClick = { onPick(word) },
+                    label = { Text(word) },
+                )
+            }
+    }
 }
