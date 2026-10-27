@@ -131,23 +131,29 @@ private fun ClipboardHistory(
         title = stringResource(if (showTranscripts) R.string.transcript_history else R.string.clipboard_history),
         emptyText = stringResource(if (showTranscripts) R.string.transcript_empty else R.string.clipboard_empty),
         isEnabled = showTranscripts || environment.config.clipboardHistoryEnabled,
-        onItemClick = { item ->
-            data.ime.currentInputConnection.commitText(item.text, 1)
-            data.onReturnToKeyboard()
-        },
-        onItemPaste = { item -> data.ime.currentInputConnection.commitText(item.text, 1) },
-        onItemDelete = { item -> options.scope.launch { repository.deleteItem(item) } },
-        onItemTogglePin = { item -> options.scope.launch { repository.togglePin(item) } },
-        onBack = data.onReturnToKeyboard,
-        onClearAll = {
-            options.scope.launch {
-                if (showTranscripts) repository.clearUnpinnedTranscripts() else repository.clearUnpinned()
-            }
-        },
-        onGoToClipboardSettings = options.onGoToClipboardSettings,
-        keyHeight = environment.keyHeight,
-        keyPadding = environment.config.keyPadding,
-        cornerRadius = environment.keyRadius,
-        vibrateOnTap = environment.config.vibrateOnTap,
+        actions =
+            ClipboardHistoryActions(
+                onItemClick = { item ->
+                    data.ime.currentInputConnection.commitText(item.text, 1)
+                    data.onReturnToKeyboard()
+                },
+                onItemPaste = { item -> data.ime.currentInputConnection.commitText(item.text, 1) },
+                onItemDelete = { item -> options.scope.launch { repository.deleteItem(item) } },
+                onItemTogglePin = { item -> options.scope.launch { repository.togglePin(item) } },
+                onBack = data.onReturnToKeyboard,
+                onClearAll = {
+                    options.scope.launch {
+                        if (showTranscripts) repository.clearUnpinnedTranscripts() else repository.clearUnpinned()
+                    }
+                },
+                onGoToClipboardSettings = options.onGoToClipboardSettings,
+            ),
+        style =
+            ClipboardHistoryStyle(
+                keyHeight = environment.keyHeight,
+                keyPadding = environment.config.keyPadding,
+                cornerRadius = environment.keyRadius,
+                vibrateOnTap = environment.config.vibrateOnTap,
+            ),
     )
 }
