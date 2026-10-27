@@ -15,6 +15,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -130,131 +132,152 @@ class MainActivity : AppCompatActivity() {
                     ShowChangelog(appSettingsViewModel = appSettingsViewModel)
                 }
 
-                NavHost(
+                AppNavHost(
                     navController = navController,
                     startDestination = startDestination,
-                    enterTransition = {
-                        slideIntoContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                            animationSpec = tween(ANIMATION_SPEED),
-                        )
-                    },
-                    exitTransition = {
-                        slideOutOfContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                            animationSpec = tween(ANIMATION_SPEED),
-                        )
-                    },
-                    popEnterTransition = {
-                        slideIntoContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(ANIMATION_SPEED),
-                        )
-                    },
-                    popExitTransition = {
-                        slideOutOfContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(ANIMATION_SPEED),
-                        )
-                    },
-                ) {
-                    composable(
-                        route = "setup",
-                    ) {
-                        SetupScreen(
-                            navController = navController,
-                            thumbkeyEnabled = thumbkeyEnabled,
-                            thumbkeySelected = thumbkeySelected,
-                        )
-                    }
-                    composable(route = "settings") {
-                        SettingsScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                            thumbkeyEnabled = thumbkeyEnabled,
-                            thumbkeySelected = thumbkeySelected,
-                        )
-                    }
-                    composable(route = "lookAndFeel") {
-                        LookAndFeelScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                        )
-                    }
-                    composable(route = "behavior") {
-                        BehaviorScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                        )
-                    }
-                    composable(route = "clipboardSettings") {
-                        ClipboardSettingsScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                            clipboardRepository = (application as ThumbkeyApplication).clipboardRepository,
-                        )
-                    }
-                    composable(route = "summera") {
-                        SummeraSettingsScreen(navController = navController)
-                    }
-                    composable(route = "summeraPrompts") {
-                        SummeraPromptsScreen(navController = navController)
-                    }
-                    composable(route = "summeraReplacements") {
-                        SummeraReplacementsScreen(
-                            navController = navController,
-                            transcript = intent.getStringExtra(EXTRA_TRANSCRIPT),
-                        )
-                    }
-                    composable(route = "summeraHistory") {
-                        SummeraHistoryScreen(navController = navController)
-                    }
-                    composable(route = "summeraLog") {
-                        SummeraLogScreen(navController = navController)
-                    }
-                    composable(route = "modifyKeys") {
-                        ModifyKeysScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                        )
-                    }
-                    composable(
-                        route = "about",
-                    ) {
-                        AboutScreen(
-                            navController = navController,
-                        )
-                    }
-                    composable(
-                        route = "backupAndRestore",
-                    ) {
-                        BackupAndRestoreScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                        )
-                    }
-                    composable(
-                        route = "abbreviations",
-                    ) {
-                        AbbreviationsScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                        )
-                    }
-                    composable(route = "wordSuggestions") {
-                        WordSuggestionsScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                        )
-                    }
-                    composable(route = "otherSettings") {
-                        OtherSettingsScreen(
-                            navController = navController,
-                            appSettingsViewModel = appSettingsViewModel,
-                        )
-                    }
-                }
+                    thumbkeyEnabled = thumbkeyEnabled,
+                    thumbkeySelected = thumbkeySelected,
+                )
             }
+        }
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun AppNavHost(
+        navController: NavHostController,
+        startDestination: String,
+        thumbkeyEnabled: Boolean,
+        thumbkeySelected: Boolean,
+    ) {
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(ANIMATION_SPEED),
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(ANIMATION_SPEED),
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(ANIMATION_SPEED),
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(ANIMATION_SPEED),
+                )
+            },
+        ) {
+            settingsRoutes(
+                navController = navController,
+                thumbkeyEnabled = thumbkeyEnabled,
+                thumbkeySelected = thumbkeySelected,
+            )
+            summeraRoutes(navController)
+        }
+    }
+
+    private fun NavGraphBuilder.settingsRoutes(
+        navController: NavHostController,
+        thumbkeyEnabled: Boolean,
+        thumbkeySelected: Boolean,
+    ) {
+        composable(route = "setup") {
+            SetupScreen(
+                navController = navController,
+                thumbkeyEnabled = thumbkeyEnabled,
+                thumbkeySelected = thumbkeySelected,
+            )
+        }
+        composable(route = "settings") {
+            SettingsScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+                thumbkeyEnabled = thumbkeyEnabled,
+                thumbkeySelected = thumbkeySelected,
+            )
+        }
+        composable(route = "lookAndFeel") {
+            LookAndFeelScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+            )
+        }
+        composable(route = "behavior") {
+            BehaviorScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+            )
+        }
+        composable(route = "clipboardSettings") {
+            ClipboardSettingsScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+                clipboardRepository = (application as ThumbkeyApplication).clipboardRepository,
+            )
+        }
+        composable(route = "modifyKeys") {
+            ModifyKeysScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+            )
+        }
+        composable(route = "about") {
+            AboutScreen(navController = navController)
+        }
+        composable(route = "backupAndRestore") {
+            BackupAndRestoreScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+            )
+        }
+        composable(route = "abbreviations") {
+            AbbreviationsScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+            )
+        }
+        composable(route = "wordSuggestions") {
+            WordSuggestionsScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+            )
+        }
+        composable(route = "otherSettings") {
+            OtherSettingsScreen(
+                navController = navController,
+                appSettingsViewModel = appSettingsViewModel,
+            )
+        }
+    }
+
+    private fun NavGraphBuilder.summeraRoutes(navController: NavHostController) {
+        composable(route = "summera") {
+            SummeraSettingsScreen(navController = navController)
+        }
+        composable(route = "summeraPrompts") {
+            SummeraPromptsScreen(navController = navController)
+        }
+        composable(route = "summeraReplacements") {
+            SummeraReplacementsScreen(
+                navController = navController,
+                transcript = intent.getStringExtra(EXTRA_TRANSCRIPT),
+            )
+        }
+        composable(route = "summeraHistory") {
+            SummeraHistoryScreen(navController = navController)
+        }
+        composable(route = "summeraLog") {
+            SummeraLogScreen(navController = navController)
         }
     }
 
