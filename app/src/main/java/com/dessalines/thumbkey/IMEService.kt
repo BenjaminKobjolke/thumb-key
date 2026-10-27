@@ -33,6 +33,7 @@ import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.ThumbKeyClipboardManager
+import com.dessalines.thumbkey.utils.learnTypedWord
 import com.dessalines.thumbkey.utils.resolveKeyboardDefinition
 import com.dessalines.thumbkey.utils.toBool
 import com.dessalines.thumbkey.utils.suggestionContext as extractSuggestionContext
@@ -216,6 +217,11 @@ class IMEService :
         // Must run before super, which commits any composing text as it stands.
         // Running after it would let the processor write its pending text a second time.
         currentKeyboardDefinition?.settings?.textProcessor?.handleFinishInput(this)
+        // Apps that hide the keyboard from their own button never send space or enter, so learn
+        // the last typed word here. Clearing prevents a later space from counting it twice.
+        val connection: InputConnection? = unchecked(super.getCurrentInputConnection())
+        learnTypedWord(this, connection?.getTextBeforeCursor(1000, 0)?.toString().orEmpty())
+        AbbreviationManager.getInstance(this).clearBuffer()
         super.onFinishInputView(finishingInput)
     }
 
