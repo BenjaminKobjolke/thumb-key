@@ -1,15 +1,7 @@
 package com.dessalines.thumbkey.ui.components.keyboard
+
 import android.content.Context
 import android.media.AudioManager
-import android.os.Build
-import android.util.Log
-import android.view.HapticFeedbackConstants
-import android.view.KeyEvent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,194 +10,74 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.ui.theme.colorVariantToColor
-import com.dessalines.thumbkey.ui.theme.fontSizeVariantToFontSize
-import com.dessalines.thumbkey.ui.theme.pxToSp
-import com.dessalines.thumbkey.ui.theme.toPx
-import com.dessalines.thumbkey.utils.CircularDirection
-import com.dessalines.thumbkey.utils.CircularDragAction
-import com.dessalines.thumbkey.utils.FontSizeVariant
-import com.dessalines.thumbkey.utils.KeyAction
-import com.dessalines.thumbkey.utils.KeyActionCallbacks
-import com.dessalines.thumbkey.utils.KeyActionContext
-import com.dessalines.thumbkey.utils.KeyActionModeCallbacks
-import com.dessalines.thumbkey.utils.KeyActionOtherCallbacks
 import com.dessalines.thumbkey.utils.KeyActionReleaseState
-import com.dessalines.thumbkey.utils.KeyActionSecondaryModeCallbacks
-import com.dessalines.thumbkey.utils.KeyC
-import com.dessalines.thumbkey.utils.KeyDisplay
-import com.dessalines.thumbkey.utils.KeyItemC
-import com.dessalines.thumbkey.utils.KeyboardDefinitionSettings
-import com.dessalines.thumbkey.utils.KeyboardPosition
-import com.dessalines.thumbkey.utils.Selection
 import com.dessalines.thumbkey.utils.SlideType
-import com.dessalines.thumbkey.utils.SwipeDirection
-import com.dessalines.thumbkey.utils.SwipeNWay
-import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.buildTapActions
-import com.dessalines.thumbkey.utils.circularDirection
-import com.dessalines.thumbkey.utils.deleteWordBeforeCursor
 import com.dessalines.thumbkey.utils.doneKeyAction
 import com.dessalines.thumbkey.utils.isPasswordField
-import com.dessalines.thumbkey.utils.nextWordAfterCursor
 import com.dessalines.thumbkey.utils.performKeyAction
-import com.dessalines.thumbkey.utils.previousWordBeforeCursor
-import com.dessalines.thumbkey.utils.slideCursorDistance
-import com.dessalines.thumbkey.utils.startSelection
-import com.dessalines.thumbkey.utils.swipeDirection
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-// magic number found from trial and error
-private const val DRAG_RETURN_THRESHOLD_FACTOR = 0.71f
-
-private const val SLIDE_HOLD_SLOW_TICK_THRESHOLD = 4 // number of ticks at the slow rate
-private const val SLIDE_HOLD_SLOW_TICK_DELAY_MS = 300L // ms between ticks during slow phase
-private const val SLIDE_HOLD_FAST_TICK_DELAY_MS = 100L // ms between ticks during fast phase
+internal fun keyboardKeyId(data: ScreenKeyData): String {
+    val config = data.environment.config
+    return data.key.toString() + data.ghostKey.toString() + config.animationHelperSpeed + config.animationSpeed + config.autoCapitalize +
+        config.vibrateOnTap + config.vibrateOnSlide + config.soundOnTap + data.environment.legendHeight + data.environment.legendWidth +
+        config.minSwipeLength +
+        config.slideSensitivity + config.slideEnabled + config.slideCursorMovementMode + config.slideSpacebarDeadzoneEnabled +
+        config.slideBackspaceDeadzoneEnabled + config.dragReturnEnabled + config.circularDragEnabled +
+        config.clockwiseDragAction.ordinal + config.counterclockwiseDragAction.ordinal + config.slideHoldEnabled
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun KeyboardKey(
-    key: KeyItemC,
-    // Hidden background key to detect swipes for. When a swipe isn't captured by the key, the ghost
-    // key will attempt to capture it instead. This is derived automatically from the keyboard
-    // layout, and should not be set directly in the keyboard definition.
-    ghostKey: KeyItemC? = null,
-    lastAction: MutableState<Pair<KeyAction, TimeMark>?>,
-    animationHelperSpeed: Int,
-    animationSpeed: Int,
-    autoCapitalize: Boolean,
-    keyboardSettings: KeyboardDefinitionSettings,
-    spacebarMultiTaps: Boolean,
-    vibrateOnTap: Boolean,
-    vibrateOnSlide: Boolean,
-    soundOnTap: Boolean,
-    hideLetters: Boolean,
-    hideSymbols: Boolean,
-    capsLock: Boolean,
-    legendHeight: Int,
-    legendWidth: Int,
-    keyPadding: Int,
-    keyHeight: Float,
-    keyWidth: Float,
-    keyBorderWidth: Float,
-    keyRadius: Float,
-    minSwipeLength: Int,
-    slideSensitivity: Int,
-    slideEnabled: Boolean,
-    slideCursorMovementMode: Int,
-    slideSpacebarDeadzoneEnabled: Boolean,
-    slideBackspaceDeadzoneEnabled: Boolean,
-    onToggleShiftMode: (enable: Boolean) -> Unit,
-    onToggleCtrlMode: (enable: Boolean) -> Unit,
-    onToggleAltMode: (enable: Boolean) -> Unit,
-    onToggleNumericMode: (enable: Boolean) -> Unit,
-    onToggleEmojiMode: (enable: Boolean) -> Unit,
-    onToggleClipboardMode: (enable: Boolean) -> Unit,
-    onToggleTranscriptHistoryMode: (enable: Boolean) -> Unit,
-    onToggleSketchMode: (enable: Boolean) -> Unit,
-    onToggleCapsLock: () -> Unit,
-    onToggleHideLetters: () -> Unit,
-    onAutoCapitalize: (enable: Boolean) -> Unit,
-    onSwitchLanguage: () -> Unit,
-    onChangePosition: ((old: KeyboardPosition) -> KeyboardPosition) -> Unit,
-    onKeyEvent: (action: KeyAction) -> Unit,
-    oppositeCaseKey: KeyItemC? = null,
-    numericKey: KeyItemC? = null,
-    dragReturnEnabled: Boolean,
-    circularDragEnabled: Boolean,
-    clockwiseDragAction: CircularDragAction,
-    counterclockwiseDragAction: CircularDragAction,
-    abbreviationBufferEnabled: Boolean,
-    slideHoldEnabled: Boolean,
-    onSketchAction: (action: KeyAction.Sketch) -> Unit = {},
-) {
-    // Necessary for swipe settings to get updated correctly
-    val id =
-        key.toString() + ghostKey.toString() + animationHelperSpeed + animationSpeed + autoCapitalize +
-            vibrateOnTap + vibrateOnSlide + soundOnTap + legendHeight + legendWidth + minSwipeLength +
-            slideSensitivity + slideEnabled + slideCursorMovementMode + slideSpacebarDeadzoneEnabled +
-            slideBackspaceDeadzoneEnabled + dragReturnEnabled + circularDragEnabled +
-            clockwiseDragAction.ordinal + counterclockwiseDragAction.ordinal +
-            slideHoldEnabled
+internal fun KeyboardKey(data: ScreenKeyData) {
+    val environment = data.environment
+    val config = environment.config
+    val key = data.key
+    val ghostKey = data.ghostKey
+    val oppositeCaseKey = data.oppositeCaseKey
+    val numericKey = data.numericKey
+    val lastAction = environment.lastAction
+    val capsLock = environment.capsLock
+    val keyHeight = environment.keyHeight
+    val keyWidth = environment.keyWidth
+    val keyBorderWidth = environment.keyBorderWidth
+    val keyRadius = environment.keyRadius
+    val animationHelperSpeed = config.animationHelperSpeed
+    val animationSpeed = config.animationSpeed
+    val spacebarMultiTaps = config.spacebarMultiTaps
+    val hideLetters = config.hideLetters
+    val hideSymbols = config.hideSymbols
+    val keyPadding = config.keyPadding
+    val minSwipeLength = config.minSwipeLength
+    val slideHoldEnabled = config.slideHoldEnabled
 
     val ctx = LocalContext.current
     val ime = ctx as IMEService
-    val keyActionContext =
-        KeyActionContext(
-            ime = ime,
-            autoCapitalize = autoCapitalize,
-            keyboardSettings = keyboardSettings,
-            callbacks =
-                KeyActionCallbacks(
-                    modeToggles =
-                        KeyActionModeCallbacks(
-                            onToggleShiftMode,
-                            onToggleCtrlMode,
-                            onToggleAltMode,
-                            onToggleNumericMode,
-                        ),
-                    secondaryModeToggles =
-                        KeyActionSecondaryModeCallbacks(
-                            onToggleEmojiMode,
-                            onToggleClipboardMode,
-                            onToggleTranscriptHistoryMode,
-                            onToggleSketchMode,
-                        ),
-                    other =
-                        KeyActionOtherCallbacks(
-                            onToggleCapsLock,
-                            onToggleHideLetters,
-                            onAutoCapitalize,
-                            onSwitchLanguage,
-                            onChangePosition,
-                            onKeyEvent,
-                        ),
-                ),
-            abbreviationBufferEnabled = abbreviationBufferEnabled,
-            onSketchAction = onSketchAction,
-        )
+    val id = keyboardKeyId(data)
     val scope = rememberCoroutineScope()
 
     // Don't show animations for password fields
@@ -218,7 +90,7 @@ fun KeyboardKey(
     val releasedKey = remember { mutableStateOf<String?>(null) }
     val releaseState = KeyActionReleaseState(scope, isDragged, releasedKey, animationHelperSpeed)
 
-    var tapCount by remember { mutableIntStateOf(0) }
+    val gestureState = remember { KeyGestureState() }
     val tapActions =
         if (spacebarMultiTaps) {
             buildTapActions(key)
@@ -226,20 +98,9 @@ fun KeyboardKey(
             listOf(key.center.action)
         }
 
-    var offsetX by remember { mutableFloatStateOf(0f) }
-    var offsetY by remember { mutableFloatStateOf(0f) }
-    var hasSlideMoveCursorTriggered by remember { mutableStateOf(false) }
-    var timeOfLastAccelerationInput by remember { mutableLongStateOf(0L) }
-    var positions by remember { mutableStateOf(listOf<Offset>()) }
-    var maxOffset by remember { mutableStateOf(Offset(0f, 0f)) }
-
-    var selection by remember { mutableStateOf(Selection()) }
-
-    // Slide-hold states
-    var slideHoldDirection by remember { mutableStateOf<SwipeDirection?>(null) }
-    var slideHoldReturnDetected by remember { mutableStateOf(false) }
-    var slideHoldTickCount by remember { mutableIntStateOf(0) }
-    var slideHoldRepeatJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var tapCount by gestureState::tapCount
+    var positions by gestureState::positions
+    var maxOffset by gestureState::maxOffset
 
     val backgroundColor =
         if (!(isDragged.value || isPressed)) {
@@ -252,150 +113,21 @@ fun KeyboardKey(
     val keySize = (keyHeight + keyWidth) / 2.0
     val view = LocalView.current
     val audioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-    /**
-     * The type of haptic feedback to use when moving the cursor with slide
-     * gestures, based on the device's supported API.
-     */
-    val slideHapticConstant =
-        if (Build.VERSION.SDK_INT >= 27) {
-            HapticFeedbackConstants.TEXT_HANDLE_MOVE
-        } else {
-            // Compatible with API 24, but vibration will not distinguish between tap and slide
-            HapticFeedbackConstants.KEYBOARD_TAP
-        }
+    val feedback = KeyFeedback(view, audioManager, config)
+    val gestureContext =
+        KeyGestureContext(
+            data,
+            ime,
+            keyActionContextFor(data, ime),
+            releaseState,
+            gestureState,
+            feedback,
+            scope,
+        )
+    val keyActionContext = gestureContext.keyActionContext
 
     LaunchedEffect(key1 = isPressed) {
-        if (isPressed) {
-            if (vibrateOnTap) {
-                // This is a workaround for only having LongPress
-                // https://stackoverflow.com/questions/68333741/how-to-perform-a-haptic-feedback-in-jetpack-compose
-                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            }
-            if (soundOnTap) {
-                audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
-            }
-        }
-    }
-
-    suspend fun repeatCursorMovement(dir: SwipeDirection) {
-        var tickCount = 0
-        while (currentCoroutineContext().isActive) {
-            val delayMs =
-                if (tickCount < SLIDE_HOLD_SLOW_TICK_THRESHOLD) {
-                    SLIDE_HOLD_SLOW_TICK_DELAY_MS
-                } else {
-                    SLIDE_HOLD_FAST_TICK_DELAY_MS
-                }
-            delay(delayMs)
-            val keyCode =
-                when (dir) {
-                    SwipeDirection.LEFT -> {
-                        KeyEvent.KEYCODE_DPAD_LEFT
-                    }
-
-                    SwipeDirection.RIGHT -> {
-                        KeyEvent.KEYCODE_DPAD_RIGHT
-                    }
-
-                    else -> {
-                        // This should never happen)
-                        Log.d(TAG, "ERROR: Invalid swipe direction: $dir")
-                    }
-                }
-            if (slideHoldReturnDetected) {
-                if (dir == SwipeDirection.RIGHT) nextWordAfterCursor(ime) else previousWordBeforeCursor(ime)
-            } else {
-                ime.currentInputConnection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
-                ime.currentInputConnection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode))
-            }
-            tickCount++
-            slideHoldTickCount = tickCount
-            if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
-        }
-    }
-
-    suspend fun repeatDeleteAction() {
-        var tickCount = 0
-        while (currentCoroutineContext().isActive) {
-            val delayMs =
-                if (tickCount < SLIDE_HOLD_SLOW_TICK_THRESHOLD) {
-                    SLIDE_HOLD_SLOW_TICK_DELAY_MS
-                } else {
-                    SLIDE_HOLD_FAST_TICK_DELAY_MS
-                }
-            delay(delayMs)
-            if (slideHoldReturnDetected) {
-                deleteWordBeforeCursor(ime)
-            } else {
-                ime.currentInputConnection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
-                ime.currentInputConnection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL))
-            }
-            tickCount++
-            slideHoldTickCount = tickCount
-            if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
-        }
-    }
-
-    /**
-     * Resets all state variables associated with the slide-hold gesture.
-     *
-     * @return The number of ticks that occurred during the slide-hold before it was reset.
-     */
-    fun resetSlideHoldVariables(): Int {
-        // Always clean up slide-hold at drag end. Capture ticks before clearing
-        // so the branch below can decide whether the hold actually fired.
-        val slideHoldTicks = slideHoldTickCount
-        slideHoldRepeatJob?.cancel()
-        slideHoldRepeatJob = null
-        slideHoldDirection = null
-        slideHoldReturnDetected = false
-        slideHoldTickCount = 0
-        return slideHoldTicks
-    }
-
-    fun updateSlideHoldReturn(returnThreshold: Float) {
-        if (slideHoldReturnDetected || maxOffset.getDistance() < minSwipeLength) return
-        val currentOffset = positions.lastOrNull() ?: Offset(offsetX, offsetY)
-        val closeEnough = currentOffset.getDistance() <= returnThreshold
-        val currentSwipeDirection =
-            swipeDirection(currentOffset.x, currentOffset.y, minSwipeLength, SwipeNWay.FOUR_WAY_CROSS)
-        val maxSwipeDirection =
-            swipeDirection(maxOffset.x, maxOffset.y, minSwipeLength, SwipeNWay.FOUR_WAY_CROSS)
-        if (closeEnough || currentSwipeDirection != maxSwipeDirection) {
-            slideHoldReturnDetected = true
-        }
-    }
-
-    fun startSlideHold() {
-        val direction = swipeDirection(offsetX, offsetY, minSwipeLength, SwipeNWay.FOUR_WAY_CROSS) ?: return
-        slideHoldDirection = direction
-        when (key.slideType) {
-            SlideType.MOVE_CURSOR -> {
-                if (direction == SwipeDirection.LEFT || direction == SwipeDirection.RIGHT) {
-                    slideHoldRepeatJob = scope.launch { repeatCursorMovement(direction) }
-                }
-            }
-
-            SlideType.DELETE -> {
-                if (direction == SwipeDirection.LEFT) {
-                    slideHoldRepeatJob = scope.launch { repeatDeleteAction() }
-                }
-            }
-
-            SlideType.NONE -> {
-                Unit
-            }
-        }
-    }
-
-    fun handleSlideHold() {
-        val returnThreshold = minSwipeLength * DRAG_RETURN_THRESHOLD_FACTOR
-        if (slideHoldDirection != null) {
-            updateSlideHoldReturn(returnThreshold)
-        } else {
-            startSlideHold()
-        }
+        if (isPressed) feedback.tap()
     }
 
     val keyboardKeyModifier =
@@ -441,12 +173,7 @@ fun KeyboardKey(
                     key.longPress?.let { action ->
                         performKeyAction(action, keyActionContext)
                         doneKeyAction(action, releaseState)
-                        if (vibrateOnTap) {
-                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                        }
-                        if (soundOnTap) {
-                            audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
-                        }
+                        feedback.tap()
                     }
                 },
             )
@@ -458,580 +185,34 @@ fun KeyboardKey(
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        val (x, y) = dragAmount
-                        offsetX += x
-                        offsetY += y
-                        val offset = Offset(offsetX, offsetY)
-                        positions += offset
-                        if (offset.getDistanceSquared() > maxOffset.getDistanceSquared()) maxOffset = offset
-
-                        // First detection is large enough to preserve swipe actions.
-                        val slideOffsetTrigger = (keySize.dp.toPx() * 0.75) + minSwipeLength
-
-                        // These keys have a lot of functionality.
-                        // We can tap; swipe; slide the cursor left/right; select and delete text
-                        // Spacebar:
-                        //      Swipe up/down/left/right
-                        //      Slide gesture
-                        //          With slide gesture deadzone to allow normal swipes
-                        //          Without deadzone
-                        //      Slide up to enter selection mode.
-                        // Backspace key:
-                        //      Swipe left and right to delete whole word
-                        //      Slide gesture delete
-                        //          Wtih slide gesture deadzone to allow normal swipes
-                        //          Without deadzone
-                        if ((key.slideType == SlideType.MOVE_CURSOR || key.slideType == SlideType.DELETE) && slideHoldEnabled) {
-                            handleSlideHold()
-                        } else if (key.slideType == SlideType.MOVE_CURSOR && slideEnabled) {
-                            val slideSelectionOffsetTrigger = (keySize.dp.toPx() * 1.25) + minSwipeLength
-                            if (abs(offsetY) > slideSelectionOffsetTrigger) {
-                                // If user slides upwards, enable selection
-                                hasSlideMoveCursorTriggered = true
-                                if (!selection.active) {
-                                    // Activate selection
-                                    selection = startSelection(ime)
-                                }
-
-                                val cursorMovement =
-                                    slideCursorDistance(offsetX, timeOfLastAccelerationInput, slideCursorMovementMode, slideSensitivity)
-                                timeOfLastAccelerationInput = System.currentTimeMillis()
-                                if (cursorMovement >= 1 || cursorMovement <= -1) {
-                                    if (cursorMovement < 0.00) {
-                                        selection.left(abs(cursorMovement))
-                                    } else {
-                                        selection.right(abs(cursorMovement))
-                                    }
-                                    ime.currentInputConnection.setSelection(
-                                        selection.start,
-                                        selection.end,
-                                    )
-                                    // reset offsetX, do not reset offsetY when sliding, it will break selecting
-                                    offsetX = 0f
-                                    // selection has changed; give feedback
-                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
-                                }
-                            } else if ((
-                                    slideSpacebarDeadzoneEnabled &&
-                                        (abs(offsetX) > slideOffsetTrigger) &&
-                                        // if we've gone past the deadzone
-                                        (!hasSlideMoveCursorTriggered)
-                                ) ||
-                                // OR we don't use the deadzone
-                                ((!hasSlideMoveCursorTriggered) && (!slideSpacebarDeadzoneEnabled)) ||
-                                // OR we have already started slide gesture mode.
-                                hasSlideMoveCursorTriggered
-                            ) {
-                                // If user slides horizontally only, move cursor
-
-                                // The first time we enter this, reset offsetX, because of the slideOffsetTrigger
-                                if (!hasSlideMoveCursorTriggered) {
-                                    // reset offsetX, do not reset offsetY when sliding, it will break selecting
-                                    offsetX = 0f
-                                    hasSlideMoveCursorTriggered = true
-                                }
-
-                                var lengthOfSelectedText = 0
-                                if (selection.active) {
-                                    // Move the cursor to the beginning or end of the selection and exit selection.
-                                    val location =
-                                        if (offsetX < 0) {
-                                            min(selection.start, selection.end)
-                                        } else {
-                                            max(selection.start, selection.end)
-                                        }
-
-                                    selection = Selection(location, location, false)
-                                    ime.currentInputConnection.setSelection(
-                                        selection.start,
-                                        selection.end,
-                                    )
-                                } else {
-                                    // Check if any text has been selected, but the selection wasn't done by this keyboard.
-                                    val selectedText = ime.currentInputConnection.getSelectedText(0)
-                                    if ((!selectedText.isNullOrEmpty()) && selectedText.isNotEmpty()) {
-                                        lengthOfSelectedText = selectedText.length
-                                    }
-                                }
-
-                                var cursorMovement =
-                                    slideCursorDistance(offsetX, timeOfLastAccelerationInput, slideCursorMovementMode, slideSensitivity)
-                                timeOfLastAccelerationInput = System.currentTimeMillis()
-                                if (cursorMovement > 0) {
-                                    // Increment distance by one, because a value of 2 moves the cursor by 1 character.
-                                    cursorMovement += 1
-                                }
-
-                                // Move the cursor
-                                // For some reason, '2' moves the cursor to the right by 1 character.
-                                //                 '-1' moves the cursor to the left  by 1 character.
-                                if (cursorMovement >= 2 || cursorMovement <= -1) {
-                                    if (lengthOfSelectedText > 0) {
-                                        // Deselect text that has been selected, but the selection wasn't done by this keyboard.
-                                        selection = startSelection(ime)
-                                        ime.currentInputConnection.setSelection(
-                                            selection.start,
-                                            selection.end,
-                                        )
-                                        // Reset the selection
-                                        selection = Selection()
-
-                                        // Move the cursor to the end of the selection if we swipe right.
-                                        if (cursorMovement >= 2) {
-                                            cursorMovement += lengthOfSelectedText
-                                        }
-                                    }
-                                    ime.currentInputConnection.commitText("", cursorMovement)
-                                    // reset offsetX, do not reset offsetY when sliding, it will break selecting
-                                    offsetX = 0f
-                                    // selection has changed; give feedback
-                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
-                                }
-                            }
-                        } else if (key.slideType == SlideType.DELETE && slideEnabled) {
-                            if (!selection.active) {
-                                timeOfLastAccelerationInput = System.currentTimeMillis()
-                                // Activate selection, first detection is large enough to preserve swipe actions.
-                                if ((
-                                        slideBackspaceDeadzoneEnabled &&
-                                            (abs(offsetX) > slideOffsetTrigger)
-                                    ) ||
-                                    !slideBackspaceDeadzoneEnabled
-                                ) {
-                                    // reset offsetX, do not reset offsetY when sliding, it will break selecting
-                                    offsetX = 0f
-                                    selection = startSelection(ime)
-                                }
-                            } else {
-                                val cursorMovement =
-                                    slideCursorDistance(offsetX, timeOfLastAccelerationInput, slideCursorMovementMode, slideSensitivity)
-                                timeOfLastAccelerationInput = System.currentTimeMillis()
-                                if (cursorMovement >= 1 || cursorMovement <= -1) {
-                                    if (cursorMovement < 0.00) {
-                                        selection.left(abs(cursorMovement))
-                                    } else {
-                                        selection.right(abs(cursorMovement))
-                                    }
-                                    ime.currentInputConnection.setSelection(
-                                        selection.start,
-                                        selection.end,
-                                    )
-                                    // reset offsetX, do not reset offsetY when sliding, it will break selecting
-                                    offsetX = 0f
-                                    // selection has changed; give feedback
-                                    if (vibrateOnSlide) view.performHapticFeedback(slideHapticConstant)
-                                }
-                            }
-                        }
+                        handleKeyDrag(
+                            gestureContext,
+                            dragAmount,
+                            SlideTriggers(
+                                slide = (keySize.dp.toPx() * 0.75f) + minSwipeLength,
+                                selection = (keySize.dp.toPx() * 1.25f) + minSwipeLength,
+                            ),
+                        )
                     },
                     onDragEnd = {
-                        lateinit var action: KeyAction
-
-                        val slideHoldTicks = resetSlideHoldVariables()
-
-                        if ((key.slideType == SlideType.MOVE_CURSOR || key.slideType == SlideType.DELETE) &&
-                            slideHoldEnabled && slideHoldTicks > 0
-                        ) {
-                            // The repeat coroutine already handled all movement/deletion; nothing more to do.
-                            action = KeyAction.Noop
-                            doneKeyAction(action, releaseState)
-                        } else if (key.slideType == SlideType.NONE ||
-                            !slideEnabled ||
-                            ((key.slideType == SlideType.DELETE) && !selection.active) ||
-                            ((key.slideType == SlideType.MOVE_CURSOR) && !hasSlideMoveCursorTriggered)
-                        ) {
-                            hasSlideMoveCursorTriggered = false
-
-                            // offset where we recognize if the swipe is back to the initial key
-                            // this offset needs to take the minSwipeLength into consideration. Otherwise
-                            // just a little (1px) swipe back would trigger the DragReturn action
-                            val finalOffsetThreshold = minSwipeLength * DRAG_RETURN_THRESHOLD_FACTOR
-
-                            // offset needed, at which the swipe qualifies for DragReturn or Circular
-                            // depending on minSwipeLength setting to have consistent swipe lengths or circle sizes
-                            val maxOffsetThreshold = minSwipeLength
-
-                            val finalOffset = positions.last()
-                            // we also consider the final offset small enough if it's kinda big, but
-                            // in a different direction than the max offset. This ensures better
-                            // swipe-and-return recognition
-                            val finalOffsetSmallEnough =
-                                finalOffset.getDistance() <= finalOffsetThreshold ||
-                                    (
-                                        swipeDirection(finalOffset.x, finalOffset.y, minSwipeLength, key.swipeType)?.equals(
-                                            swipeDirection(maxOffset.x, maxOffset.y, minSwipeLength, key.swipeType),
-                                        ) != true
-                                    )
-
-                            val maxOffsetDistance = maxOffset.getDistance().toDouble()
-                            val maxOffsetBigEnough = maxOffsetDistance >= maxOffsetThreshold
-                            action =
-                                (
-                                    if (maxOffsetBigEnough && finalOffsetSmallEnough) {
-                                        (
-                                            if (circularDragEnabled) {
-                                                val circularDragActions =
-                                                    mapOf(
-                                                        CircularDragAction.OppositeCase to oppositeCaseKey?.center?.action,
-                                                        CircularDragAction.Numeric to numericKey?.center?.action,
-                                                    )
-                                                circularDirection(positions, finalOffsetThreshold, minSwipeLength)?.let {
-                                                    when (it) {
-                                                        CircularDirection.Clockwise -> {
-                                                            circularDragActions[clockwiseDragAction]
-                                                        }
-
-                                                        CircularDirection.Counterclockwise -> {
-                                                            circularDragActions[counterclockwiseDragAction]
-                                                        }
-                                                    }
-                                                }
-                                            } else {
-                                                null
-                                            }
-                                        ) ?: (
-                                            if (dragReturnEnabled) {
-                                                val swipeDirection =
-                                                    swipeDirection(
-                                                        maxOffset.x,
-                                                        maxOffset.y,
-                                                        minSwipeLength,
-                                                        if (ghostKey == null) key.swipeType else SwipeNWay.EIGHT_WAY,
-                                                    )
-                                                key.getSwipe(swipeDirection)?.swipeReturnAction
-                                                    ?: oppositeCaseKey?.getSwipe(swipeDirection)?.action
-                                                    ?: ghostKey?.getSwipe(swipeDirection)?.swipeReturnAction
-                                            } else {
-                                                null
-                                            }
-                                        )
-                                    } else {
-                                        val swipeDirection =
-                                            swipeDirection(
-                                                offsetX,
-                                                offsetY,
-                                                minSwipeLength,
-                                                if (ghostKey == null) key.swipeType else SwipeNWay.EIGHT_WAY,
-                                            )
-                                        key.getSwipe(swipeDirection)?.action ?: (
-                                            ghostKey?.getSwipe(swipeDirection)?.action
-                                        )
-                                    }
-                                ) ?: key.center.action
-
-                            performKeyAction(action, keyActionContext)
-                            doneKeyAction(action, releaseState)
-                        } else if (key.slideType == SlideType.DELETE) {
-                            action =
-                                KeyAction.SendEvent(
-                                    KeyEvent(
-                                        KeyEvent.ACTION_DOWN,
-                                        KeyEvent
-                                            .KEYCODE_DEL,
-                                    ),
-                                )
-                            // only delete if valid selection
-                            val sel = ime.currentInputConnection.getSelectedText(0)
-                            sel?.let {
-                                if (it.isNotEmpty()) {
-                                    performKeyAction(action, keyActionContext)
-                                }
-                                // Play an extra haptic effect on supported devices when slide deleting text
-                                if (vibrateOnSlide && Build.VERSION.SDK_INT >= 30) {
-                                    view.performHapticFeedback(HapticFeedbackConstants.REJECT)
-                                }
-                            }
-                            doneKeyAction(action, releaseState)
-                        } else {
-                            hasSlideMoveCursorTriggered = false
-                            action =
-                                KeyAction.SendEvent(
-                                    KeyEvent(
-                                        KeyEvent.ACTION_UP,
-                                        KeyEvent.KEYCODE_DPAD_RIGHT,
-                                    ),
-                                )
-                            doneKeyAction(action, releaseState)
-                        }
-
-                        // Set tapCount and lastAction to avoid issues with multitap after slide
+                        val action =
+                            handleKeyDragEnd(
+                                gestureContext,
+                                SwipeKeys(key, ghostKey, oppositeCaseKey, numericKey),
+                                SwipeGesture(positions, maxOffset, gestureState.offsetX, gestureState.offsetY),
+                            )
                         tapCount = 0
                         lastAction.value = Pair(action, TimeSource.Monotonic.markNow())
-
-                        // Reset the drags
-                        offsetX = 0f
-                        offsetY = 0f
-                        maxOffset = Offset(0f, 0f)
-                        positions = listOf()
-
-                        // Reset selection
-                        selection = Selection()
+                        gestureState.resetDrag()
                     },
                 )
             }
 
-    // a 3x3 grid
-    // Use box so they can overlap
-    // Some magic padding numbers so that large radii don't obscure the legends
-    val radiusPercent = keyRadius / 100F
-    val keyRadiusAdd = 20.dp
-    val xPadding = (2 + keyBorderWidth).dp
-    val yPadding = (0 + keyBorderWidth).dp
+    val legendSizes = KeyLegendSizes(keySize.dp, keyBorderWidth.dp, keyRadius.dp)
+    val legendDisplay = KeyLegendDisplay(hideLetters, hideSymbols, capsLock)
 
-    val diagonalXPadding =
-        lerp(
-            xPadding,
-            xPadding +
-                keyRadiusAdd,
-            radiusPercent,
-        )
-    val diagonalYPadding =
-        lerp(
-            yPadding,
-            yPadding + keyRadiusAdd,
-            radiusPercent,
-        )
-
-    Box(
-        modifier = keyboardKeyModifier,
-    ) {
-        Box(
-            contentAlignment = Alignment.TopStart,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = diagonalXPadding,
-                        vertical = diagonalYPadding,
-                    ),
-        ) {
-            key.getSwipe(SwipeDirection.TOP_LEFT)?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-            }
-        }
-        Box(
-            contentAlignment = Alignment.TopCenter,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(vertical = yPadding),
-        ) {
-            key.getSwipe(SwipeDirection.TOP)?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-            }
-        }
-        Box(
-            contentAlignment = Alignment.TopEnd,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = diagonalXPadding,
-                        vertical = diagonalYPadding,
-                    ),
-        ) {
-            key.getSwipe(SwipeDirection.TOP_RIGHT)?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-            }
-        }
-        Box(
-            contentAlignment = Alignment.CenterStart,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = xPadding),
-        ) {
-            key.getSwipe(SwipeDirection.LEFT)?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-            }
-        }
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier =
-                Modifier
-                    .fillMaxSize(),
-        ) {
-            KeyText(key.center, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-        }
-
-        Box(
-            contentAlignment = Alignment.CenterEnd,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = xPadding),
-        ) {
-            key.getSwipe(SwipeDirection.RIGHT)?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-            }
-        }
-        Box(
-            contentAlignment = Alignment.BottomStart,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = diagonalXPadding,
-                        vertical = diagonalYPadding,
-                    ),
-        ) {
-            key.getSwipe(SwipeDirection.BOTTOM_LEFT)?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-            }
-        }
-        Box(
-            contentAlignment = Alignment.BottomCenter,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(vertical = yPadding),
-        ) {
-            key.getSwipe(SwipeDirection.BOTTOM)?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-            }
-        }
-        Box(
-            contentAlignment = Alignment.BottomEnd,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = diagonalXPadding,
-                        vertical = diagonalYPadding,
-                    ),
-        ) {
-            key.getSwipe(SwipeDirection.BOTTOM_RIGHT)?.let {
-                KeyText(it, (keySize - keyBorderWidth).dp, hideLetters, hideSymbols, capsLock)
-            }
-        }
-
-        // The animated box that fades out.
-        AnimatedVisibility(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(color = Color(0, 0, 0, 0)),
-            visible = releasedKey.value != null && !isPasswordField,
-            enter = EnterTransition.None,
-            exit = fadeOut(tween(animationSpeed)),
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .background(color = MaterialTheme.colorScheme.tertiaryContainer),
-            ) {}
-        }
-
-        // The animated key letter that falls downwards and then fades out.
-        AnimatedVisibility(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(color = Color(0, 0, 0, 0)),
-            visible = releasedKey.value != null && !isPasswordField,
-            enter = slideInVertically(tween(animationSpeed)),
-            exit = fadeOut(tween(animationSpeed)),
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                val spSize =
-                    fontSizeVariantToFontSize(
-                        fontSizeVariant = FontSizeVariant.LARGE,
-                        keySize = keySize.dp,
-                        isUpperCase = false,
-                    ).toPx.pxToSp
-                releasedKey.value?.let { text ->
-                    Text(
-                        text = text,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = spSize,
-                        lineHeight = spSize,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun KeyText(
-    key: KeyC,
-    keySize: Dp,
-    hideLetters: Boolean,
-    hideSymbols: Boolean,
-    capsLock: Boolean,
-) {
-    val color = colorVariantToColor(colorVariant = key.color)
-    val isUpperCase =
-        when (key.display) {
-            is KeyDisplay.TextDisplay -> {
-                key.display.text
-                    .firstOrNull()
-                    ?.isUpperCase() == true
-            }
-
-            else -> {
-                false
-            }
-        }
-    val fontSize =
-        fontSizeVariantToFontSize(
-            fontSizeVariant = key.size,
-            keySize = keySize,
-            isUpperCase = isUpperCase,
-        )
-
-    val display =
-        if (capsLock) {
-            key.capsModeDisplay ?: key.display
-        } else {
-            key.display
-        }
-
-    when (display) {
-        is KeyDisplay.IconDisplay -> {
-            Icon(
-                imageVector = display.icon,
-                contentDescription = display.icon.name,
-                tint = color,
-                modifier = Modifier.size(fontSize),
-            )
-        }
-
-        is KeyDisplay.TextDisplay -> {
-            // Only  hide the letters for text, not symbols
-            val containsLetters = display.text.any { it.isLetter() }
-            val containsNumbers = display.text.any { it.isDigit() }
-
-            // If its a letter key, use the hide letter setting
-            val hideKey =
-                if (containsLetters) {
-                    hideLetters
-                } else {
-                    if (containsNumbers) {
-                        false
-                    } else {
-                        hideSymbols
-                    }
-                }
-            if (!hideKey) {
-                val spSize = fontSize.toPx.pxToSp
-                Text(
-                    text = display.text,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = display.fontFamily,
-                    fontSize = spSize,
-                    lineHeight = spSize,
-                    color = color,
-                )
-            }
-        }
-
-        null -> {}
+    Box(modifier = keyboardKeyModifier) {
+        KeyLegends(key, legendSizes, legendDisplay)
+        KeyReleaseAnimation(releasedKey.value, isPasswordField, animationSpeed, keySize.dp)
     }
 }
