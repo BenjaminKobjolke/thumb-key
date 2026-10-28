@@ -23,6 +23,11 @@ import com.dessalines.thumbkey.keyboards.EMOJI_BACK_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.NUMERIC_KEY_ITEM
 import com.dessalines.thumbkey.keyboards.RETURN_KEY_ITEM
 import com.dessalines.thumbkey.utils.KeyAction
+import com.dessalines.thumbkey.utils.KeyActionCallbacks
+import com.dessalines.thumbkey.utils.KeyActionContext
+import com.dessalines.thumbkey.utils.KeyActionModeCallbacks
+import com.dessalines.thumbkey.utils.KeyActionOtherCallbacks
+import com.dessalines.thumbkey.utils.KeyActionSecondaryModeCallbacks
 import com.dessalines.thumbkey.utils.KeyItemC
 import com.dessalines.thumbkey.utils.KeyboardC
 import com.dessalines.thumbkey.utils.KeyboardDefinition
@@ -77,26 +82,41 @@ private fun handleEmojiPicked(
     val config = context.environment.config
     if (config.vibrateOnTap) context.pickerView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
     if (config.soundOnTap) context.audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK, .1f)
+    val callbacks = context.environment.callbacks
     performKeyAction(
-        action = KeyAction.CommitText(emoji),
-        ime = context.ime,
-        autoCapitalize = config.autoCapitalize,
-        keyboardSettings = context.environment.keyboardSettings,
-        onToggleShiftMode = context.environment.callbacks.onToggleShiftMode,
-        onToggleCtrlMode = context.environment.callbacks.onToggleCtrlMode,
-        onToggleAltMode = context.environment.callbacks.onToggleAltMode,
-        onToggleNumericMode = context.environment.callbacks.onToggleNumericMode,
-        onToggleEmojiMode = context.environment.callbacks.onToggleEmojiMode,
-        onToggleCapsLock = context.environment.callbacks.onToggleCapsLockFromEmojiPicker,
-        onAutoCapitalize = context.environment.callbacks.onAutoCapitalize,
-        onToggleClipboardMode = context.environment.callbacks.onToggleClipboardMode,
-        onToggleTranscriptHistoryMode = context.environment.callbacks.onToggleTranscriptHistoryMode,
-        onToggleSketchMode = context.environment.callbacks.onToggleSketchMode,
-        onToggleHideLetters = context.environment.callbacks.onToggleHideLetters,
-        onSwitchLanguage = context.onSwitchLanguage,
-        onChangePosition = context.environment.callbacks.onChangePosition,
-        onKeyEvent = {},
-        abbreviationBufferEnabled = config.abbreviationBufferEnabled,
+        KeyAction.CommitText(emoji),
+        KeyActionContext(
+            ime = context.ime,
+            autoCapitalize = config.autoCapitalize,
+            keyboardSettings = context.environment.keyboardSettings,
+            callbacks =
+                KeyActionCallbacks(
+                    modeToggles =
+                        KeyActionModeCallbacks(
+                            callbacks.onToggleShiftMode,
+                            callbacks.onToggleCtrlMode,
+                            callbacks.onToggleAltMode,
+                            callbacks.onToggleNumericMode,
+                        ),
+                    secondaryModeToggles =
+                        KeyActionSecondaryModeCallbacks(
+                            callbacks.onToggleEmojiMode,
+                            callbacks.onToggleClipboardMode,
+                            callbacks.onToggleTranscriptHistoryMode,
+                            callbacks.onToggleSketchMode,
+                        ),
+                    other =
+                        KeyActionOtherCallbacks(
+                            callbacks.onToggleCapsLockFromEmojiPicker,
+                            callbacks.onToggleHideLetters,
+                            callbacks.onAutoCapitalize,
+                            context.onSwitchLanguage,
+                            callbacks.onChangePosition,
+                            {},
+                        ),
+                ),
+            abbreviationBufferEnabled = config.abbreviationBufferEnabled,
+        ),
     )
 }
 

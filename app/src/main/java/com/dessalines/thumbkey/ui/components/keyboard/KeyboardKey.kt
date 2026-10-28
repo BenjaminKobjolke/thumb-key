@@ -51,10 +51,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.dessalines.thumbkey.IMEService
+import com.dessalines.thumbkey.ui.theme.colorVariantToColor
+import com.dessalines.thumbkey.ui.theme.fontSizeVariantToFontSize
+import com.dessalines.thumbkey.ui.theme.pxToSp
+import com.dessalines.thumbkey.ui.theme.toPx
 import com.dessalines.thumbkey.utils.CircularDirection
 import com.dessalines.thumbkey.utils.CircularDragAction
 import com.dessalines.thumbkey.utils.FontSizeVariant
 import com.dessalines.thumbkey.utils.KeyAction
+import com.dessalines.thumbkey.utils.KeyActionCallbacks
+import com.dessalines.thumbkey.utils.KeyActionContext
+import com.dessalines.thumbkey.utils.KeyActionModeCallbacks
+import com.dessalines.thumbkey.utils.KeyActionOtherCallbacks
+import com.dessalines.thumbkey.utils.KeyActionReleaseState
+import com.dessalines.thumbkey.utils.KeyActionSecondaryModeCallbacks
 import com.dessalines.thumbkey.utils.KeyC
 import com.dessalines.thumbkey.utils.KeyDisplay
 import com.dessalines.thumbkey.utils.KeyItemC
@@ -67,19 +77,15 @@ import com.dessalines.thumbkey.utils.SwipeNWay
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.buildTapActions
 import com.dessalines.thumbkey.utils.circularDirection
-import com.dessalines.thumbkey.utils.colorVariantToColor
 import com.dessalines.thumbkey.utils.deleteWordBeforeCursor
 import com.dessalines.thumbkey.utils.doneKeyAction
-import com.dessalines.thumbkey.utils.fontSizeVariantToFontSize
 import com.dessalines.thumbkey.utils.isPasswordField
 import com.dessalines.thumbkey.utils.nextWordAfterCursor
 import com.dessalines.thumbkey.utils.performKeyAction
 import com.dessalines.thumbkey.utils.previousWordBeforeCursor
-import com.dessalines.thumbkey.utils.pxToSp
 import com.dessalines.thumbkey.utils.slideCursorDistance
 import com.dessalines.thumbkey.utils.startSelection
 import com.dessalines.thumbkey.utils.swipeDirection
-import com.dessalines.thumbkey.utils.toPx
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -166,6 +172,40 @@ fun KeyboardKey(
 
     val ctx = LocalContext.current
     val ime = ctx as IMEService
+    val keyActionContext =
+        KeyActionContext(
+            ime = ime,
+            autoCapitalize = autoCapitalize,
+            keyboardSettings = keyboardSettings,
+            callbacks =
+                KeyActionCallbacks(
+                    modeToggles =
+                        KeyActionModeCallbacks(
+                            onToggleShiftMode,
+                            onToggleCtrlMode,
+                            onToggleAltMode,
+                            onToggleNumericMode,
+                        ),
+                    secondaryModeToggles =
+                        KeyActionSecondaryModeCallbacks(
+                            onToggleEmojiMode,
+                            onToggleClipboardMode,
+                            onToggleTranscriptHistoryMode,
+                            onToggleSketchMode,
+                        ),
+                    other =
+                        KeyActionOtherCallbacks(
+                            onToggleCapsLock,
+                            onToggleHideLetters,
+                            onAutoCapitalize,
+                            onSwitchLanguage,
+                            onChangePosition,
+                            onKeyEvent,
+                        ),
+                ),
+            abbreviationBufferEnabled = abbreviationBufferEnabled,
+            onSketchAction = onSketchAction,
+        )
     val scope = rememberCoroutineScope()
 
     // Don't show animations for password fields
@@ -176,6 +216,7 @@ fun KeyboardKey(
 
     val isDragged = remember { mutableStateOf(false) }
     val releasedKey = remember { mutableStateOf<String?>(null) }
+    val releaseState = KeyActionReleaseState(scope, isDragged, releasedKey, animationHelperSpeed)
 
     var tapCount by remember { mutableIntStateOf(0) }
     val tapActions =
@@ -313,69 +354,47 @@ fun KeyboardKey(
         return slideHoldTicks
     }
 
+    fun updateSlideHoldReturn(returnThreshold: Float) {
+        if (slideHoldReturnDetected || maxOffset.getDistance() < minSwipeLength) return
+        val currentOffset = positions.lastOrNull() ?: Offset(offsetX, offsetY)
+        val closeEnough = currentOffset.getDistance() <= returnThreshold
+        val currentSwipeDirection =
+            swipeDirection(currentOffset.x, currentOffset.y, minSwipeLength, SwipeNWay.FOUR_WAY_CROSS)
+        val maxSwipeDirection =
+            swipeDirection(maxOffset.x, maxOffset.y, minSwipeLength, SwipeNWay.FOUR_WAY_CROSS)
+        if (closeEnough || currentSwipeDirection != maxSwipeDirection) {
+            slideHoldReturnDetected = true
+        }
+    }
+
+    fun startSlideHold() {
+        val direction = swipeDirection(offsetX, offsetY, minSwipeLength, SwipeNWay.FOUR_WAY_CROSS) ?: return
+        slideHoldDirection = direction
+        when (key.slideType) {
+            SlideType.MOVE_CURSOR -> {
+                if (direction == SwipeDirection.LEFT || direction == SwipeDirection.RIGHT) {
+                    slideHoldRepeatJob = scope.launch { repeatCursorMovement(direction) }
+                }
+            }
+
+            SlideType.DELETE -> {
+                if (direction == SwipeDirection.LEFT) {
+                    slideHoldRepeatJob = scope.launch { repeatDeleteAction() }
+                }
+            }
+
+            SlideType.NONE -> {
+                Unit
+            }
+        }
+    }
+
     fun handleSlideHold() {
-        // Slide-hold: detect swipe direction, then
-        // repeat cursor movement (spacebar) or deletion (backspace) while held
         val returnThreshold = minSwipeLength * DRAG_RETURN_THRESHOLD_FACTOR
-
         if (slideHoldDirection != null) {
-            // Direction already detected; check for return gesture.
-            if (!slideHoldReturnDetected && maxOffset.getDistance() >= minSwipeLength) {
-                // Mirrors the drag-return detection in onDragEnd: the gesture qualifies as "slide-and-return" if either
-                // (a) it's close enough to the origin, or
-                // (b) it moved into a different cardinal direction from the max-offset direction.
-                val currentOffset = positions.lastOrNull() ?: Offset(offsetX, offsetY)
-                val closeEnough = currentOffset.getDistance() <= returnThreshold
-                val currentSwipeDirection =
-                    swipeDirection(
-                        currentOffset.x,
-                        currentOffset.y,
-                        minSwipeLength,
-                        SwipeNWay.FOUR_WAY_CROSS,
-                    )
-                val maxSwipeDirection =
-                    swipeDirection(
-                        maxOffset.x,
-                        maxOffset.y,
-                        minSwipeLength,
-                        SwipeNWay.FOUR_WAY_CROSS,
-                    )
-                val oppositeDirection = currentSwipeDirection != maxSwipeDirection
-                if (closeEnough || oppositeDirection) {
-                    slideHoldReturnDetected = true
-                }
-            }
+            updateSlideHoldReturn(returnThreshold)
         } else {
-            // Try to detect cardinal swipe direction
-            val dir =
-                swipeDirection(
-                    offsetX,
-                    offsetY,
-                    minSwipeLength,
-                    SwipeNWay.FOUR_WAY_CROSS,
-                )
-            if (dir == null) {
-                return
-            }
-
-            slideHoldDirection = dir
-            when (key.slideType) {
-                SlideType.MOVE_CURSOR -> {
-                    if (dir == SwipeDirection.LEFT || dir == SwipeDirection.RIGHT) {
-                        // Launch repeating cursor movement coroutine
-                        slideHoldRepeatJob = scope.launch { repeatCursorMovement(dir) }
-                    }
-                }
-
-                SlideType.DELETE -> {
-                    // Backspace: only left-swipe is supported
-                    if (dir == SwipeDirection.LEFT) {
-                        slideHoldRepeatJob = scope.launch { repeatDeleteAction() }
-                    }
-                }
-
-                SlideType.NONE -> {}
-            }
+            startSlideHold()
         }
     }
 
@@ -415,55 +434,13 @@ fun KeyboardKey(
 
                     // Set the correct action
                     val action = tapActions[tapCount % tapActions.size]
-                    performKeyAction(
-                        action = action,
-                        ime = ime,
-                        autoCapitalize = autoCapitalize,
-                        keyboardSettings = keyboardSettings,
-                        onToggleShiftMode = onToggleShiftMode,
-                        onToggleCtrlMode = onToggleCtrlMode,
-                        onToggleAltMode = onToggleAltMode,
-                        onToggleNumericMode = onToggleNumericMode,
-                        onToggleEmojiMode = onToggleEmojiMode,
-                        onToggleClipboardMode = onToggleClipboardMode,
-                        onToggleTranscriptHistoryMode = onToggleTranscriptHistoryMode,
-                        onToggleSketchMode = onToggleSketchMode,
-                        onToggleCapsLock = onToggleCapsLock,
-                        onToggleHideLetters = onToggleHideLetters,
-                        onAutoCapitalize = onAutoCapitalize,
-                        onSwitchLanguage = onSwitchLanguage,
-                        onChangePosition = onChangePosition,
-                        onKeyEvent = onKeyEvent,
-                        abbreviationBufferEnabled = abbreviationBufferEnabled,
-                        onSketchAction = onSketchAction,
-                    )
-                    doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
+                    performKeyAction(action, keyActionContext)
+                    doneKeyAction(action, releaseState)
                 },
                 onLongClick = {
                     key.longPress?.let { action ->
-                        performKeyAction(
-                            action = action,
-                            ime = ime,
-                            autoCapitalize = autoCapitalize,
-                            keyboardSettings = keyboardSettings,
-                            onToggleShiftMode = onToggleShiftMode,
-                            onToggleCtrlMode = onToggleCtrlMode,
-                            onToggleAltMode = onToggleAltMode,
-                            onToggleNumericMode = onToggleNumericMode,
-                            onToggleEmojiMode = onToggleEmojiMode,
-                            onToggleClipboardMode = onToggleClipboardMode,
-                            onToggleTranscriptHistoryMode = onToggleTranscriptHistoryMode,
-                            onToggleSketchMode = onToggleSketchMode,
-                            onToggleCapsLock = onToggleCapsLock,
-                            onToggleHideLetters = onToggleHideLetters,
-                            onAutoCapitalize = onAutoCapitalize,
-                            onSwitchLanguage = onSwitchLanguage,
-                            onChangePosition = onChangePosition,
-                            onKeyEvent = onKeyEvent,
-                            abbreviationBufferEnabled = abbreviationBufferEnabled,
-                            onSketchAction = onSketchAction,
-                        )
-                        doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
+                        performKeyAction(action, keyActionContext)
+                        doneKeyAction(action, releaseState)
                         if (vibrateOnTap) {
                             view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                         }
@@ -657,7 +634,7 @@ fun KeyboardKey(
                         ) {
                             // The repeat coroutine already handled all movement/deletion; nothing more to do.
                             action = KeyAction.Noop
-                            doneKeyAction(scope, action, isDragged, releasedKey, animationHelperSpeed)
+                            doneKeyAction(action, releaseState)
                         } else if (key.slideType == SlideType.NONE ||
                             !slideEnabled ||
                             ((key.slideType == SlideType.DELETE) && !selection.active) ||
@@ -742,35 +719,8 @@ fun KeyboardKey(
                                     }
                                 ) ?: key.center.action
 
-                            performKeyAction(
-                                action = action,
-                                ime = ime,
-                                autoCapitalize = autoCapitalize,
-                                keyboardSettings = keyboardSettings,
-                                onToggleShiftMode = onToggleShiftMode,
-                                onToggleCtrlMode = onToggleCtrlMode,
-                                onToggleAltMode = onToggleAltMode,
-                                onToggleNumericMode = onToggleNumericMode,
-                                onToggleEmojiMode = onToggleEmojiMode,
-                                onToggleClipboardMode = onToggleClipboardMode,
-                                onToggleTranscriptHistoryMode = onToggleTranscriptHistoryMode,
-                                onToggleSketchMode = onToggleSketchMode,
-                                onToggleCapsLock = onToggleCapsLock,
-                                onToggleHideLetters = onToggleHideLetters,
-                                onAutoCapitalize = onAutoCapitalize,
-                                onSwitchLanguage = onSwitchLanguage,
-                                onChangePosition = onChangePosition,
-                                onKeyEvent = onKeyEvent,
-                                abbreviationBufferEnabled = abbreviationBufferEnabled,
-                                onSketchAction = onSketchAction,
-                            )
-                            doneKeyAction(
-                                scope,
-                                action,
-                                isDragged,
-                                releasedKey,
-                                animationHelperSpeed,
-                            )
+                            performKeyAction(action, keyActionContext)
+                            doneKeyAction(action, releaseState)
                         } else if (key.slideType == SlideType.DELETE) {
                             action =
                                 KeyAction.SendEvent(
@@ -784,41 +734,14 @@ fun KeyboardKey(
                             val sel = ime.currentInputConnection.getSelectedText(0)
                             sel?.let {
                                 if (it.isNotEmpty()) {
-                                    performKeyAction(
-                                        action = action,
-                                        ime = ime,
-                                        autoCapitalize = autoCapitalize,
-                                        keyboardSettings = keyboardSettings,
-                                        onToggleShiftMode = onToggleShiftMode,
-                                        onToggleCtrlMode = onToggleCtrlMode,
-                                        onToggleAltMode = onToggleAltMode,
-                                        onToggleNumericMode = onToggleNumericMode,
-                                        onToggleEmojiMode = onToggleEmojiMode,
-                                        onToggleClipboardMode = onToggleClipboardMode,
-                                        onToggleTranscriptHistoryMode = onToggleTranscriptHistoryMode,
-                                        onToggleSketchMode = onToggleSketchMode,
-                                        onToggleCapsLock = onToggleCapsLock,
-                                        onToggleHideLetters = onToggleHideLetters,
-                                        onAutoCapitalize = onAutoCapitalize,
-                                        onSwitchLanguage = onSwitchLanguage,
-                                        onChangePosition = onChangePosition,
-                                        onKeyEvent = onKeyEvent,
-                                        abbreviationBufferEnabled = abbreviationBufferEnabled,
-                                        onSketchAction = onSketchAction,
-                                    )
+                                    performKeyAction(action, keyActionContext)
                                 }
                                 // Play an extra haptic effect on supported devices when slide deleting text
                                 if (vibrateOnSlide && Build.VERSION.SDK_INT >= 30) {
                                     view.performHapticFeedback(HapticFeedbackConstants.REJECT)
                                 }
                             }
-                            doneKeyAction(
-                                scope,
-                                action,
-                                isDragged,
-                                releasedKey,
-                                animationHelperSpeed,
-                            )
+                            doneKeyAction(action, releaseState)
                         } else {
                             hasSlideMoveCursorTriggered = false
                             action =
@@ -828,13 +751,7 @@ fun KeyboardKey(
                                         KeyEvent.KEYCODE_DPAD_RIGHT,
                                     ),
                                 )
-                            doneKeyAction(
-                                scope,
-                                action,
-                                isDragged,
-                                releasedKey,
-                                animationHelperSpeed,
-                            )
+                            doneKeyAction(action, releaseState)
                         }
 
                         // Set tapCount and lastAction to avoid issues with multitap after slide
