@@ -25,6 +25,7 @@ import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
 import com.dessalines.thumbkey.db.DEFAULT_SWITCH_IME_MODE
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
 import com.dessalines.thumbkey.summera.SummeraDictation
+import com.dessalines.thumbkey.textprocessors.CursorSelectionUpdate
 import com.dessalines.thumbkey.ui.components.keyboard.SketchState
 import com.dessalines.thumbkey.utils.AbbreviationManager
 import com.dessalines.thumbkey.utils.EMPTY_SUGGESTION_CONTEXT
@@ -159,10 +160,12 @@ class IMEService :
 
         currentKeyboardDefinition?.settings?.textProcessor?.handleCursorUpdate(
             this,
-            selectionStart,
-            selectionEnd,
-            cursorAnchorInfo.selectionStart,
-            cursorAnchorInfo.selectionEnd,
+            CursorSelectionUpdate(
+                oldSelectionStart = selectionStart,
+                oldSelectionEnd = selectionEnd,
+                newSelectionStart = cursorAnchorInfo.selectionStart,
+                newSelectionEnd = cursorAnchorInfo.selectionEnd,
+            ),
         )
 
         selectionStart = cursorAnchorInfo.selectionStart

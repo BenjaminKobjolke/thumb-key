@@ -117,23 +117,20 @@ class ComposeComboProcessor : TextProcessor {
 
     override fun handleCursorUpdate(
         ime: IMEService,
-        oldSelStart: Int,
-        oldSelEnd: Int,
-        newSelStart: Int,
-        newSelEnd: Int,
+        update: CursorSelectionUpdate,
     ) {
         if (!composing) {
-            base = newSelStart
+            base = update.newSelectionStart
             return
         }
 
         // Our own edits leave the cursor at the end of the composing region.
-        if (newSelStart == base + display.length && newSelStart == newSelEnd) return
+        if (update.newSelectionStart == base + display.length && update.newSelectionStart == update.newSelectionEnd) return
 
         // Anything else means the user moved the caret or selected text; drop the sequence.
-        Log.d(TAG, "ComposeCombo: cursor moved to $newSelStart, cancelling")
+        Log.d(TAG, "ComposeCombo: cursor moved to ${update.newSelectionStart}, cancelling")
         cancel(ime.currentInputConnection)
-        base = newSelStart
+        base = update.newSelectionStart
     }
 
     override fun updateCursorPosition(ime: IMEService) {

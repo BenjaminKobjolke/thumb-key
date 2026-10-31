@@ -21,6 +21,8 @@ class KoreanTextProcessor : TextProcessor {
         ime: IMEService,
         input: CharSequence,
     ) {
+        if (input.isEmpty()) return
+
         val ic = ime.currentInputConnection
         val inputChar = input[0]
 
@@ -69,21 +71,18 @@ class KoreanTextProcessor : TextProcessor {
 
     override fun handleCursorUpdate(
         ime: IMEService,
-        oldSelStart: Int,
-        oldSelEnd: Int,
-        newSelStart: Int,
-        newSelEnd: Int,
+        update: CursorSelectionUpdate,
     ) {
         // after committing each letter selectionStart is incremented to predict cursor position
-        if (oldSelStart == newSelStart || selectionStart == newSelStart) return
-        if (newSelStart != newSelEnd) {
+        if (update.oldSelectionStart == update.newSelectionStart || selectionStart == update.newSelectionStart) return
+        if (update.newSelectionStart != update.newSelectionEnd) {
             resetState()
         }
 
-        Log.d(TAG, "TextProcessor: cursor moved -> $newSelStart")
+        Log.d(TAG, "TextProcessor: cursor moved -> ${update.newSelectionStart}")
 
-        selectionStart = newSelStart
-        selectionEnd = newSelEnd
+        selectionStart = update.newSelectionStart
+        selectionEnd = update.newSelectionEnd
 
         if (state != CompositionState.EMPTY) {
             handleFinishInput(ime)

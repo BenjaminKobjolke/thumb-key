@@ -3,6 +3,13 @@ package com.dessalines.thumbkey.textprocessors
 import android.view.KeyEvent
 import com.dessalines.thumbkey.IMEService
 
+data class CursorSelectionUpdate(
+    val oldSelectionStart: Int,
+    val oldSelectionEnd: Int,
+    val newSelectionStart: Int,
+    val newSelectionEnd: Int,
+)
+
 interface TextProcessor {
     // intercepts text to be committed
     fun handleCommitText(
@@ -26,10 +33,7 @@ interface TextProcessor {
     // notifies on selection update
     fun handleCursorUpdate(
         ime: IMEService,
-        oldSelStart: Int,
-        oldSelEnd: Int,
-        newSelStart: Int,
-        newSelEnd: Int,
+        update: CursorSelectionUpdate,
     )
 
     // manually update position after switching layouts
