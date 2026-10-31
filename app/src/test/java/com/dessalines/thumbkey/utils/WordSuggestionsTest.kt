@@ -5,6 +5,18 @@ import org.junit.Test
 
 class WordSuggestionsTest {
     @Test
+    fun matchesPrefixCase() {
+        assertEquals("Stuttgart", matchPrefixCase("stuttgart", "Stuttga"))
+        assertEquals("STUTTGART", matchPrefixCase("stuttgart", "STU"))
+        assertEquals("Stuttgart", matchPrefixCase("stuttgart", "S"))
+        assertEquals("Stuttgart", matchPrefixCase("Stuttgart", "stu"))
+        assertEquals("stuttgart", matchPrefixCase("stuttgart", "stu"))
+        assertEquals("stuttgart", matchPrefixCase("stuttgart", ""))
+        assertEquals("Über", matchPrefixCase("über", "Üb"))
+        assertEquals("E-mail", matchPrefixCase("e-mail", "E-"))
+    }
+
+    @Test
     fun acceptsOnlyLearnableWords() {
         assertEquals("Hallo", learnableWord("Hallo,"))
         assertEquals(null, learnableWord("a"))

@@ -133,6 +133,7 @@ internal fun AbbreviationSuggestionItem(
 @Composable
 internal fun WordSuggestionItem(
     word: WordUsage,
+    text: String,
     actions: WordSuggestionActions,
 ) {
     var menuExpanded by remember(word.id) { mutableStateOf(false) }
@@ -146,7 +147,7 @@ internal fun WordSuggestionItem(
                     ).padding(horizontal = 10.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(word.word, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
             DropdownMenuItem(

@@ -39,6 +39,7 @@ import com.dessalines.thumbkey.utils.AbbreviationManager
 import com.dessalines.thumbkey.utils.KeyboardFieldConnection
 import com.dessalines.thumbkey.utils.applyExpansion
 import com.dessalines.thumbkey.utils.expansionResult
+import com.dessalines.thumbkey.utils.matchPrefixCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
@@ -221,9 +222,11 @@ private fun SuggestionBarWordList(
             }
         }
         items(data.words, key = { it.id }) { word ->
+            val text = matchPrefixCase(word.word, data.prefix)
             WordSuggestionItem(
                 word = word,
-                actions = suggestionActions(actionContext, word),
+                text = text,
+                actions = suggestionActions(actionContext, word, text),
             )
         }
     }
@@ -232,6 +235,7 @@ private fun SuggestionBarWordList(
 private fun suggestionActions(
     context: SuggestionBarActionContext,
     word: WordUsage,
+    text: String,
 ): WordSuggestionActions {
     val data = context.data
     val options = context.options
@@ -241,7 +245,7 @@ private fun suggestionActions(
             tapFeedback(data.view, data.audioManager, options)
             data.context.ignoreNextCursorMove()
             data.context.appInputConnection.deleteSurroundingText(data.prefix.length, 0)
-            data.context.appInputConnection.commitText(word.word + " ", 1)
+            data.context.appInputConnection.commitText(text + " ", 1)
             AbbreviationManager.getInstance(data.context).clearBuffer()
             scope.launch(Dispatchers.IO) {
                 val now = System.currentTimeMillis()

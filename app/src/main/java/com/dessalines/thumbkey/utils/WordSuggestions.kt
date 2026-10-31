@@ -36,6 +36,18 @@ fun currentPartialWord(textBeforeCursor: String): String =
         lastWord(textBeforeCursor).orEmpty()
     }
 
+fun matchPrefixCase(
+    word: String,
+    prefix: String,
+): String {
+    val letters = prefix.filter(Char::isLetter)
+    return when {
+        letters.length >= 2 && letters.all(Char::isUpperCase) -> word.uppercase()
+        prefix.firstOrNull()?.isUpperCase() == true -> word.replaceFirstChar { it.titlecase() }
+        else -> word
+    }
+}
+
 fun suggestionContext(textBeforeCursor: String): SuggestionContext {
     if (textBeforeCursor.isEmpty()) return EMPTY_SUGGESTION_CONTEXT
 
