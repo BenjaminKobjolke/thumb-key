@@ -18,12 +18,6 @@ if (-not (Test-Path -LiteralPath $PromptFile -PathType Leaf)) {
 }
 
 $prompt = Get-Content -LiteralPath $PromptFile -Raw -Encoding UTF8
-$backendCommand = if ($Backend -eq 'codex') { 'codex' } else { 'reasonix' }
-
-if (-not (Get-Command -Name $backendCommand -ErrorAction SilentlyContinue)) {
-    Write-Error "backend command not found: $backendCommand"
-    exit 127
-}
 
 if ($Backend -eq 'codex') {
     & codex exec --dangerously-bypass-approvals-and-sandbox $prompt *> $LogFile
