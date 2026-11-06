@@ -23,6 +23,7 @@ class ThemeColorPairTest {
                 ThemeColor.HighContrastColorful to highContrastColorful(),
                 ThemeColor.Ancom to ancom(),
                 ThemeColor.Neon to neon(),
+                ThemeColor.Magma to magma(),
             )
 
         assertEquals(ThemeColor.entries.toSet(), expectedPairs.keys)

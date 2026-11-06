@@ -31,6 +31,7 @@ import com.dessalines.thumbkey.keyboards.TOGGLE_CLIPBOARD_MODE_TRUE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_CTRL_FALSE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_CTRL_TRUE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_EMOJI_MODE_TRUE_KEYC
+import com.dessalines.thumbkey.keyboards.TOGGLE_HIDE_LETTERS_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_NUMERIC_MODE_FALSE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_NUMERIC_MODE_TRUE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_SHIFT_FALSE_KEYC
@@ -52,6 +53,7 @@ class CommonKeyCFromKeyActionTest {
                 KeyActionSerializable.ToggleEmojiMode to TOGGLE_EMOJI_MODE_TRUE_KEYC,
                 KeyActionSerializable.ToggleClipboardMode to TOGGLE_CLIPBOARD_MODE_TRUE_KEYC,
                 KeyActionSerializable.ToggleSketchMode to TOGGLE_SKETCH_MODE_TRUE_KEYC,
+                KeyActionSerializable.ToggleHideLetters to TOGGLE_HIDE_LETTERS_KEYC,
                 KeyActionSerializable.ToggleCapsLock to TOGGLE_CAPS_KEYC,
                 KeyActionSerializable.ToggleShiftModeTrue to TOGGLE_SHIFT_TRUE_KEYC,
                 KeyActionSerializable.ToggleShiftModeFalse to TOGGLE_SHIFT_FALSE_KEYC,

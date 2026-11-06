@@ -155,5 +155,7 @@ private fun matchesSearchQuery(
     query: String,
 ): Boolean {
     if (query.isBlank()) return true
-    return stripCombiningMarks(keyboardLayout.name).contains(stripCombiningMarks(query), ignoreCase = true)
+    val normalizedQuery = stripCombiningMarks(query)
+    return stripCombiningMarks(text).contains(normalizedQuery, ignoreCase = true) ||
+        keyboardLayout.name.contains(normalizedQuery, ignoreCase = true)
 }

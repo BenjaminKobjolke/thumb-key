@@ -110,4 +110,5 @@ private val STATIC_COLOR_SCHEMES: Map<ThemeColor, () -> Pair<ColorScheme, ColorS
         ThemeColor.HighContrastColorful to ::highContrastColorful,
         ThemeColor.Ancom to ::ancom,
         ThemeColor.Neon to ::neon,
+        ThemeColor.Magma to ::magma,
     )

@@ -35,6 +35,7 @@ import com.dessalines.thumbkey.keyboards.TOGGLE_CLIPBOARD_MODE_TRUE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_CTRL_FALSE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_CTRL_TRUE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_EMOJI_MODE_TRUE_KEYC
+import com.dessalines.thumbkey.keyboards.TOGGLE_HIDE_LETTERS_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_NUMERIC_MODE_FALSE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_NUMERIC_MODE_TRUE_KEYC
 import com.dessalines.thumbkey.keyboards.TOGGLE_SHIFT_FALSE_KEYC
@@ -237,6 +238,7 @@ enum class KeyActionSerializable(
     ToggleEmojiMode(TOGGLE_EMOJI_MODE_TRUE_KEYC),
     ToggleClipboardMode(TOGGLE_CLIPBOARD_MODE_TRUE_KEYC),
     ToggleSketchMode(TOGGLE_SKETCH_MODE_TRUE_KEYC),
+    ToggleHideLetters(TOGGLE_HIDE_LETTERS_KEYC),
     ToggleCapsLock(TOGGLE_CAPS_KEYC),
     ToggleShiftModeFalse(TOGGLE_SHIFT_FALSE_KEYC),
     ToggleShiftModeTrue(TOGGLE_SHIFT_TRUE_KEYC),

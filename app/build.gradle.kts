@@ -21,8 +21,8 @@ android {
         applicationId = "com.dessalines.thumbkey"
         minSdk = 24
         targetSdk = 37
-        versionCode = 188
-        versionName = "5.1.18"
+        versionCode = 190
+        versionName = "5.1.20"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -100,9 +100,6 @@ dependencies {
     // Summera AI (XIDA AI chat API) client
     implementation(project(":aichatapi"))
 
-    // Freedroidwarn
-    implementation("com.github.woheller69:FreeDroidWarn:V1.14")
-
     // Exporting / importing DB helper
     implementation("com.github.dessalines:room-db-export-import:0.1.1")
 
@@ -160,8 +157,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.21")
 
     // Arrow-kt for mutating deeply nested data classes
-    implementation("io.arrow-kt:arrow-optics:2.2.3")
-    ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.2.3")
+    implementation("io.arrow-kt:arrow-optics:2.3.0")
+    ksp("io.arrow-kt:arrow-optics-ksp-plugin:2.3.0")
 
     // Handwriting recognition for sketch mode, fully offline
     implementation("io.github.toldry:glyphsketch:0.1.1")
