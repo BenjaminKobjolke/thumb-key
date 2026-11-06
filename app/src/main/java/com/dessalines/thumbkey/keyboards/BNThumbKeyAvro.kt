@@ -139,21 +139,8 @@ val KB_BN_THUMBKEY_AVRO_SHIFTED =
                     center = KeyC("A", size = LARGE),
                     swipeType = FOUR_WAY_CROSS,
                     left = KeyC("L"),
-                    bottom =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.ArrowDropDown),
-                            action = ToggleShiftMode(false),
-                            swipeReturnAction = ToggleCurrentWordCapitalization(false),
-                            color = MUTED,
-                        ),
-                    top =
-                        KeyC(
-                            display = KeyDisplay.IconDisplay(Icons.Outlined.KeyboardCapslock),
-                            capsModeDisplay = KeyDisplay.IconDisplay(Icons.Outlined.Copyright),
-                            action = ToggleCapsLock,
-                            swipeReturnAction = ToggleCurrentWordCapitalization(true),
-                            color = MUTED,
-                        ),
+                    bottom = TOGGLE_SHIFT_FALSE_KEYC,
+                    top = TOGGLE_CAPS_KEYC,
                 ),
                 NUMERIC_KEY_ITEM,
             ),
