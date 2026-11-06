@@ -5,14 +5,14 @@ internal object AvroConditionEvaluator {
     private const val CONSONANTS = "bcdfghjklmnpqrstvwxyz"
 
     fun passes(
-        cond: AvroEngine.Cond,
+        cond: AvroPatternDsl.Cond,
         fixed: String,
         start: Int,
         end: Int,
-        prev: Int,
     ): Boolean {
         val negative = cond.scope.startsWith("!")
         val scope = if (negative) cond.scope.drop(1) else cond.scope
+        val prev = start - 1
         val chk = if (cond.type == "suffix") end else prev
         val context = Context(fixed, start, end)
         val hit =
@@ -33,7 +33,7 @@ internal object AvroConditionEvaluator {
     )
 
     private fun isPunctuationHit(
-        cond: AvroEngine.Cond,
+        cond: AvroPatternDsl.Cond,
         context: Context,
         chk: Int,
     ): Boolean {
@@ -54,7 +54,7 @@ internal object AvroConditionEvaluator {
     }
 
     private fun isExactHit(
-        cond: AvroEngine.Cond,
+        cond: AvroPatternDsl.Cond,
         context: Context,
     ): Boolean {
         val len = context.fixed.length
