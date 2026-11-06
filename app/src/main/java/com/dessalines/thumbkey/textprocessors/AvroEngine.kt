@@ -6,11 +6,9 @@ package com.dessalines.thumbkey.textprocessors
  * https://github.com/torifat/jsAvroPhonetic
  */
 object AvroEngine {
-    private const val VOWELS = "aeiou"
-    private const val CONSONANTS = "bcdfghjklmnpqrstvwxyz"
     private const val CASE_SENSITIVE = "oiudgjnrstyz"
 
-    private data class Cond(
+    internal data class Cond(
         val type: String,
         val scope: String,
         val value: String = "",
@@ -433,7 +431,10 @@ object AvroEngine {
                 val end = cur + pattern.find.length
                 if (end > fixed.length || fixed.substring(start, end) != pattern.find) continue
                 for (rule in pattern.rules) {
-                    if (rule.conds.all { condPass(it, fixed, start, end, prev) }) {
+                    if (rule.conds.all {
+                            AvroConditionEvaluator.passes(it, fixed, start, end, prev)
+                        }
+                    ) {
                         out.append(rule.replace)
                         cur = end
                         matched = true
@@ -459,55 +460,4 @@ object AvroEngine {
         buildString {
             for (ch in input) append(if (ch.lowercaseChar() in CASE_SENSITIVE) ch else ch.lowercaseChar())
         }
-
-    private fun isVowel(ch: Char) = ch.lowercaseChar() in VOWELS
-
-    private fun isConsonant(ch: Char) = ch.lowercaseChar() in CONSONANTS
-
-    private fun isPunctuation(ch: Char) = !isVowel(ch) && !isConsonant(ch)
-
-    private fun condPass(
-        cond: Cond,
-        fixed: String,
-        start: Int,
-        end: Int,
-        prev: Int,
-    ): Boolean {
-        val negative = cond.scope.startsWith("!")
-        val scope = if (negative) cond.scope.drop(1) else cond.scope
-        val chk = if (cond.type == "suffix") end else prev
-        val len = fixed.length
-        val hit =
-            when (scope) {
-                "punctuation" -> {
-                    val atBoundary = (chk < 0 && cond.type == "prefix") || (chk >= len && cond.type == "suffix")
-                    atBoundary || (chk in fixed.indices && isPunctuation(fixed[chk]))
-                }
-
-                "vowel" -> {
-                    val inRange = (chk >= 0 && cond.type == "prefix") || (chk < len && cond.type == "suffix")
-                    inRange && isVowel(fixed[chk])
-                }
-
-                "consonant" -> {
-                    val inRange = (chk >= 0 && cond.type == "prefix") || (chk < len && cond.type == "suffix")
-                    inRange && isConsonant(fixed[chk])
-                }
-
-                "exact" -> {
-                    val (s, e) =
-                        if (cond.type == "suffix") {
-                            end to (end + cond.value.length)
-                        } else {
-                            (start - cond.value.length) to start
-                        }
-                    s >= 0 && e < len && fixed.substring(s, e) == cond.value
-                }
-
-                else -> {
-                    true
-                }
-            }
-        return hit xor negative
-    }
 }
