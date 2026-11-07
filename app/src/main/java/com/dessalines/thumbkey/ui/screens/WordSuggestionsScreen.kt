@@ -1,8 +1,9 @@
 package com.dessalines.thumbkey.ui.screens
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -54,27 +55,38 @@ fun WordSuggestionsScreen(
             WordSuggestionsTopBar(navController)
         },
     ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp),
         ) {
-            WordSuggestionsDescription()
+            item {
+                WordSuggestionsDescription()
+            }
 
-            WordSuggestionSettings(
-                enabled = enabled,
-                combinationsEnabled = combinationsEnabled,
-                onEnabledChange = {
-                    enabled = it
-                    appSettingsViewModel.updateWordSuggestionsEnabled(it.toInt())
-                },
-                onCombinationsEnabledChange = {
-                    combinationsEnabled = it
-                    appSettingsViewModel.updateWordCombinationsEnabled(it.toInt())
-                },
-            )
+            item {
+                WordSuggestionSettings(
+                    enabled = enabled,
+                    combinationsEnabled = combinationsEnabled,
+                    onEnabledChange = {
+                        enabled = it
+                        appSettingsViewModel.updateWordSuggestionsEnabled(it.toInt())
+                    },
+                    onCombinationsEnabledChange = {
+                        combinationsEnabled = it
+                        appSettingsViewModel.updateWordCombinationsEnabled(it.toInt())
+                    },
+                )
+            }
 
-            WordSuggestionSearchField(query, onQueryChange = { query = it })
-            ResetIgnoredWordsButton(wordList.ignoredCount, onClick = { confirmReset = true })
-            WordSuggestionList(
+            item {
+                WordSuggestionSearchField(query, onQueryChange = { query = it })
+            }
+
+            item {
+                ResetIgnoredWordsButton(wordList.ignoredCount, onClick = { confirmReset = true })
+            }
+
+            wordSuggestionItems(
                 words = wordList.shown,
                 allWords = wordList.words,
                 actions =

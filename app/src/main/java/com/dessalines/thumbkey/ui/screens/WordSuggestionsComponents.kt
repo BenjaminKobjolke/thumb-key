@@ -4,11 +4,10 @@ package com.dessalines.thumbkey.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
@@ -142,28 +141,27 @@ internal fun ResetIgnoredWordsButton(
     }
 }
 
-@Composable
-internal fun WordSuggestionList(
+internal fun LazyListScope.wordSuggestionItems(
     words: List<WordUsage>,
     allWords: List<WordUsage>,
     actions: WordSuggestionListActions,
 ) {
     if (words.isEmpty()) {
-        Text(
-            text = stringResource(if (allWords.isEmpty()) R.string.word_suggestions_empty else R.string.word_suggestions_no_match),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(vertical = 16.dp),
-        )
+        item {
+            Text(
+                text = stringResource(if (allWords.isEmpty()) R.string.word_suggestions_empty else R.string.word_suggestions_no_match),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 16.dp),
+            )
+        }
     } else {
-        LazyColumn(contentPadding = PaddingValues(bottom = 16.dp)) {
-            items(words, key = { it.id }) { word ->
-                WordSuggestionItem(
-                    word = word,
-                    onEdit = { actions.onEdit(word) },
-                    onIgnore = { actions.onIgnore(word) },
-                    onDelete = { actions.onDelete(word) },
-                )
-            }
+        items(words, key = { it.id }) { word ->
+            WordSuggestionItem(
+                word = word,
+                onEdit = { actions.onEdit(word) },
+                onIgnore = { actions.onIgnore(word) },
+                onDelete = { actions.onDelete(word) },
+            )
         }
     }
 }
