@@ -188,5 +188,7 @@ sealed class KeyAction {
 
     data object HideKeyboard : KeyAction()
 
+    data object AcceptBestSuggestion : KeyAction()
+
     data object Noop : KeyAction()
 }

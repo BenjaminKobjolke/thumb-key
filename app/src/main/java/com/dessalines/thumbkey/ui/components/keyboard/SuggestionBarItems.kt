@@ -5,10 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Check
@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -37,12 +38,17 @@ import com.dessalines.thumbkey.db.Abbreviation
 import com.dessalines.thumbkey.db.WordPairDao
 import com.dessalines.thumbkey.db.WordUsage
 import com.dessalines.thumbkey.db.WordUsageDao
+import com.dessalines.thumbkey.utils.MIN_PHRASE_PAIR_USES
+import com.dessalines.thumbkey.utils.MIN_SUGGEST_USES
 import com.dessalines.thumbkey.utils.SUGGESTION_LIMIT
 import com.dessalines.thumbkey.utils.escapeLike
 import com.dessalines.thumbkey.utils.expansionResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 internal data class SuggestedWordsQuery(
     val dao: WordUsageDao,
@@ -53,33 +59,47 @@ internal data class SuggestedWordsQuery(
     val lastWordKey: String?,
 )
 
-internal fun mergeSuggestions(
-    pairs: List<WordUsage>,
-    recent: List<WordUsage>,
-    lastWordKey: String?,
-): List<WordUsage> =
-    (pairs + recent.filterNot { it.wordKey == lastWordKey })
-        .distinctBy { it.id }
-        .take(SUGGESTION_LIMIT)
-
-internal fun observeSuggestedWords(query: SuggestedWordsQuery): Flow<List<WordUsage>> {
+@OptIn(ExperimentalCoroutinesApi::class)
+internal fun observeSuggestedWords(query: SuggestedWordsQuery): Flow<List<Suggestion?>> {
     val (dao, wordPairDao, prefix, previousKey, combinationsEnabled, lastWordKey) = query
     val normalWords =
         if (prefix.isEmpty()) {
-            dao.recent(SUGGESTION_LIMIT)
+            flowOf(emptyList<WordUsage>())
         } else {
-            dao.suggest(escapeLike(prefix.lowercase()), SUGGESTION_LIMIT)
+            dao.suggest(escapeLike(prefix.lowercase()), MIN_SUGGEST_USES, SUGGESTION_LIMIT)
         }
     val pairWords =
         if (combinationsEnabled && previousKey != null) {
-            wordPairDao.nextWords(previousKey, escapeLike(prefix.lowercase()), SUGGESTION_LIMIT)
+            wordPairDao.nextWords(
+                previousKey,
+                escapeLike(prefix.lowercase()),
+                MIN_SUGGEST_USES,
+                MIN_SUGGEST_USES,
+                SUGGESTION_LIMIT,
+            )
         } else {
             flowOf(emptyList<WordUsage>())
         }
 
     return combine(pairWords, normalWords) { pairs, normal ->
         // The word just typed is the least likely next word.
-        mergeSuggestions(pairs, normal, lastWordKey)
+        rankSuggestions(prefix, normal, pairs, lastWordKey)
+    }.flatMapLatest { ranked ->
+        val best = ranked.firstOrNull()?.first
+        val phraseNext =
+            if (combinationsEnabled && best != null) {
+                wordPairDao
+                    .nextWords(
+                        best.wordKey,
+                        "",
+                        MIN_SUGGEST_USES,
+                        MIN_PHRASE_PAIR_USES,
+                        SUGGESTION_LIMIT,
+                    ).map { it.firstOrNull() }
+            } else {
+                flowOf(null)
+            }
+        phraseNext.map { next -> buildSuggestions(ranked, next) }
     }
 }
 
@@ -116,14 +136,18 @@ internal fun AbbreviationSuggestionItem(
     onClick: () -> Unit,
 ) {
     Box(
-        modifier = Modifier.clickable(onClick = onClick).padding(horizontal = 10.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = expansionResult(abbreviation.expansion, prefixLength).expandedText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.widthIn(max = 200.dp),
             color = MaterialTheme.colorScheme.primary,
         )
     }
@@ -132,49 +156,74 @@ internal fun AbbreviationSuggestionItem(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WordSuggestionItem(
-    word: WordUsage,
-    text: String,
+    suggestion: Suggestion,
+    prefix: String,
+    bold: Boolean,
     actions: WordSuggestionActions,
 ) {
-    var menuExpanded by remember(word.id) { mutableStateOf(false) }
-    Box(contentAlignment = Alignment.Center) {
+    var menuExpanded by remember(suggestion.first.id) { mutableStateOf(false) }
+    Box(
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+        contentAlignment = Alignment.Center,
+    ) {
         Box(
             modifier =
                 Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
                     .combinedClickable(
                         onClick = actions.onSelect,
                         onLongClick = { menuExpanded = true },
-                    ).padding(horizontal = 10.dp),
+                    ).padding(horizontal = 4.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.edit_word_suggestion)) },
-                leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
-                onClick = {
-                    menuExpanded = false
-                    actions.onEdit()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.word_suggestion_ignore)) },
-                leadingIcon = { Icon(Icons.Outlined.Block, contentDescription = null) },
-                onClick = {
-                    menuExpanded = false
-                    actions.onIgnore()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.delete_word_suggestion)) },
-                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
-                onClick = {
-                    menuExpanded = false
-                    actions.onDelete()
-                },
+            Text(
+                text = suggestion.text(prefix),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
             )
         }
+        WordSuggestionMenu(
+            expanded = menuExpanded,
+            onDismiss = { menuExpanded = false },
+            actions = actions,
+        )
+    }
+}
+
+@Composable
+private fun WordSuggestionMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    actions: WordSuggestionActions,
+) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.edit_word_suggestion)) },
+            leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                actions.onEdit()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.word_suggestion_ignore)) },
+            leadingIcon = { Icon(Icons.Outlined.Block, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                actions.onIgnore()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.delete_word_suggestion)) },
+            leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                actions.onDelete()
+            },
+        )
     }
 }
 

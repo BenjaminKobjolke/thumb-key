@@ -4,6 +4,7 @@ import androidx.annotation.Keep
 import com.charleskorn.kaml.AnchorsAndAliases
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
+import com.dessalines.thumbkey.keyboards.ACCEPT_BEST_SUGGESTION_KEYC
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEYC
 import com.dessalines.thumbkey.keyboards.BACKSPACE_TEXT_MANIPULATION_KEYC
 import com.dessalines.thumbkey.keyboards.COMPOSE_COMBO_KEYC
@@ -270,5 +271,6 @@ enum class KeyActionSerializable(
     DeleteWordBeforeCursor(DELETE_WORD_BEFORE_CURSOR_KEYC),
     DeleteWordAfterCursor(DELETE_WORD_AFTER_CURSOR_KEYC),
     StartComposeCombo(COMPOSE_COMBO_KEYC),
+    AcceptBestSuggestion(ACCEPT_BEST_SUGGESTION_KEYC),
     Noop(NOOP_KEYC),
 }

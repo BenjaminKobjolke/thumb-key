@@ -20,11 +20,16 @@ data class WordPair(
 
 @Dao
 interface WordPairDao {
+    // Suggestion ranking uses pair frequency, so expose the pair count and timestamp as WordUsage fields.
     @Query(
-        "SELECT WordUsage.* FROM WordPair " +
+        "SELECT WordUsage.id, WordUsage.word, WordUsage.word_key, " +
+            "WordPair.use_count AS use_count, WordPair.last_used AS last_used, WordUsage.ignored " +
+            "FROM WordPair " +
             "INNER JOIN WordUsage ON WordUsage.word_key = WordPair.next_word_key " +
             "WHERE WordPair.previous_key = :previousKey " +
             "AND WordUsage.ignored = 0 " +
+            "AND WordUsage.use_count >= :minWordUses " +
+            "AND WordPair.use_count >= :minPairUses " +
             "AND WordUsage.word_key LIKE :prefixKey || '%' ESCAPE '\\' " +
             "AND WordUsage.word_key != :prefixKey " +
             "ORDER BY WordPair.use_count DESC, WordPair.last_used DESC LIMIT :limit",
@@ -32,6 +37,8 @@ interface WordPairDao {
     fun nextWords(
         previousKey: String,
         prefixKey: String,
+        minWordUses: Int,
+        minPairUses: Int,
         limit: Int,
     ): Flow<List<WordUsage>>
 

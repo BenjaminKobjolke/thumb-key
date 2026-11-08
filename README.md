@@ -381,6 +381,7 @@ This swaps the 'switch language' and 'toggle emoji' actions on the top-right key
 - `SwitchIME`
 - `SwitchIMEVoice`
 - `HideKeyboard`
+- `AcceptBestSuggestion` # Accepts the best suggestion shown in the middle of the suggestion bar.
 - `StartComposeCombo` # The compose key. See [Compose combo](#compose-combo).
 - `Noop` # No operation. Does nothing.
 

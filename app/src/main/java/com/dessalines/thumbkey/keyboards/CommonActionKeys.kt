@@ -87,6 +87,12 @@ val HIDE_KEYBOARD_KEYC =
         action = HideKeyboard,
         color = MUTED,
     )
+val ACCEPT_BEST_SUGGESTION_KEYC =
+    KeyC(
+        display = KeyDisplay.IconDisplay(Icons.Outlined.Check),
+        action = AcceptBestSuggestion,
+        color = MUTED,
+    )
 
 fun textEditKeyItem(center: KeyC): KeyItemC =
     KeyItemC(

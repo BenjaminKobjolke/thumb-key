@@ -246,6 +246,10 @@ private fun handleRemainingKeyActions(
             context.ime.requestHideSelf(0)
         }
 
+        KeyAction.AcceptBestSuggestion -> {
+            context.ime.acceptBestSuggestion?.invoke()
+        }
+
         KeyAction.Noop -> {}
 
         else -> {

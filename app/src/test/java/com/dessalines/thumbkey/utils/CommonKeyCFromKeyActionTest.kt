@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.utils
 
+import com.dessalines.thumbkey.keyboards.ACCEPT_BEST_SUGGESTION_KEYC
 import com.dessalines.thumbkey.keyboards.BACKSPACE_KEYC
 import com.dessalines.thumbkey.keyboards.BACKSPACE_TEXT_MANIPULATION_KEYC
 import com.dessalines.thumbkey.keyboards.COMPOSE_COMBO_KEYC
@@ -85,6 +86,7 @@ class CommonKeyCFromKeyActionTest {
                 KeyActionSerializable.SwitchIMEVoice to SWITCH_IME_VOICE_KEYC,
                 KeyActionSerializable.HideKeyboard to HIDE_KEYBOARD_KEYC,
                 KeyActionSerializable.StartComposeCombo to COMPOSE_COMBO_KEYC,
+                KeyActionSerializable.AcceptBestSuggestion to ACCEPT_BEST_SUGGESTION_KEYC,
                 KeyActionSerializable.Noop to NOOP_KEYC,
             )
 

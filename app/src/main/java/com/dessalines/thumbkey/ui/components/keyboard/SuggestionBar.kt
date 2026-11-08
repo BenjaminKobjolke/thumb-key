@@ -4,25 +4,16 @@ import android.content.Context
 import android.media.AudioManager
 import android.view.HapticFeedbackConstants
 import android.view.View
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -39,7 +30,6 @@ import com.dessalines.thumbkey.utils.AbbreviationManager
 import com.dessalines.thumbkey.utils.KeyboardFieldConnection
 import com.dessalines.thumbkey.utils.applyExpansion
 import com.dessalines.thumbkey.utils.expansionResult
-import com.dessalines.thumbkey.utils.matchPrefixCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
@@ -61,9 +51,8 @@ private data class SuggestionBarData(
     val wordPairDao: WordPairDao,
     val prefix: String,
     val previousKey: String?,
-    val words: List<WordUsage>,
+    val words: List<Suggestion?>,
     val abbreviation: Abbreviation?,
-    val listState: LazyListState,
 )
 
 private data class SuggestionBarEditor(
@@ -161,10 +150,8 @@ private fun rememberSuggestionBarData(
     val abbreviation by remember(prefix) {
         if (prefix.isEmpty()) flowOf<Abbreviation?>(null) else abbreviationDao.observeAbbreviation(prefix)
     }.collectAsState(initial = null)
-    val listState = rememberLazyListState()
     val audioManager = remember(context) { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 
-    LaunchedEffect(prefix) { listState.scrollToItem(0) }
     return SuggestionBarData(
         context,
         view,
@@ -175,7 +162,6 @@ private fun rememberSuggestionBarData(
         previousKey,
         words,
         abbreviation,
-        listState,
     )
 }
 
@@ -201,16 +187,14 @@ private fun SuggestionBarWordList(
 ) {
     val scope = rememberCoroutineScope()
     val actionContext = SuggestionBarActionContext(data, options, scope, onEdit)
-    LazyRow(
-        state = data.listState,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        contentPadding = PaddingValues(horizontal = 4.dp),
-        modifier = Modifier.fillMaxWidth().height(options.height),
-    ) {
-        data.abbreviation?.let { abbreviation ->
-            item(key = "abbreviation-${abbreviation.id}") {
-                AbbreviationSuggestionItem(abbreviation, data.prefix.length) {
+    val abbreviation = data.abbreviation
+    val left = if (abbreviation == null) data.words.getOrNull(0) else data.words.getOrNull(1)
+    val center = if (abbreviation == null) data.words.getOrNull(1) else null
+    val right = data.words.getOrNull(if (abbreviation == null) 2 else 0)
+    val selectBest =
+        when {
+            abbreviation != null -> {
+                {
                     tapFeedback(data.view, data.audioManager, options)
                     data.context.ignoreNextCursorMove()
                     applyExpansion(
@@ -220,44 +204,87 @@ private fun SuggestionBarWordList(
                     AbbreviationManager.getInstance(data.context).clearBuffer()
                 }
             }
+
+            center != null -> {
+                suggestionActions(actionContext, center).onSelect
+            }
+
+            else -> {
+                null
+            }
         }
-        items(data.words, key = { it.id }) { word ->
-            val text = matchPrefixCase(word.word, data.prefix)
-            WordSuggestionItem(
-                word = word,
-                text = text,
-                actions = suggestionActions(actionContext, word, text),
-            )
+
+    DisposableEffect(data.context, selectBest) {
+        data.context.acceptBestSuggestion = selectBest
+        onDispose {
+            if (data.context.acceptBestSuggestion === selectBest) {
+                data.context.acceptBestSuggestion = null
+            }
         }
+    }
+
+    SuggestionBarSlots(
+        modifier = Modifier.height(options.height).padding(horizontal = 4.dp),
+        left = { SuggestionBarWordSlot(actionContext, left, bold = false) },
+        center = {
+            if (abbreviation != null) {
+                AbbreviationSuggestionItem(abbreviation, data.prefix.length) { selectBest?.invoke() }
+            } else {
+                SuggestionBarWordSlot(actionContext, center, bold = true)
+            }
+        },
+        right = { SuggestionBarWordSlot(actionContext, right, bold = false) },
+    )
+}
+
+@Composable
+private fun SuggestionBarWordSlot(
+    context: SuggestionBarActionContext,
+    suggestion: Suggestion?,
+    bold: Boolean,
+) {
+    if (suggestion != null) {
+        WordSuggestionItem(
+            suggestion = suggestion,
+            prefix = context.data.prefix,
+            bold = bold,
+            actions = suggestionActions(context, suggestion),
+        )
     }
 }
 
 private fun suggestionActions(
     context: SuggestionBarActionContext,
-    word: WordUsage,
-    text: String,
+    suggestion: Suggestion,
 ): WordSuggestionActions {
     val data = context.data
     val options = context.options
     val scope = context.scope
+    val first = suggestion.first
     return WordSuggestionActions(
         onSelect = {
             tapFeedback(data.view, data.audioManager, options)
             data.context.ignoreNextCursorMove()
             data.context.appInputConnection.deleteSurroundingText(data.prefix.length, 0)
-            data.context.appInputConnection.commitText(text + " ", 1)
+            data.context.appInputConnection.commitText(suggestion.text(data.prefix) + " ", 1)
             AbbreviationManager.getInstance(data.context).clearBuffer()
             scope.launch(Dispatchers.IO) {
                 val now = System.currentTimeMillis()
-                data.wordUsageDao.recordUse(word.word, word.wordKey, now)
+                data.wordUsageDao.recordUse(first.word, first.wordKey, now)
                 if (options.wordCombinationsEnabled && data.previousKey != null) {
-                    data.wordPairDao.recordUse(data.previousKey, word.wordKey, now)
+                    data.wordPairDao.recordUse(data.previousKey, first.wordKey, now)
+                }
+                suggestion.next?.let { next ->
+                    data.wordUsageDao.recordUse(next.word, next.wordKey, now)
+                    if (options.wordCombinationsEnabled) {
+                        data.wordPairDao.recordUse(first.wordKey, next.wordKey, now)
+                    }
                 }
             }
         },
-        onEdit = { context.onEdit(word) },
-        onIgnore = { options.onIgnoreRequest(word) },
-        onDelete = { scope.launch(Dispatchers.IO) { data.wordUsageDao.deleteById(word.id) } },
+        onEdit = { context.onEdit(first) },
+        onIgnore = { options.onIgnoreRequest(first) },
+        onDelete = { scope.launch(Dispatchers.IO) { data.wordUsageDao.deleteById(first.id) } },
     )
 }
 

@@ -93,6 +93,8 @@ class IMEService :
     var suggestionContext by mutableStateOf(EMPTY_SUGGESTION_CONTEXT)
         private set
 
+    var acceptBestSuggestion: (() -> Unit)? = null
+
     // Sketch mode's drawing, kept while the keyboard is closed and opened again
     val sketchState = SketchState()
     private var clipboardManager: ThumbKeyClipboardManager? = null

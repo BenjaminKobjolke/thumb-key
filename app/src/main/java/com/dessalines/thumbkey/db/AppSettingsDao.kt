@@ -41,15 +41,13 @@ interface AbbreviationDao {
 @Dao
 interface WordUsageDao {
     @Query(
-        "SELECT * FROM WordUsage WHERE ignored = 0 AND word_key LIKE :prefixKey || '%' ESCAPE '\\' AND word_key != :prefixKey ORDER BY use_count DESC, last_used DESC LIMIT :limit",
+        "SELECT * FROM WordUsage WHERE ignored = 0 AND use_count >= :minUses AND word_key LIKE :prefixKey || '%' ESCAPE '\\' AND word_key != :prefixKey ORDER BY use_count DESC, last_used DESC LIMIT :limit",
     )
     fun suggest(
         prefixKey: String,
+        minUses: Int,
         limit: Int,
     ): Flow<List<WordUsage>>
-
-    @Query("SELECT * FROM WordUsage WHERE ignored = 0 ORDER BY last_used DESC LIMIT :limit")
-    fun recent(limit: Int): Flow<List<WordUsage>>
 
     @Query("SELECT * FROM WordUsage WHERE ignored = 0 ORDER BY use_count DESC, last_used DESC")
     fun all(): Flow<List<WordUsage>>

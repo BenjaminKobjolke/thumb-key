@@ -10,6 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 const val SUGGESTION_LIMIT = 50
+const val SUGGESTION_SLOTS = 3
+const val MIN_LETTERS_SAVED = 2
+const val MIN_SUGGEST_USES = 2
+const val MIN_PHRASE_PAIR_USES = 3
 
 fun learnableWord(
     word: String?,
