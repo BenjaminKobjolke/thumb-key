@@ -5,11 +5,13 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material3.Icon
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
 private const val SKETCH_PEN_WIDTH_DP = 6f
@@ -62,7 +65,7 @@ internal fun SketchPad(
 }
 
 @Composable
-private fun SketchPadHint(
+private fun BoxScope.SketchPadHint(
     visible: Boolean,
     hint: String,
     hintColor: androidx.compose.ui.graphics.Color,
@@ -71,7 +74,8 @@ private fun SketchPadHint(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
-        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+        // The hint must not contribute to the pad's intrinsic height.
+        modifier = Modifier.matchParentSize().padding(horizontal = 20.dp),
     ) {
         Icon(
             imageVector = Icons.Outlined.Draw,
@@ -82,9 +86,10 @@ private fun SketchPadHint(
         Text(
             text = hint,
             color = hintColor,
-            fontSize = 14.sp,
-            lineHeight = 19.sp,
+            autoSize = TextAutoSize.StepBased(minFontSize = 1.sp, maxFontSize = 14.sp),
+            lineHeight = (19f / 14f).em,
             textAlign = TextAlign.Center,
+            modifier = Modifier.weight(1f, fill = false),
         )
     }
 }

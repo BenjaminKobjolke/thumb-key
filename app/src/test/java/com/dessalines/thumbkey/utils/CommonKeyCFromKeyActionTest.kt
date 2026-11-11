@@ -64,6 +64,8 @@ class CommonKeyCFromKeyActionTest {
                 KeyActionSerializable.ToggleAltModeFalse to TOGGLE_ALT_FALSE_KEYC,
                 KeyActionSerializable.Left to SPACEBAR_LEFT_KEYC,
                 KeyActionSerializable.Right to SPACEBAR_RIGHT_KEYC,
+                KeyActionSerializable.Up to SPACEBAR_PROGRAMMING_TOP_KEYC,
+                KeyActionSerializable.Down to SPACEBAR_PROGRAMMING_BOTTOM_KEYC,
                 KeyActionSerializable.Top to SPACEBAR_PROGRAMMING_TOP_KEYC,
                 KeyActionSerializable.Bottom to SPACEBAR_PROGRAMMING_BOTTOM_KEYC,
                 KeyActionSerializable.IMEComplete to RETURN_KEYC,
@@ -99,5 +101,11 @@ class CommonKeyCFromKeyActionTest {
     @Test
     fun nullActionResolvesToNull() {
         assertNull(getCommonKeyCFromKeyAction(null))
+    }
+
+    @Test
+    fun programmingSpacebarKeysUseCursorActions() {
+        assertSame(KeyAction.CursorUp, SPACEBAR_PROGRAMMING_TOP_KEYC.action)
+        assertSame(KeyAction.CursorDown, SPACEBAR_PROGRAMMING_BOTTOM_KEYC.action)
     }
 }

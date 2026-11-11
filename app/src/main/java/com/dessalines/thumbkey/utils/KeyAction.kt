@@ -166,6 +166,10 @@ sealed class KeyAction {
 
     data object Redo : KeyAction()
 
+    data object CursorUp : KeyAction()
+
+    data object CursorDown : KeyAction()
+
     data object CursorToLineStart : KeyAction()
 
     data object CursorToLineEnd : KeyAction()

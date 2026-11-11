@@ -132,6 +132,24 @@ private fun handleCursorNavigationAction(
     context: KeyActionContext,
 ): Boolean {
     when (action) {
+        is KeyAction.CursorUp -> {
+            Log.d(TAG, "Cursor up")
+            // Reported as a key event, so ctrl and alt modes are released like for the left and right keys.
+            handleModeAndOtherActions(
+                KeyAction.SendEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_UP)),
+                context,
+            )
+        }
+
+        is KeyAction.CursorDown -> {
+            Log.d(TAG, "Cursor down")
+            // Reported as a key event, so ctrl and alt modes are released like for the left and right keys.
+            handleModeAndOtherActions(
+                KeyAction.SendEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_DOWN)),
+                context,
+            )
+        }
+
         is KeyAction.SelectLineWithCursor -> {
             selectLineWithCursorAction(context.ime, context.keyboardSettings)
         }
