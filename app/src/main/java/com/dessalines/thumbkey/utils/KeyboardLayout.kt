@@ -269,4 +269,5 @@ enum class KeyboardLayout(
     CZTypeSplit(KB_CZ_TYPESPLIT_FULL), // čeština type-split
     ENMessagEaseComposeCombo(KB_EN_MESSAGEASE_COMPOSE_COMBO), // english messagease compose combo
     BNThumbKeyAvro(KB_BN_THUMBKEY_AVRO), // বাংলা avro thumb-key
+    DEThumbKey4x3SymNum(KB_DE_THUMBKEY_4x3_SYMNUM), // deutsch thumb-key 4x3 symnum
 }
