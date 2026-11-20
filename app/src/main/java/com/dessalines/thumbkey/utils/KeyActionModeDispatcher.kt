@@ -167,18 +167,18 @@ private fun moveRight(position: KeyboardPosition): KeyboardPosition =
 
 private val CYCLE_LEFT_POSITIONS =
     mapOf(
-        KeyboardPosition.Right to KeyboardPosition.Dual,
+        KeyboardPosition.Right to KeyboardPosition.Center,
         KeyboardPosition.Center to KeyboardPosition.Left,
-        KeyboardPosition.Left to KeyboardPosition.Right,
-        KeyboardPosition.Dual to KeyboardPosition.Center,
+        KeyboardPosition.Left to KeyboardPosition.Dual,
+        KeyboardPosition.Dual to KeyboardPosition.Right,
     )
 
 private val CYCLE_RIGHT_POSITIONS =
     mapOf(
-        KeyboardPosition.Left to KeyboardPosition.Dual,
+        KeyboardPosition.Left to KeyboardPosition.Center,
         KeyboardPosition.Center to KeyboardPosition.Right,
-        KeyboardPosition.Right to KeyboardPosition.Left,
-        KeyboardPosition.Dual to KeyboardPosition.Center,
+        KeyboardPosition.Right to KeyboardPosition.Dual,
+        KeyboardPosition.Dual to KeyboardPosition.Left,
     )
 
 private fun cycleLeft(position: KeyboardPosition): KeyboardPosition = CYCLE_LEFT_POSITIONS.getValue(position)
