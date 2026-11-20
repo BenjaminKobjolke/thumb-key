@@ -13,7 +13,7 @@ Merged `dessalines/thumb-key` upstream into the fork (`main`).
 
 ## Conflicts resolved
 
-- `utils/Utils.kt` — kept the fork's split-file version because upstream's edited `performKeyAction` block had already moved out of this file. Ported the new cycle order into `utils/KeyActionModeDispatcher.kt`'s `CYCLE_LEFT_POSITIONS` and `CYCLE_RIGHT_POSITIONS` maps.
+- `Utils.kt` — resolved to the fork's version because upstream's edited `performKeyAction` block had already moved out of this file. Fork commit `fc814887` had already ported the new cycle order into `KeyActionModeDispatcher.kt`, so the merge adds no code change.
 
 ## Fork features verified intact
 
