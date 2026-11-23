@@ -65,8 +65,8 @@ internal fun <T> SearchableMultiSelectPreferenceDialog(
             pinnedValues.filter { data.matchesSearch(it, query) }
         }
     val filteredValues =
-        remember(data.values, query) {
-            data.values.filter { data.matchesSearch(it, query) }
+        remember(data.values, pinnedValues, query) {
+            data.values.filter { it !in pinnedValues && data.matchesSearch(it, query) }
         }
     val onToggle: (T, Boolean) -> Unit = { itemValue, checked ->
         dialogValue = if (checked) dialogValue + itemValue else dialogValue - itemValue
@@ -90,7 +90,12 @@ private fun <T> SearchableMultiSelectListPreferenceData<T>.matchesSearch(
     value: T,
     query: String,
 ): Boolean {
-    val terms = query.trim().split(Regex("\\s+")).filter(String::isNotEmpty).ifEmpty { listOf(query) }
+    val terms =
+        query
+            .trim()
+            .split(Regex("\\s+"))
+            .filter(String::isNotEmpty)
+            .ifEmpty { listOf(query) }
     val text = valueToText(value).text
     return terms.all { term -> searchFilter(value, text, term) }
 }
