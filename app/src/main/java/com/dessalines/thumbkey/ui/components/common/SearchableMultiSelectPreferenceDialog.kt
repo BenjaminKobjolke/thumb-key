@@ -3,6 +3,7 @@ package com.dessalines.thumbkey.ui.components.common
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -61,11 +62,11 @@ internal fun <T> SearchableMultiSelectPreferenceDialog(
     val pinnedValues = rememberSaveable { data.values.filter { it in data.value } }
     val filteredPinnedValues =
         remember(pinnedValues, query) {
-            pinnedValues.filter { data.searchFilter(it, data.valueToText(it).text, query) }
+            pinnedValues.filter { data.matchesSearch(it, query) }
         }
     val filteredValues =
         remember(data.values, query) {
-            data.values.filter { data.searchFilter(it, data.valueToText(it).text, query) }
+            data.values.filter { data.matchesSearch(it, query) }
         }
     val onToggle: (T, Boolean) -> Unit = { itemValue, checked ->
         dialogValue = if (checked) dialogValue + itemValue else dialogValue - itemValue
@@ -83,6 +84,15 @@ internal fun <T> SearchableMultiSelectPreferenceDialog(
         )
 
     SearchableMultiSelectDialog(data, title, content, actions)
+}
+
+private fun <T> SearchableMultiSelectListPreferenceData<T>.matchesSearch(
+    value: T,
+    query: String,
+): Boolean {
+    val terms = query.trim().split(Regex("\\s+")).filter(String::isNotEmpty).ifEmpty { listOf(query) }
+    val text = valueToText(value).text
+    return terms.all { term -> searchFilter(value, text, term) }
 }
 
 private data class SearchableMultiSelectDialogContent<T>(
@@ -120,7 +130,7 @@ private fun <T> SearchableMultiSelectDialog(
 }
 
 @Composable
-private fun <T> SearchableMultiSelectDialogBody(
+private fun <T> ColumnScope.SearchableMultiSelectDialogBody(
     data: SearchableMultiSelectListPreferenceData<T>,
     title: @Composable () -> Unit,
     content: SearchableMultiSelectDialogContent<T>,
@@ -133,7 +143,7 @@ private fun <T> SearchableMultiSelectDialogBody(
         placeholder = data.searchPlaceholder,
     )
     SearchableMultiSelectDialogValues(
-        items = SearchableMultiSelectDialogItems(data, content.rows),
+        itemData = SearchableMultiSelectDialogItems(data, content.rows),
         onToggle = content.onToggle,
         modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 8.dp),
     )
