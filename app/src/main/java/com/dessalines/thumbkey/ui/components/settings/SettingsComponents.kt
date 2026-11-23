@@ -23,6 +23,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.navigation.NavController
 import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.ui.components.common.SearchableMultiSelectListPreference
+import com.dessalines.thumbkey.ui.components.common.SearchableMultiSelectListPreferenceData
+import com.dessalines.thumbkey.ui.components.common.SearchableMultiSelectListPreferencePresentation
 import com.dessalines.thumbkey.ui.components.settings.about.USER_GUIDE_URL
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.openLink
@@ -55,19 +57,25 @@ private fun SettingsLayoutItems(state: SettingsFeatureState) {
     }
 
     SearchableMultiSelectListPreference(
-        value = state.layoutsState,
-        values = KeyboardLayout.entries.sortedBy { it.keyboardDefinition.title },
-        valueToText = { AnnotatedString(it.keyboardDefinition.title) },
-        searchFilter = ::matchesSearchQuery,
-        searchPlaceholder = stringResource(R.string.search_layouts),
-        emptySearchText = stringResource(R.string.no_layouts_found),
+        data =
+            SearchableMultiSelectListPreferenceData(
+                value = state.layoutsState,
+                values = KeyboardLayout.entries.sortedBy { it.keyboardDefinition.title },
+                valueToText = { AnnotatedString(it.keyboardDefinition.title) },
+                searchFilter = ::matchesSearchQuery,
+                searchPlaceholder = stringResource(R.string.search_layouts),
+                emptySearchText = stringResource(R.string.no_layouts_found),
+            ),
+        presentation =
+            SearchableMultiSelectListPreferencePresentation(
+                title = { Text(stringResource(R.string.layouts)) },
+                icon = { Icon(Icons.Outlined.KeyboardAlt, contentDescription = null) },
+                summary = {
+                    val layoutsStr = state.layoutsState.joinToString(", ") { it.keyboardDefinition.title }
+                    Text(layoutsStr)
+                },
+            ),
         onValueChange = state.onLayoutsChange,
-        icon = { Icon(Icons.Outlined.KeyboardAlt, contentDescription = null) },
-        title = { Text(stringResource(R.string.layouts)) },
-        summary = {
-            val layoutsStr = state.layoutsState.joinToString(", ") { it.keyboardDefinition.title }
-            Text(layoutsStr)
-        },
     )
 }
 
