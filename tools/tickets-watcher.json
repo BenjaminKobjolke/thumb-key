@@ -35,7 +35,7 @@
       "test": "green"
     },
     "run-gradle.bat :app:lintKotlin --console=plain": {
-      "test": "failed"
+      "test": "green"
     },
     "run-gradle.bat :app:lintDebug --console=plain": {
       "test": "green"
