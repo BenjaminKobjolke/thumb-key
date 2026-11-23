@@ -19,8 +19,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.ui.theme.colorVariantToColor
-import com.dessalines.thumbkey.utils.KeyActionReleaseState
 import com.dessalines.thumbkey.utils.KeyAction
+import com.dessalines.thumbkey.utils.KeyActionReleaseState
 import com.dessalines.thumbkey.utils.buildTapActions
 import com.dessalines.thumbkey.utils.isPasswordField
 

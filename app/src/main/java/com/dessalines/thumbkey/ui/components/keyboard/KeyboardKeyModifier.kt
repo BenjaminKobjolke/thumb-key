@@ -73,33 +73,33 @@ private fun keyboardKeyTapModifier(
     state: KeyboardKeyModifierState,
 ): Modifier =
     modifier.combinedClickable(
-            interactionSource = state.interactionSource,
-            indication = null,
-            hapticFeedbackEnabled = false,
-            onClick = {
-                val action = gestureContext.data.key.center.action
-                gestureContext.data.environment.lastAction.value?.let { (lastAction, time) ->
-                    if (time.elapsedNow() < 1.seconds && lastAction == action && !gestureContext.ime.didCursorMove()) {
-                        gestureContext.state.tapCount += 1
-                    } else {
-                        gestureContext.state.tapCount = 0
-                    }
+        interactionSource = state.interactionSource,
+        indication = null,
+        hapticFeedbackEnabled = false,
+        onClick = {
+            val action = gestureContext.data.key.center.action
+            gestureContext.data.environment.lastAction.value?.let { (lastAction, time) ->
+                if (time.elapsedNow() < 1.seconds && lastAction == action && !gestureContext.ime.didCursorMove()) {
+                    gestureContext.state.tapCount += 1
+                } else {
+                    gestureContext.state.tapCount = 0
                 }
-                gestureContext.data.environment.lastAction.value =
-                    Pair(action, TimeSource.Monotonic.markNow())
+            }
+            gestureContext.data.environment.lastAction.value =
+                Pair(action, TimeSource.Monotonic.markNow())
 
-                val selectedAction = state.tapActions[gestureContext.state.tapCount % state.tapActions.size]
-                performKeyAction(selectedAction, gestureContext.keyActionContext)
-                doneKeyAction(selectedAction, gestureContext.releaseState)
-            },
-            onLongClick = {
-                gestureContext.data.key.longPress?.let { action ->
-                    performKeyAction(action, gestureContext.keyActionContext)
-                    doneKeyAction(action, gestureContext.releaseState)
-                    gestureContext.feedback.tap()
-                }
-            },
-        )
+            val selectedAction = state.tapActions[gestureContext.state.tapCount % state.tapActions.size]
+            performKeyAction(selectedAction, gestureContext.keyActionContext)
+            doneKeyAction(selectedAction, gestureContext.releaseState)
+        },
+        onLongClick = {
+            gestureContext.data.key.longPress?.let { action ->
+                performKeyAction(action, gestureContext.keyActionContext)
+                doneKeyAction(action, gestureContext.releaseState)
+                gestureContext.feedback.tap()
+            }
+        },
+    )
 
 @OptIn(ExperimentalFoundationApi::class)
 private fun keyboardKeyDragModifier(
@@ -112,31 +112,31 @@ private fun keyboardKeyDragModifier(
     val environment = data.environment
     val keySize = (data.environment.keyHeight + data.environment.keyWidth) / 2.0
     return modifier.pointerInput(key1 = keyboardKeyId(data)) {
-            detectDragGestures(
-                onDragStart = { state.isDragged.value = true },
-                onDrag = { change, dragAmount ->
-                    change.consume()
-                    handleKeyDrag(
+        detectDragGestures(
+            onDragStart = { state.isDragged.value = true },
+            onDrag = { change, dragAmount ->
+                change.consume()
+                handleKeyDrag(
+                    gestureContext,
+                    dragAmount,
+                    SlideTriggers(
+                        slide = (keySize.dp.toPx() * 0.75f) + config.minSwipeLength,
+                        selection = (keySize.dp.toPx() * 1.25f) + config.minSwipeLength,
+                    ),
+                )
+            },
+            onDragEnd = {
+                val state = gestureContext.state
+                val action =
+                    handleKeyDragEnd(
                         gestureContext,
-                        dragAmount,
-                        SlideTriggers(
-                            slide = (keySize.dp.toPx() * 0.75f) + config.minSwipeLength,
-                            selection = (keySize.dp.toPx() * 1.25f) + config.minSwipeLength,
-                        ),
+                        SwipeKeys(data.key, data.ghostKey, data.oppositeCaseKey, data.numericKey),
+                        SwipeGesture(state.positions, state.maxOffset, state.offsetX, state.offsetY),
                     )
-                },
-                onDragEnd = {
-                    val state = gestureContext.state
-                    val action =
-                        handleKeyDragEnd(
-                            gestureContext,
-                            SwipeKeys(data.key, data.ghostKey, data.oppositeCaseKey, data.numericKey),
-                            SwipeGesture(state.positions, state.maxOffset, state.offsetX, state.offsetY),
-                        )
-                    state.tapCount = 0
-                    environment.lastAction.value = Pair(action, TimeSource.Monotonic.markNow())
-                    state.resetDrag()
-                },
-            )
-        }
+                state.tapCount = 0
+                environment.lastAction.value = Pair(action, TimeSource.Monotonic.markNow())
+                state.resetDrag()
+            },
+        )
+    }
 }
