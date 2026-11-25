@@ -24,7 +24,7 @@ val KB_DE_TYPESPLITBEN_NUMERIC =
                             size = LARGE,
                             color = SECONDARY,
                         ),
-                ).copy(right = TRANSCRIPT_HISTORY_KEYC),
+                ).copy(right = TRANSCRIPT_HISTORY_KEYC).copyClipboardModeToLongPress(),
                 KeyItemC(
                     center = KeyC("1", size = LARGE),
                     bottomRight = KeyC("!"),

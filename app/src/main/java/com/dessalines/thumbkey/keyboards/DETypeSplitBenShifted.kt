@@ -47,7 +47,7 @@ val KB_DE_TYPESPLITBEN_SHIFTED =
                     bottomLeft = UNDO_KEYC,
                     bottomRight = REDO_KEYC,
                     backgroundColor = SURFACE_VARIANT,
-                ),
+                ).copyClipboardModeToLongPress(),
                 KeyItemC(
                     center = KeyC("T", size = LARGE),
                     swipeType = FOUR_WAY_CROSS,

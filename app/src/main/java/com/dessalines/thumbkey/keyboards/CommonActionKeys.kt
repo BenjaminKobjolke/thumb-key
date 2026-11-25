@@ -107,6 +107,12 @@ fun textEditKeyItem(center: KeyC): KeyItemC =
         bottom = PASTE_KEYC,
     )
 
+fun KeyItemC.copyClipboardModeToLongPress(): KeyItemC =
+    copy(
+        center = center.copy(action = Noop),
+        longPress = ToggleClipboardMode(true),
+    )
+
 fun specialActionKeyItem(center: KeyC): KeyItemC =
     KeyItemC(
         backgroundColor = SURFACE_VARIANT,
