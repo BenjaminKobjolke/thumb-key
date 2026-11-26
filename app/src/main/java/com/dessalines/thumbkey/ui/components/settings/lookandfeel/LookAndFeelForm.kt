@@ -10,9 +10,9 @@ import com.dessalines.thumbkey.db.DEFAULT_FLOATING_HANDLE_POSITION
 import com.dessalines.thumbkey.db.DEFAULT_HIDE_LETTERS
 import com.dessalines.thumbkey.db.DEFAULT_HIDE_SYMBOLS
 import com.dessalines.thumbkey.db.DEFAULT_IGNORE_BOTTOM_PADDING
+import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_OPACITY
 import com.dessalines.thumbkey.db.DEFAULT_KEY_ANIMATION_TYPE
 import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
-import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_OPACITY
 import com.dessalines.thumbkey.db.DEFAULT_KEY_HEIGHT
 import com.dessalines.thumbkey.db.DEFAULT_KEY_PADDING
 import com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS

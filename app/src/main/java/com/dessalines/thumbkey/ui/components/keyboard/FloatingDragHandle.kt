@@ -64,7 +64,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-
 private const val HANDLE_IDLE_TIMEOUT_MS = 2500L
 private const val HANDLE_ALPHA_IDLE = 0.15f
 private const val HANDLE_ALPHA_ACTIVE = 0.55f
@@ -109,14 +108,20 @@ private fun rememberKeyboardActive(activity: FloatingDragHandleActivity): androi
     return rememberUpdatedState(isActive)
 }
 
-private fun floatingHandleTargetAlpha(highlighted: Boolean, active: Boolean): Float =
+private fun floatingHandleTargetAlpha(
+    highlighted: Boolean,
+    active: Boolean,
+): Float =
     when {
         highlighted -> HANDLE_ALPHA_HELD
         active -> HANDLE_ALPHA_ACTIVE
         else -> HANDLE_ALPHA_IDLE
     }
 
-private fun floatingHandleTargetWidth(panelWidthDp: Float, highlighted: Boolean): Float {
+private fun floatingHandleTargetWidth(
+    panelWidthDp: Float,
+    highlighted: Boolean,
+): Float {
     val maxWidth = if (highlighted) HANDLE_HIGHLIGHTED_MAX_WIDTH_DP else HANDLE_IDLE_MAX_WIDTH_DP
     val widthRatio = if (highlighted) HANDLE_HIGHLIGHTED_WIDTH_RATIO else HANDLE_IDLE_WIDTH_RATIO
     val minWidth = if (highlighted) HANDLE_HIGHLIGHTED_MIN_WIDTH_DP else HANDLE_IDLE_MIN_WIDTH_DP
@@ -124,18 +129,23 @@ private fun floatingHandleTargetWidth(panelWidthDp: Float, highlighted: Boolean)
 }
 
 @Composable
-private fun FloatingHandlePill(atTop: Boolean, width: androidx.compose.ui.unit.Dp, alpha: Float, color: androidx.compose.ui.graphics.Color) {
+private fun FloatingHandlePill(
+    atTop: Boolean,
+    width: androidx.compose.ui.unit.Dp,
+    alpha: Float,
+    color: androidx.compose.ui.graphics.Color,
+) {
     Box(
-        modifier = Modifier
-            .padding(
-                top = if (atTop) 0.dp else HANDLE_PILL_GAP,
-                bottom = if (atTop) HANDLE_PILL_GAP else 0.dp,
-            )
-            .width(width)
-            .height(HANDLE_PILL_HEIGHT)
-            .graphicsLayer { this.alpha = alpha }
-            .clip(RoundedCornerShape(HANDLE_PILL_HEIGHT / 2))
-            .background(color),
+        modifier =
+            Modifier
+                .padding(
+                    top = if (atTop) 0.dp else HANDLE_PILL_GAP,
+                    bottom = if (atTop) HANDLE_PILL_GAP else 0.dp,
+                ).width(width)
+                .height(HANDLE_PILL_HEIGHT)
+                .graphicsLayer { this.alpha = alpha }
+                .clip(RoundedCornerShape(HANDLE_PILL_HEIGHT / 2))
+                .background(color),
     )
 }
 
@@ -151,26 +161,28 @@ private fun Modifier.floatingDragGesture(callbacks: FloatingDragHandleCallbacks)
                 var cumulative = Offset.Zero
                 var dragStarted = false
                 var pointerCancelled = false
-                val afterSlop = awaitTouchSlopOrCancellation(down.id) { change, over ->
-                    change.consume()
-                    if (!dragStarted) {
-                        dragStarted = true
-                        lastTapUpTime = 0L
-                        callbacks.onDragStart()
+                val afterSlop =
+                    awaitTouchSlopOrCancellation(down.id) { change, over ->
+                        change.consume()
+                        if (!dragStarted) {
+                            dragStarted = true
+                            lastTapUpTime = 0L
+                            callbacks.onDragStart()
+                        }
+                        cumulative += over
+                        velocityTracker.addPosition(change.uptimeMillis, cumulative)
+                        callbacks.onDragBy(over)
                     }
-                    cumulative += over
-                    velocityTracker.addPosition(change.uptimeMillis, cumulative)
-                    callbacks.onDragBy(over)
-                }
                 if (dragStarted) {
                     if (afterSlop != null) {
-                        val finished = drag(afterSlop.id) { change ->
-                            val delta = change.positionChange()
-                            change.consume()
-                            cumulative += delta
-                            velocityTracker.addPosition(change.uptimeMillis, cumulative)
-                            callbacks.onDragBy(delta)
-                        }
+                        val finished =
+                            drag(afterSlop.id) { change ->
+                                val delta = change.positionChange()
+                                change.consume()
+                                cumulative += delta
+                                velocityTracker.addPosition(change.uptimeMillis, cumulative)
+                                callbacks.onDragBy(delta)
+                            }
                         if (!finished) pointerCancelled = true
                     }
                     val velocity = if (pointerCancelled) Offset.Zero else velocityTracker.calculateVelocity().let { Offset(it.x, it.y) }

@@ -27,7 +27,9 @@ import com.dessalines.thumbkey.utils.isPasswordField
 
 internal fun keyboardKeyId(data: ScreenKeyData): String {
     val config = data.environment.config
-    return data.key.toString() + data.ghostKey.toString() + config.animationHelperSpeed + config.animationSpeed + config.keyAnimationType.ordinal + config.autoCapitalize +
+    return data.key.toString() + data.ghostKey.toString() + config.animationHelperSpeed + config.animationSpeed +
+        config.keyAnimationType.ordinal +
+        config.autoCapitalize +
         config.vibrateOnTap + config.vibrateOnSlide + config.soundOnTap + data.environment.legendHeight + data.environment.legendWidth +
         config.minSwipeLength +
         config.slideSensitivity + config.slideEnabled + config.slideCursorMovementMode + config.slideSpacebarDeadzoneEnabled +
@@ -72,12 +74,13 @@ internal fun KeyboardKey(data: ScreenKeyData) {
         KeyReleaseAnimation(
             feedback = state.releasedFeedback.value,
             isPasswordField = state.isPasswordField,
-            config = KeyReleaseAnimationConfig(
-                type = config.keyAnimationType,
-                speed = config.animationSpeed,
-                helperSpeed = config.animationHelperSpeed,
-                keySize = keySize,
-            ),
+            config =
+                KeyReleaseAnimationConfig(
+                    type = config.keyAnimationType,
+                    speed = config.animationSpeed,
+                    helperSpeed = config.animationHelperSpeed,
+                    keySize = keySize,
+                ),
         )
     }
 }

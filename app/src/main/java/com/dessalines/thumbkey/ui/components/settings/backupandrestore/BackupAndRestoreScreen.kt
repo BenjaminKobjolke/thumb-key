@@ -29,9 +29,9 @@ import com.dessalines.thumbkey.db.AppSettingsViewModel
 import com.dessalines.thumbkey.db.DEFAULT_FLOATING_HANDLE_POSITION
 import com.dessalines.thumbkey.db.DEFAULT_FLOATING_X_FRACTION
 import com.dessalines.thumbkey.db.DEFAULT_FLOATING_Y_FRACTION
-import com.dessalines.thumbkey.db.DEFAULT_KEY_ANIMATION_TYPE
-import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_OPACITY
 import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_LAYOUT
+import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_OPACITY
+import com.dessalines.thumbkey.db.DEFAULT_KEY_ANIMATION_TYPE
 import com.dessalines.thumbkey.db.DEFAULT_SWIPE_TRAIL_ENABLED
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString

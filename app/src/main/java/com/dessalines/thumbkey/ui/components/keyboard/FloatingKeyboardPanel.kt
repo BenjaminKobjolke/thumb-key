@@ -57,10 +57,11 @@ internal fun FloatingKeyboardPanel(panel: FloatingKeyboardPanelContent) {
                 }.onGloballyPositioned { coordinates ->
                     if (!drag.gesture.active && !drag.gesture.animating) {
                         val position = coordinates.positionInWindow()
-                        drag.gesture.bounds = IntRect(
-                            offset = IntOffset(position.x.roundToInt(), position.y.roundToInt()),
-                            size = coordinates.size,
-                        )
+                        drag.gesture.bounds =
+                            IntRect(
+                                offset = IntOffset(position.x.roundToInt(), position.y.roundToInt()),
+                                size = coordinates.size,
+                            )
                         drag.controller.publishBounds()
                     }
                 },
@@ -69,35 +70,40 @@ internal fun FloatingKeyboardPanel(panel: FloatingKeyboardPanelContent) {
             FloatingDragHandle(
                 atTop = atTop,
                 panelWidthDp = panel.panelWidthDp,
-                activity = FloatingDragHandleActivity(
-                    isPressed = drag.isHandlePressed.value,
-                    isDragging = drag.isDragging.value,
-                    activityTick = drag.lastActivityTick,
-                ),
+                activity =
+                    FloatingDragHandleActivity(
+                        isPressed = drag.isHandlePressed.value,
+                        isDragging = drag.isDragging.value,
+                        activityTick = drag.lastActivityTick,
+                    ),
                 callbacks = handleCallbacks,
             )
         }
         if (panel.frameConfig.handlePosition == FloatingHandlePosition.Top) dragHandle(true)
         Box(
-            modifier = Modifier
-                .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            val event = awaitPointerEvent(PointerEventPass.Initial)
-                            if (event.changes.any { it.changedToDownIgnoreConsumed() || it.changedToUpIgnoreConsumed() }) {
-                                drag.lastActivityTick.intValue += 1
+            modifier =
+                Modifier
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                if (event.changes.any { it.changedToDownIgnoreConsumed() || it.changedToUpIgnoreConsumed() }) {
+                                    drag.lastActivityTick.intValue += 1
+                                }
                             }
                         }
-                    }
-                },
+                    },
         ) {
             val opacity = panel.frameConfig.keyboardOpacity
-            val opacityModifier = if (opacity < MAX_KEYBOARD_OPACITY) {
-                Modifier.graphicsLayer {
-                    alpha = (opacity / 100f).coerceIn(MIN_KEYBOARD_OPACITY / 100f, 1f)
-                    compositingStrategy = CompositingStrategy.Offscreen
+            val opacityModifier =
+                if (opacity < MAX_KEYBOARD_OPACITY) {
+                    Modifier.graphicsLayer {
+                        alpha = (opacity / 100f).coerceIn(MIN_KEYBOARD_OPACITY / 100f, 1f)
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    }
+                } else {
+                    Modifier
                 }
-            } else Modifier
             Box(modifier = opacityModifier) { panel.content(panel.keyWidth, panel.keyHeight) }
             panel.overlay(this)
         }

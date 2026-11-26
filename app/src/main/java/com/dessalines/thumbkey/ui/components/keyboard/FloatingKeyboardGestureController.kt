@@ -101,7 +101,10 @@ internal class FloatingKeyboardGestureController(
         persistPosition(target, sx, sy)
     }
 
-    fun animateToOffset(animation: FloatingOffsetAnimation, slack: Offset) {
+    fun animateToOffset(
+        animation: FloatingOffsetAnimation,
+        slack: Offset,
+    ) {
         val (base, startShift, target) = animation
         if ((target - (base + startShift)).getDistance() < 1f) {
             settleAt(target, slack.x, slack.y)

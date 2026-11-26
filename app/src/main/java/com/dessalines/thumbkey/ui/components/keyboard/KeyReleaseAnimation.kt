@@ -60,13 +60,14 @@ private fun KeyPressFeedbackOverlay(
     feedback: ReleasedKeyFeedback?,
     config: KeyReleaseAnimationConfig,
 ) {
-    val state = remember {
-        KeyPressFeedbackAnimationState(
-            activeFeedback = mutableStateOf(null),
-            enterProgress = Animatable(1f),
-            exitAlpha = Animatable(0f),
-        )
-    }
+    val state =
+        remember {
+            KeyPressFeedbackAnimationState(
+                activeFeedback = mutableStateOf(null),
+                enterProgress = Animatable(1f),
+                exitAlpha = Animatable(0f),
+            )
+        }
     KeyPressFeedbackAnimation(feedback, config, state)
     val current = state.activeFeedback.value ?: return
     KeyPressFeedbackVisual(current, config, state)

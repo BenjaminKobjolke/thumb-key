@@ -30,11 +30,15 @@ class FloatingKeyboardSnapTest {
         assertEquals(0f, resolveFlipTargetX(50f, 0f))
     }
 
-    private fun resolveSnap(rawX: Float, slackX: Float, velocityX: Float, velocityY: Float) =
-        resolveSnapTargetX(
-            rawOffset = Offset(rawX, 0f),
-            slackX = slackX,
-            velocity = Offset(velocityX, velocityY),
-            thresholds = FloatingSnapThresholds(snapPx = 28f, flingPxPerSecond = 550f),
-        )
+    private fun resolveSnap(
+        rawX: Float,
+        slackX: Float,
+        velocityX: Float,
+        velocityY: Float,
+    ) = resolveSnapTargetX(
+        rawOffset = Offset(rawX, 0f),
+        slackX = slackX,
+        velocity = Offset(velocityX, velocityY),
+        thresholds = FloatingSnapThresholds(snapPx = 28f, flingPxPerSecond = 550f),
+    )
 }

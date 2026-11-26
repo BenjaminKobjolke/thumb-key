@@ -85,7 +85,8 @@ enum class KeyboardPosition(
     Right(R.string.right),
     Left(R.string.left),
     Dual(R.string.dual),
-    Floating(R.string.floating);
+    Floating(R.string.floating),
+    ;
 
     companion object {
         fun fromStoredValue(value: Int): KeyboardPosition = entries.getOrElse(value) { Center }

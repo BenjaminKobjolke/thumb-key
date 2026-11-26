@@ -1,5 +1,6 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -7,7 +8,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntRect
@@ -20,8 +20,8 @@ import com.dessalines.thumbkey.utils.KeyAction
 import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardMode
 import com.dessalines.thumbkey.utils.KeyboardPosition
-import com.dessalines.thumbkey.utils.getKeyboardMode
 import com.dessalines.thumbkey.utils.getCurrentLayoutGridColumns
+import com.dessalines.thumbkey.utils.getKeyboardMode
 import com.dessalines.thumbkey.utils.isPasswordField
 import com.dessalines.thumbkey.utils.resolveKeyboardDefinition
 import kotlin.time.TimeMark
@@ -140,10 +140,11 @@ private fun rememberKeyboardModeState(
 ) = remember {
     mutableStateOf(
         KeyboardModeState(
-            mode = getKeyboardMode(
-                ime = ime,
-                autoCapitalize = data.settings != null && config.autoCapitalize && keyboardDefinition.settings.autoShift,
-            ),
+            mode =
+                getKeyboardMode(
+                    ime = ime,
+                    autoCapitalize = data.settings != null && config.autoCapitalize && keyboardDefinition.settings.autoShift,
+                ),
         ),
     )
 }
@@ -202,18 +203,19 @@ private fun KeyboardScreenContent(
     val config = data.environment.config
     if (config.position == KeyboardPosition.Floating) {
         FloatingKeyboardFrame(
-            config = FloatingKeyboardFrameConfig(
-                keyWidth = config.legendWidth.toFloat(),
-                keyHeight = config.legendHeight.toFloat(),
-                columns = getCurrentLayoutGridColumns(config.layout.ordinal),
-                keyboardOpacity = config.keyboardOpacity,
-                handlePosition = config.floatingHandlePosition,
-                floatingXFraction = config.floatingXFraction,
-                floatingYFraction = config.floatingYFraction,
-                vibrateOnTap = config.vibrateOnTap,
-                onMoved = data.onFloatingMoved,
-                onBounds = data.onFloatingBounds,
-            ),
+            config =
+                FloatingKeyboardFrameConfig(
+                    keyWidth = config.legendWidth.toFloat(),
+                    keyHeight = config.legendHeight.toFloat(),
+                    columns = getCurrentLayoutGridColumns(config.layout.ordinal),
+                    keyboardOpacity = config.keyboardOpacity,
+                    handlePosition = config.floatingHandlePosition,
+                    floatingXFraction = config.floatingXFraction,
+                    floatingYFraction = config.floatingYFraction,
+                    vibrateOnTap = config.vibrateOnTap,
+                    onMoved = data.onFloatingMoved,
+                    onBounds = data.onFloatingBounds,
+                ),
             overlay = {
                 if (data.environment.swipeTrailEnabled) {
                     SwipeTrailOverlay(data.environment.swipeTrailState, Modifier.matchParentSize())

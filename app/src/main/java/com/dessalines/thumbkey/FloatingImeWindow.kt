@@ -73,7 +73,10 @@ internal class FloatingImeWindow(
         }
     }
 
-    private fun applyFloatingLayout(win: Window, inputArea: View?) {
+    private fun applyFloatingLayout(
+        win: Window,
+        inputArea: View?,
+    ) {
         inputArea?.let { area ->
             val params = area.layoutParams
             if (params != null && params.height != ViewGroup.LayoutParams.MATCH_PARENT) {
@@ -93,7 +96,11 @@ internal class FloatingImeWindow(
         }
     }
 
-    private fun applyRegularLayout(win: Window, inputArea: View?, fullscreen: Boolean) {
+    private fun applyRegularLayout(
+        win: Window,
+        inputArea: View?,
+        fullscreen: Boolean,
+    ) {
         inputArea?.let { area ->
             val params = area.layoutParams
             if (params != null && params.height != ViewGroup.LayoutParams.WRAP_CONTENT) {

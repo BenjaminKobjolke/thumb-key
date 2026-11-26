@@ -96,7 +96,9 @@ fun getCurrentLayoutColumnCount(keyboardLayout: Int): Int {
 
 fun getCurrentLayoutGridColumns(keyboardLayout: Int): Int {
     val layout = KeyboardLayout.entries[keyboardLayout]
-    return layout.keyboardDefinition.modes.main.arr.maxOf { row -> row.sumOf { it.widthMultiplier } }.coerceAtLeast(1)
+    return layout.keyboardDefinition.modes.main.arr
+        .maxOf { row -> row.sumOf { it.widthMultiplier } }
+        .coerceAtLeast(1)
 }
 
 fun getCurrentDisplayWidth(ctx: Context): Int {

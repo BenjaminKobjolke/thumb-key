@@ -38,7 +38,11 @@ internal data class FloatingSnapIndicatorState(
 internal fun BoxScope.FloatingSnapIndicator(state: FloatingSnapIndicatorState) {
     val edge = state.edge ?: return
     if (state.gesture.panelSize.height <= 0) return
-    val indicatorHeightDp = with(state.density) { state.gesture.panelSize.height.toDp() }
+    val indicatorHeightDp =
+        with(state.density) {
+            state.gesture.panelSize.height
+                .toDp()
+        }
     val alignment = if (edge == FloatingSnapEdge.LEFT) Alignment.TopStart else Alignment.TopEnd
     Box(
         modifier =

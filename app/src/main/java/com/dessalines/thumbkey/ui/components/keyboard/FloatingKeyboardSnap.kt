@@ -1,7 +1,7 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
-import kotlin.math.abs
 import androidx.compose.ui.geometry.Offset
+import kotlin.math.abs
 
 internal enum class FloatingSnapEdge {
     LEFT,

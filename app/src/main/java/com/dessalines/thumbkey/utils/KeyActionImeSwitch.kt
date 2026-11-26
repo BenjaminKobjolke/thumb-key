@@ -183,7 +183,10 @@ private fun switchToVoiceInputMethod(
         }
 
     if (!switched) {
-        val token = ime.window.window?.attributes?.token
+        val token =
+            ime.window.window
+                ?.attributes
+                ?.token
         if (token == null) {
             Log.i(TAG, "No window token available to switch to $id")
         } else {

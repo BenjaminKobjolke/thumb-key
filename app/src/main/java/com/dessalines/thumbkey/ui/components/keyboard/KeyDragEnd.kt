@@ -209,9 +209,10 @@ private fun dragReturnActionWithOrigin(
     if (!settings.dragReturnEnabled) return null
     val direction =
         swipeDirection(gesture.maxOffset.x, gesture.maxOffset.y, settings.minSwipeLength, swipeType(keys))
-    val action = keys.key.getSwipe(direction)?.swipeReturnAction
-        ?: keys.oppositeCaseKey?.getSwipe(direction)?.action
-        ?: keys.ghostKey?.getSwipe(direction)?.swipeReturnAction
+    val action =
+        keys.key.getSwipe(direction)?.swipeReturnAction
+            ?: keys.oppositeCaseKey?.getSwipe(direction)?.action
+            ?: keys.ghostKey?.getSwipe(direction)?.swipeReturnAction
     return action?.let { it to direction }
 }
 

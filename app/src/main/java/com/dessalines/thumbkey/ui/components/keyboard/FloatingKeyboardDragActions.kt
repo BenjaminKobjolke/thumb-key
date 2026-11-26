@@ -53,12 +53,13 @@ internal fun floatingKeyboardDragCallbacks(state: FloatingKeyboardDragState): Fl
             val nextX = (base.x + shift.x + delta.x).coerceIn(0f, sx)
             val nextY = (base.y + shift.y + delta.y).coerceIn(0f, sy)
             dragShift.value = Offset(nextX - base.x, nextY - base.y)
-            val edge = when {
-                sx <= 0f -> null
-                nextX <= state.snapThresholds.snapPx -> FloatingSnapEdge.LEFT
-                sx - nextX <= state.snapThresholds.snapPx -> FloatingSnapEdge.RIGHT
-                else -> null
-            }
+            val edge =
+                when {
+                    sx <= 0f -> null
+                    nextX <= state.snapThresholds.snapPx -> FloatingSnapEdge.LEFT
+                    sx - nextX <= state.snapThresholds.snapPx -> FloatingSnapEdge.RIGHT
+                    else -> null
+                }
             if (edge != state.snapIndicatorEdge.value) {
                 if (edge != null && state.vibrateOnTap) state.view.performHapticFeedback(state.slideHapticConstant)
                 state.snapIndicatorEdge.value = edge
