@@ -151,6 +151,9 @@ interface AppSettingsDao {
     fun updateLookAndFeel(lookAndFeel: LookAndFeelUpdate)
 
     @Update(entity = AppSettings::class)
+    fun updateFloatingPosition(floatingPosition: FloatingPositionUpdate)
+
+    @Update(entity = AppSettings::class)
     fun updateBehavior(behavior: BehaviorUpdate)
 
     @Update(entity = AppSettings::class)

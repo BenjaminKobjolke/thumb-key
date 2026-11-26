@@ -146,4 +146,28 @@ class AppSettingsDefaultsTest {
         )
         assertEquals("", settings.keyModifications)
     }
+
+    @Test
+    fun floatingKeyboardDefaultsMatchTheNewSettings() {
+        assertEquals(15, MIN_KEYBOARD_OPACITY)
+        assertEquals(100, MAX_KEYBOARD_OPACITY)
+        assertEquals(
+            listOf(
+                DEFAULT_KEYBOARD_OPACITY,
+                DEFAULT_FLOATING_HANDLE_POSITION,
+                DEFAULT_FLOATING_X_FRACTION,
+                DEFAULT_FLOATING_Y_FRACTION,
+                DEFAULT_KEY_ANIMATION_TYPE,
+                DEFAULT_SWIPE_TRAIL_ENABLED,
+            ),
+            listOf(
+                settings.keyboardOpacity,
+                settings.floatingHandlePosition,
+                settings.floatingXFraction,
+                settings.floatingYFraction,
+                settings.keyAnimationType,
+                settings.swipeTrailEnabled,
+            ),
+        )
+    }
 }

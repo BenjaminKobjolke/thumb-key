@@ -1,11 +1,5 @@
 package com.dessalines.thumbkey.ui.components.keyboard
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -31,7 +25,7 @@ import com.dessalines.thumbkey.utils.KeyDisplay
 import com.dessalines.thumbkey.utils.KeyItemC
 import com.dessalines.thumbkey.utils.SwipeDirection
 
-/** Renders the swipe legends and release animation for one keyboard key. */
+/** Renders the swipe legends for one keyboard key. */
 internal data class KeyLegendSizes(
     val keySize: Dp,
     val keyBorderWidth: Dp,
@@ -121,75 +115,6 @@ private fun legendPadding(
     }
 
 private fun textSize(sizes: KeyLegendSizes): Dp = sizes.keySize - sizes.keyBorderWidth
-
-@Composable
-internal fun KeyReleaseAnimation(
-    releasedKey: String?,
-    isPasswordField: Boolean,
-    animationSpeed: Int,
-    keySize: Dp,
-) {
-    ReleaseAnimationBackdrop(releasedKey, isPasswordField, animationSpeed)
-    ReleaseAnimationText(releasedKey, isPasswordField, animationSpeed, keySize)
-}
-
-@Composable
-private fun ReleaseAnimationBackdrop(
-    releasedKey: String?,
-    isPasswordField: Boolean,
-    animationSpeed: Int,
-) {
-    AnimatedVisibility(
-        modifier = Modifier.fillMaxSize().background(color = Color(0, 0, 0, 0)),
-        visible = releasedKey != null && !isPasswordField,
-        enter = EnterTransition.None,
-        exit = fadeOut(tween(animationSpeed)),
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.tertiaryContainer),
-        ) {}
-    }
-}
-
-@Composable
-private fun ReleaseAnimationText(
-    releasedKey: String?,
-    isPasswordField: Boolean,
-    animationSpeed: Int,
-    keySize: Dp,
-) {
-    AnimatedVisibility(
-        modifier = Modifier.fillMaxSize().background(color = Color(0, 0, 0, 0)),
-        visible = releasedKey != null && !isPasswordField,
-        enter = slideInVertically(tween(animationSpeed)),
-        exit = fadeOut(tween(animationSpeed)),
-    ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            releasedKey?.let { ReleasedKeyText(it, keySize) }
-        }
-    }
-}
-
-@Composable
-private fun ReleasedKeyText(
-    text: String,
-    keySize: Dp,
-) {
-    val spSize =
-        fontSizeVariantToFontSize(
-            fontSizeVariant = FontSizeVariant.LARGE,
-            keySize = keySize,
-            isUpperCase = false,
-        ).toPx.pxToSp
-    Text(
-        text = text,
-        fontWeight = FontWeight.Bold,
-        fontSize = spSize,
-        lineHeight = spSize,
-        color = MaterialTheme.colorScheme.tertiary,
-    )
-}
 
 @Composable
 internal fun KeyText(

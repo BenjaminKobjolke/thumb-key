@@ -6,10 +6,13 @@ import com.dessalines.thumbkey.db.DEFAULT_ANIMATION_SPEED
 import com.dessalines.thumbkey.db.DEFAULT_AUTO_SIZE_KEYS
 import com.dessalines.thumbkey.db.DEFAULT_BACKDROP_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_DISABLE_FULLSCREEN_EDITOR
+import com.dessalines.thumbkey.db.DEFAULT_FLOATING_HANDLE_POSITION
 import com.dessalines.thumbkey.db.DEFAULT_HIDE_LETTERS
 import com.dessalines.thumbkey.db.DEFAULT_HIDE_SYMBOLS
 import com.dessalines.thumbkey.db.DEFAULT_IGNORE_BOTTOM_PADDING
+import com.dessalines.thumbkey.db.DEFAULT_KEY_ANIMATION_TYPE
 import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
+import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_OPACITY
 import com.dessalines.thumbkey.db.DEFAULT_KEY_HEIGHT
 import com.dessalines.thumbkey.db.DEFAULT_KEY_PADDING
 import com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS
@@ -20,6 +23,7 @@ import com.dessalines.thumbkey.db.DEFAULT_POSITION_PADDING
 import com.dessalines.thumbkey.db.DEFAULT_PUSHUP_SIZE
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
+import com.dessalines.thumbkey.db.DEFAULT_SWIPE_TRAIL_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_THEME
 import com.dessalines.thumbkey.db.DEFAULT_THEME_COLOR
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
@@ -57,6 +61,10 @@ class LookAndFeelFormTest {
                 keyHeight = DEFAULT_KEY_HEIGHT,
                 showToastOnLayoutSwitch = DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH,
                 disableFullscreenEditor = DEFAULT_DISABLE_FULLSCREEN_EDITOR,
+                keyboardOpacity = DEFAULT_KEYBOARD_OPACITY,
+                floatingHandlePosition = DEFAULT_FLOATING_HANDLE_POSITION,
+                keyAnimationType = DEFAULT_KEY_ANIMATION_TYPE,
+                swipeTrailEnabled = DEFAULT_SWIPE_TRAIL_ENABLED,
             )
 
         assertEquals(expected, LookAndFeelForm(null).toUpdate())
@@ -65,7 +73,8 @@ class LookAndFeelFormTest {
 
     @Test(timeout = 30_000)
     fun settingsRoundTripAllLookAndFeelFields() {
-        assertEquals(expectedRoundTripUpdate(), LookAndFeelForm(roundTripSettings()).toUpdate())
+        val settings = roundTripSettings()
+        assertEquals(expectedRoundTripUpdate(settings), LookAndFeelForm(settings).toUpdate())
     }
 
     private fun roundTripSettings() =
@@ -94,33 +103,41 @@ class LookAndFeelFormTest {
             keyHeight = 97,
             showToastOnLayoutSwitch = 0,
             disableFullscreenEditor = 1,
+            keyboardOpacity = 64,
+            floatingHandlePosition = 1,
+            keyAnimationType = 4,
+            swipeTrailEnabled = 1,
         )
 
-    private fun expectedRoundTripUpdate() =
+    private fun expectedRoundTripUpdate(settings: AppSettings) =
         LookAndFeelUpdate(
-            id = 1,
-            pushupSize = 37,
-            animationSpeed = 111,
-            animationHelperSpeed = 222,
-            position = 1,
-            positionPadding = -17,
-            vibrateOnTap = 0,
-            vibrateOnSlide = 0,
-            soundOnTap = 1,
-            hideLetters = 1,
-            hideSymbols = 1,
-            ignoreBottomPadding = 1,
-            theme = 1,
-            themeColor = 1,
-            backdropEnabled = 1,
-            keyPadding = 4,
-            keyBorderWidth = 12,
-            keyRadius = 56,
-            autoSizeKeys = 0,
-            nonSquareKeys = 1,
-            keyWidth = 83,
-            keyHeight = 97,
-            showToastOnLayoutSwitch = 0,
-            disableFullscreenEditor = 1,
+            id = settings.id,
+            pushupSize = settings.pushupSize,
+            animationSpeed = settings.animationSpeed,
+            animationHelperSpeed = settings.animationHelperSpeed,
+            position = settings.position,
+            positionPadding = settings.positionPadding,
+            vibrateOnTap = settings.vibrateOnTap,
+            vibrateOnSlide = settings.vibrateOnSlide,
+            soundOnTap = settings.soundOnTap,
+            hideLetters = settings.hideLetters,
+            hideSymbols = settings.hideSymbols,
+            ignoreBottomPadding = settings.ignoreBottomPadding,
+            theme = settings.theme,
+            themeColor = settings.themeColor,
+            backdropEnabled = settings.backdropEnabled,
+            keyPadding = settings.keyPadding,
+            keyBorderWidth = settings.keyBorderWidth,
+            keyRadius = settings.keyRadius,
+            autoSizeKeys = settings.autoSizeKeys,
+            nonSquareKeys = settings.nonSquareKeys,
+            keyWidth = settings.keyWidth,
+            keyHeight = settings.keyHeight,
+            showToastOnLayoutSwitch = settings.showToastOnLayoutSwitch,
+            disableFullscreenEditor = settings.disableFullscreenEditor,
+            keyboardOpacity = settings.keyboardOpacity,
+            floatingHandlePosition = settings.floatingHandlePosition,
+            keyAnimationType = settings.keyAnimationType,
+            swipeTrailEnabled = settings.swipeTrailEnabled,
         )
 }

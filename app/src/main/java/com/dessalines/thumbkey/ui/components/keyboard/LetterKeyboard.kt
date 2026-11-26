@@ -222,12 +222,22 @@ private fun LetterKeyboardLayout(
                 backdropColor = MaterialTheme.colorScheme.background,
                 contentAlignment = alignment,
                 modifier =
-                    Modifier
-                        .keyboardBottomInset(config.ignoreBottomPadding, config.pushupSize.dp)
-                        .keyboardBackdropPadding(config.backdropEnabled, 6.dp),
+                    if (config.position == KeyboardPosition.Floating) {
+                        Modifier
+                    } else {
+                        Modifier
+                            .keyboardBottomInset(config.ignoreBottomPadding, config.pushupSize.dp)
+                            .keyboardBackdropPadding(config.backdropEnabled, 6.dp)
+                    },
             ),
     ) {
-        Column(modifier = modifierPositionPadding) { LetterKeyboardRows(drawing) }
+        Column(
+            modifier =
+                modifierPositionPadding.captureSwipeTrail(
+                    environment.swipeTrailState,
+                    environment.swipeTrailEnabled,
+                ),
+        ) { LetterKeyboardRows(drawing) }
     }
 }
 

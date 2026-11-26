@@ -7,7 +7,10 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntRect
 import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.db.AppSettings
 import com.dessalines.thumbkey.db.ClipboardRepository
@@ -18,6 +21,8 @@ import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardMode
 import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.getKeyboardMode
+import com.dessalines.thumbkey.utils.getCurrentLayoutGridColumns
+import com.dessalines.thumbkey.utils.isPasswordField
 import com.dessalines.thumbkey.utils.resolveKeyboardDefinition
 import kotlin.time.TimeMark
 
@@ -54,6 +59,8 @@ fun KeyboardScreen(data: KeyboardScreenInput) {
                 clipboardItems = clipboardItems,
                 transcripts = transcripts,
                 onModeStateChange = setup.onModeStateChange,
+                onFloatingMoved = data.onFloatingMoved,
+                onFloatingBounds = data.onFloatingBounds,
             ),
         onSwitchLanguage = data.actions::onSwitchLanguage,
         onGoToClipboardSettings = data.actions::onGoToClipboardSettings,
@@ -64,6 +71,8 @@ data class KeyboardScreenInput(
     val settings: AppSettings?,
     val clipboardRepository: ClipboardRepository,
     val actions: KeyboardScreenActions,
+    val onFloatingMoved: (xFraction: Float, yFraction: Float) -> Unit,
+    val onFloatingBounds: (IntRect) -> Unit,
 )
 
 private data class KeyboardScreenSetup(
@@ -80,18 +89,10 @@ private fun rememberKeyboardScreenSetup(
     ime: IMEService,
 ): KeyboardScreenSetup {
     val config = KeyboardScreenConfig.from(data.settings ?: AppSettings(id = 1), ime)
+    val swipeTrailState = rememberSwipeTrailState()
+    val swipeTrailEnabled = config.swipeTrailEnabled && !remember(ime) { isPasswordField(ime) }
     val keyboardDefinition = resolveKeyboardDefinition(config.layout, config.keyMods)
-    var modeState by remember {
-        mutableStateOf(
-            KeyboardModeState(
-                mode =
-                    getKeyboardMode(
-                        ime = ime,
-                        autoCapitalize = data.settings != null && config.autoCapitalize && keyboardDefinition.settings.autoShift,
-                    ),
-            ),
-        )
-    }
+    var modeState by rememberKeyboardModeState(data, ime, config, keyboardDefinition)
     val sketch = ime.sketchState
     LaunchedEffect(modeState.mode) {
         val typingSearch = sketch.searching && modeState.mode != KeyboardMode.EMOJI && modeState.mode != KeyboardMode.CLIPBOARD
@@ -116,8 +117,11 @@ private fun rememberKeyboardScreenSetup(
                     data.actions.onChangePosition(KeyboardPositionChange { old -> change(old) })
                 },
                 onToggleHideLetters = data.actions::onToggleHideLetters,
+                swipeTrailState = swipeTrailState,
+                swipeTrailEnabled = swipeTrailEnabled,
             ),
         )
+    ClearInactiveSwipeTrail(swipeTrailState, swipeTrailEnabled, modeState.mode)
     return KeyboardScreenSetup(
         keyboardDefinition = keyboardDefinition,
         modeState = modeState,
@@ -125,6 +129,34 @@ private fun rememberKeyboardScreenSetup(
         environment = environment,
         onModeStateChange = { transform -> modeState = transform(modeState) },
     )
+}
+
+@Composable
+private fun rememberKeyboardModeState(
+    data: KeyboardScreenInput,
+    ime: IMEService,
+    config: KeyboardScreenConfig,
+    keyboardDefinition: KeyboardDefinition,
+) = remember {
+    mutableStateOf(
+        KeyboardModeState(
+            mode = getKeyboardMode(
+                ime = ime,
+                autoCapitalize = data.settings != null && config.autoCapitalize && keyboardDefinition.settings.autoShift,
+            ),
+        ),
+    )
+}
+
+@Composable
+private fun ClearInactiveSwipeTrail(
+    state: SwipeTrailState,
+    enabled: Boolean,
+    mode: KeyboardMode,
+) {
+    LaunchedEffect(enabled, mode) {
+        if (!enabled || mode in setOf(KeyboardMode.EMOJI, KeyboardMode.CLIPBOARD, KeyboardMode.SKETCH)) state.clear()
+    }
 }
 
 private data class KeyboardScreenContentData(
@@ -137,6 +169,8 @@ private data class KeyboardScreenContentData(
     val clipboardItems: List<com.dessalines.thumbkey.db.ClipboardItem>,
     val transcripts: List<com.dessalines.thumbkey.db.ClipboardItem>,
     val onModeStateChange: ModeStateUpdate,
+    val onFloatingMoved: (xFraction: Float, yFraction: Float) -> Unit,
+    val onFloatingBounds: (IntRect) -> Unit,
 )
 
 private data class KeyboardScreenModeContentData(
@@ -157,15 +191,45 @@ private fun KeyboardScreenContent(
     val dictationActive =
         dictationState != DictationState.Idle &&
             !(dictationState is DictationState.Done && data.ime.currentInputEditorInfo.packageName == data.ime.packageName)
-    KeyboardScreenModeContent(
+    val modeContent =
         KeyboardScreenModeContentData(
             screen = data,
             dictationState = dictationState,
             dictationActive = dictationActive,
             onSwitchLanguage = onSwitchLanguage,
             onGoToClipboardSettings = onGoToClipboardSettings,
-        ),
-    )
+        )
+    val config = data.environment.config
+    if (config.position == KeyboardPosition.Floating) {
+        FloatingKeyboardFrame(
+            config = FloatingKeyboardFrameConfig(
+                keyWidth = config.legendWidth.toFloat(),
+                keyHeight = config.legendHeight.toFloat(),
+                columns = getCurrentLayoutGridColumns(config.layout.ordinal),
+                keyboardOpacity = config.keyboardOpacity,
+                handlePosition = config.floatingHandlePosition,
+                floatingXFraction = config.floatingXFraction,
+                floatingYFraction = config.floatingYFraction,
+                vibrateOnTap = config.vibrateOnTap,
+                onMoved = data.onFloatingMoved,
+                onBounds = data.onFloatingBounds,
+            ),
+            overlay = {
+                if (data.environment.swipeTrailEnabled) {
+                    SwipeTrailOverlay(data.environment.swipeTrailState, Modifier.matchParentSize())
+                }
+            },
+        ) { _, _ ->
+            KeyboardScreenModeContent(modeContent)
+        }
+    } else {
+        Box {
+            KeyboardScreenModeContent(modeContent)
+            if (data.environment.swipeTrailEnabled) {
+                SwipeTrailOverlay(data.environment.swipeTrailState, Modifier.matchParentSize())
+            }
+        }
+    }
 }
 
 @Composable

@@ -34,6 +34,11 @@ class AppSettingsRepository(
     }
 
     @WorkerThread
+    fun updateFloatingPosition(floatingPosition: FloatingPositionUpdate) {
+        appSettingsDao.updateFloatingPosition(floatingPosition)
+    }
+
+    @WorkerThread
     fun updateBehavior(behavior: BehaviorUpdate) {
         appSettingsDao.updateBehavior(behavior)
     }

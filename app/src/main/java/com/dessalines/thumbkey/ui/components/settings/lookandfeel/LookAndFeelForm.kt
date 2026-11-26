@@ -6,10 +6,13 @@ import com.dessalines.thumbkey.db.DEFAULT_ANIMATION_SPEED
 import com.dessalines.thumbkey.db.DEFAULT_AUTO_SIZE_KEYS
 import com.dessalines.thumbkey.db.DEFAULT_BACKDROP_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_DISABLE_FULLSCREEN_EDITOR
+import com.dessalines.thumbkey.db.DEFAULT_FLOATING_HANDLE_POSITION
 import com.dessalines.thumbkey.db.DEFAULT_HIDE_LETTERS
 import com.dessalines.thumbkey.db.DEFAULT_HIDE_SYMBOLS
 import com.dessalines.thumbkey.db.DEFAULT_IGNORE_BOTTOM_PADDING
+import com.dessalines.thumbkey.db.DEFAULT_KEY_ANIMATION_TYPE
 import com.dessalines.thumbkey.db.DEFAULT_KEY_BORDER_WIDTH
+import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_OPACITY
 import com.dessalines.thumbkey.db.DEFAULT_KEY_HEIGHT
 import com.dessalines.thumbkey.db.DEFAULT_KEY_PADDING
 import com.dessalines.thumbkey.db.DEFAULT_KEY_RADIUS
@@ -20,11 +23,16 @@ import com.dessalines.thumbkey.db.DEFAULT_POSITION_PADDING
 import com.dessalines.thumbkey.db.DEFAULT_PUSHUP_SIZE
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH
 import com.dessalines.thumbkey.db.DEFAULT_SOUND_ON_TAP
+import com.dessalines.thumbkey.db.DEFAULT_SWIPE_TRAIL_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_THEME
 import com.dessalines.thumbkey.db.DEFAULT_THEME_COLOR
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_SLIDE
 import com.dessalines.thumbkey.db.DEFAULT_VIBRATE_ON_TAP
 import com.dessalines.thumbkey.db.LookAndFeelUpdate
+import com.dessalines.thumbkey.db.MAX_KEYBOARD_OPACITY
+import com.dessalines.thumbkey.db.MIN_KEYBOARD_OPACITY
+import com.dessalines.thumbkey.utils.FloatingHandlePosition
+import com.dessalines.thumbkey.utils.KeyAnimationType
 import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.ThemeColor
 import com.dessalines.thumbkey.utils.ThemeMode
@@ -46,7 +54,7 @@ internal class LookAndFeelForm(
     var keyPaddingState = (settings?.keyPadding ?: DEFAULT_KEY_PADDING).toFloat()
     var keyBorderWidthState = (settings?.keyBorderWidth ?: DEFAULT_KEY_BORDER_WIDTH).toFloat()
     var keyRadiusState = (settings?.keyRadius ?: DEFAULT_KEY_RADIUS).toFloat()
-    var positionState = KeyboardPosition.entries[settings?.position ?: DEFAULT_POSITION]
+    var positionState = KeyboardPosition.fromStoredValue(settings?.position ?: DEFAULT_POSITION)
     var positionPaddingState = (settings?.positionPadding ?: DEFAULT_POSITION_PADDING).toFloat()
     var vibrateOnTapState = (settings?.vibrateOnTap ?: DEFAULT_VIBRATE_ON_TAP).toBool()
     var vibrateOnSlideState = (settings?.vibrateOnSlide ?: DEFAULT_VIBRATE_ON_SLIDE).toBool()
@@ -57,6 +65,19 @@ internal class LookAndFeelForm(
     var showToastOnLayoutSwitchState = (settings?.showToastOnLayoutSwitch ?: DEFAULT_SHOW_TOAST_ON_LAYOUT_SWITCH).toBool()
     var backdropEnabledState = (settings?.backdropEnabled ?: DEFAULT_BACKDROP_ENABLED).toBool()
     var disableFullscreenEditorState = (settings?.disableFullscreenEditor ?: DEFAULT_DISABLE_FULLSCREEN_EDITOR).toBool()
+    var keyboardOpacityState =
+        (settings?.keyboardOpacity ?: DEFAULT_KEYBOARD_OPACITY)
+            .coerceIn(MIN_KEYBOARD_OPACITY, MAX_KEYBOARD_OPACITY)
+            .toFloat()
+    var floatingHandlePositionState =
+        FloatingHandlePosition.entries.getOrElse(settings?.floatingHandlePosition ?: DEFAULT_FLOATING_HANDLE_POSITION) {
+            FloatingHandlePosition.entries[DEFAULT_FLOATING_HANDLE_POSITION]
+        }
+    var keyAnimationTypeState =
+        KeyAnimationType.entries.getOrElse(settings?.keyAnimationType ?: DEFAULT_KEY_ANIMATION_TYPE) {
+            KeyAnimationType.entries[DEFAULT_KEY_ANIMATION_TYPE]
+        }
+    var swipeTrailEnabledState = (settings?.swipeTrailEnabled ?: DEFAULT_SWIPE_TRAIL_ENABLED).toBool()
 
     val slideEnabled = settings?.slideEnabled?.toBool() == true
 
@@ -86,5 +107,9 @@ internal class LookAndFeelForm(
             keyHeight = keyHeightState.toInt(),
             showToastOnLayoutSwitch = showToastOnLayoutSwitchState.toInt(),
             disableFullscreenEditor = disableFullscreenEditorState.toInt(),
+            keyboardOpacity = keyboardOpacityState.toInt().coerceIn(MIN_KEYBOARD_OPACITY, MAX_KEYBOARD_OPACITY),
+            floatingHandlePosition = floatingHandlePositionState.ordinal,
+            keyAnimationType = keyAnimationTypeState.ordinal,
+            swipeTrailEnabled = swipeTrailEnabledState.toInt(),
         )
 }

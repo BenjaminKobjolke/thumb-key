@@ -108,6 +108,22 @@ data class LookAndFeelUpdate(
         name = "position_padding",
     )
     val positionPadding: Int,
+    @ColumnInfo(name = "keyboard_opacity")
+    val keyboardOpacity: Int = DEFAULT_KEYBOARD_OPACITY,
+    @ColumnInfo(name = "floating_handle_position")
+    val floatingHandlePosition: Int = DEFAULT_FLOATING_HANDLE_POSITION,
+    @ColumnInfo(name = "key_animation_type")
+    val keyAnimationType: Int = DEFAULT_KEY_ANIMATION_TYPE,
+    @ColumnInfo(name = "swipe_trail_enabled")
+    val swipeTrailEnabled: Int = DEFAULT_SWIPE_TRAIL_ENABLED,
+)
+
+data class FloatingPositionUpdate(
+    val id: Int,
+    @ColumnInfo(name = "floating_x_fraction")
+    val floatingXFraction: Float,
+    @ColumnInfo(name = "floating_y_fraction")
+    val floatingYFraction: Float,
 )
 
 data class BehaviorUpdate(

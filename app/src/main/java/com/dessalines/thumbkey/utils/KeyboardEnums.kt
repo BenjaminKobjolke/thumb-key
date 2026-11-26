@@ -85,6 +85,29 @@ enum class KeyboardPosition(
     Right(R.string.right),
     Left(R.string.left),
     Dual(R.string.dual),
+    Floating(R.string.floating);
+
+    companion object {
+        fun fromStoredValue(value: Int): KeyboardPosition = entries.getOrElse(value) { Center }
+    }
+}
+
+enum class FloatingHandlePosition(
+    @param:StringRes val resId: Int,
+) {
+    Bottom(R.string.bottom),
+    Top(R.string.top),
+}
+
+enum class KeyAnimationType(
+    @param:StringRes val resId: Int,
+) {
+    SlideFromTop(R.string.key_animation_slide_from_top),
+    SlideFromBottom(R.string.key_animation_slide_from_bottom),
+    SlideFromLeft(R.string.key_animation_slide_from_left),
+    SlideFromRight(R.string.key_animation_slide_from_right),
+    Fade(R.string.key_animation_fade),
+    FromOrigin(R.string.key_animation_from_origin),
 }
 
 enum class SwipeNWay {

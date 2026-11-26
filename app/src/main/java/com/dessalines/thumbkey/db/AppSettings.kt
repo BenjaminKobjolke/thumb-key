@@ -255,44 +255,32 @@ data class AppSettings(
         defaultValue = DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED.toString(),
     )
     val clipboardAutoCleanupEnabled: Int = DEFAULT_CLIPBOARD_AUTO_CLEANUP_ENABLED,
-    @ColumnInfo(
-        name = "clipboard_cleanup_after_minutes",
-        defaultValue = DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES.toString(),
-    )
+    @ColumnInfo(name = "clipboard_cleanup_after_minutes", defaultValue = DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES.toString())
     val clipboardCleanupAfterMinutes: Int = DEFAULT_CLIPBOARD_CLEANUP_AFTER_MINUTES,
-    @ColumnInfo(
-        name = "clipboard_size_limit_enabled",
-        defaultValue = DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED.toString(),
-    )
+    @ColumnInfo(name = "clipboard_size_limit_enabled", defaultValue = DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED.toString())
     val clipboardSizeLimitEnabled: Int = DEFAULT_CLIPBOARD_SIZE_LIMIT_ENABLED,
-    @ColumnInfo(
-        name = "clipboard_max_size",
-        defaultValue = DEFAULT_CLIPBOARD_MAX_SIZE.toString(),
-    )
+    @ColumnInfo(name = "clipboard_max_size", defaultValue = DEFAULT_CLIPBOARD_MAX_SIZE.toString())
     val clipboardMaxSize: Int = DEFAULT_CLIPBOARD_MAX_SIZE,
-    @ColumnInfo(
-        name = "position_padding",
-        defaultValue = DEFAULT_POSITION_PADDING.toString(),
-    )
+    @ColumnInfo(name = "position_padding", defaultValue = DEFAULT_POSITION_PADDING.toString())
     val positionPadding: Int = DEFAULT_POSITION_PADDING,
-    @ColumnInfo(
-        name = "use_private_clipboard",
-        defaultValue = DEFAULT_USE_PRIVATE_CLIPBOARD.toString(),
-    )
+    @ColumnInfo(name = "use_private_clipboard", defaultValue = DEFAULT_USE_PRIVATE_CLIPBOARD.toString())
     val usePrivateClipboard: Int = DEFAULT_USE_PRIVATE_CLIPBOARD,
-    @ColumnInfo(
-        name = "show_on_screen_keyboard",
-        defaultValue = DEFAULT_SHOW_ON_SCREEN_KEYBOARD.toString(),
-    )
+    @ColumnInfo(name = "show_on_screen_keyboard", defaultValue = DEFAULT_SHOW_ON_SCREEN_KEYBOARD.toString())
     val showOnScreenKeyboard: Int = DEFAULT_SHOW_ON_SCREEN_KEYBOARD,
-    @ColumnInfo(
-        name = "switch_to_letters_after_space",
-        defaultValue = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE.toString(),
-    )
+    @ColumnInfo(name = "switch_to_letters_after_space", defaultValue = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE.toString())
     val switchToLettersAfterSpace: Int = DEFAULT_SWITCH_TO_LETTERS_AFTER_SPACE,
-    @ColumnInfo(
-        name = "switch_ime_mode",
-        defaultValue = DEFAULT_SWITCH_IME_MODE.toString(),
-    )
+    @ColumnInfo(name = "switch_ime_mode", defaultValue = DEFAULT_SWITCH_IME_MODE.toString())
     val switchImeMode: Int = DEFAULT_SWITCH_IME_MODE,
+    @ColumnInfo(name = "keyboard_opacity", defaultValue = DEFAULT_KEYBOARD_OPACITY.toString())
+    val keyboardOpacity: Int = DEFAULT_KEYBOARD_OPACITY,
+    @ColumnInfo(name = "floating_handle_position", defaultValue = DEFAULT_FLOATING_HANDLE_POSITION.toString())
+    val floatingHandlePosition: Int = DEFAULT_FLOATING_HANDLE_POSITION,
+    @ColumnInfo(name = "floating_x_fraction", defaultValue = DEFAULT_FLOATING_X_FRACTION.toString())
+    val floatingXFraction: Float = DEFAULT_FLOATING_X_FRACTION,
+    @ColumnInfo(name = "floating_y_fraction", defaultValue = DEFAULT_FLOATING_Y_FRACTION.toString())
+    val floatingYFraction: Float = DEFAULT_FLOATING_Y_FRACTION,
+    @ColumnInfo(name = "key_animation_type", defaultValue = DEFAULT_KEY_ANIMATION_TYPE.toString())
+    val keyAnimationType: Int = DEFAULT_KEY_ANIMATION_TYPE,
+    @ColumnInfo(name = "swipe_trail_enabled", defaultValue = DEFAULT_SWIPE_TRAIL_ENABLED.toString())
+    val swipeTrailEnabled: Int = DEFAULT_SWIPE_TRAIL_ENABLED,
 )

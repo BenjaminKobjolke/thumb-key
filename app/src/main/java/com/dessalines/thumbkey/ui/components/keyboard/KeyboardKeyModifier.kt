@@ -41,29 +41,31 @@ internal fun keyboardKeyModifier(
     val environment = data.environment
     val config = environment.config
     val key = data.key
-    val baseModifier =
+    val inputModifier =
         Modifier
             .height(environment.keyHeight.dp)
             .width(environment.keyWidth.dp * key.widthMultiplier)
-            .padding(config.keyPadding.dp)
-            .clip(RoundedCornerShape(environment.keyRadius.dp))
-            .then(
-                if (environment.keyBorderWidth > 0.0) {
-                    Modifier.border(
-                        environment.keyBorderWidth.dp,
-                        state.borderColor,
-                        shape = RoundedCornerShape(environment.keyRadius.dp),
-                    )
-                } else {
-                    Modifier
-                },
-            ).background(color = state.backgroundColor)
+    val gestureModifier =
+        keyboardKeyDragModifier(
+            keyboardKeyTapModifier(inputModifier, gestureContext, state),
+            gestureContext,
+            state,
+        )
 
-    return keyboardKeyDragModifier(
-        keyboardKeyTapModifier(baseModifier, gestureContext, state),
-        gestureContext,
-        state,
-    )
+    return gestureModifier
+        .padding(config.keyPadding.dp)
+        .clip(RoundedCornerShape(environment.keyRadius.dp))
+        .then(
+            if (environment.keyBorderWidth > 0.0) {
+                Modifier.border(
+                    environment.keyBorderWidth.dp,
+                    state.borderColor,
+                    shape = RoundedCornerShape(environment.keyRadius.dp),
+                )
+            } else {
+                Modifier
+            },
+        ).background(color = state.backgroundColor)
 }
 
 @OptIn(ExperimentalFoundationApi::class)

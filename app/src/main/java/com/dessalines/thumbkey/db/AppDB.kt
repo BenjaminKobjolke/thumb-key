@@ -11,7 +11,7 @@ import com.dessalines.thumbkey.BuildConfig
 import java.util.concurrent.Executors
 
 @Database(
-    version = 33,
+    version = 34,
     entities = [AppSettings::class, Abbreviation::class, WordUsage::class, WordPair::class],
     exportSchema = true,
 )

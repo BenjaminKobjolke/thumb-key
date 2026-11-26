@@ -21,12 +21,13 @@ import com.dessalines.thumbkey.IMEService
 import com.dessalines.thumbkey.ui.theme.colorVariantToColor
 import com.dessalines.thumbkey.utils.KeyAction
 import com.dessalines.thumbkey.utils.KeyActionReleaseState
+import com.dessalines.thumbkey.utils.ReleasedKeyFeedback
 import com.dessalines.thumbkey.utils.buildTapActions
 import com.dessalines.thumbkey.utils.isPasswordField
 
 internal fun keyboardKeyId(data: ScreenKeyData): String {
     val config = data.environment.config
-    return data.key.toString() + data.ghostKey.toString() + config.animationHelperSpeed + config.animationSpeed + config.autoCapitalize +
+    return data.key.toString() + data.ghostKey.toString() + config.animationHelperSpeed + config.animationSpeed + config.keyAnimationType.ordinal + config.autoCapitalize +
         config.vibrateOnTap + config.vibrateOnSlide + config.soundOnTap + data.environment.legendHeight + data.environment.legendWidth +
         config.minSwipeLength +
         config.slideSensitivity + config.slideEnabled + config.slideCursorMovementMode + config.slideSpacebarDeadzoneEnabled +
@@ -68,7 +69,16 @@ internal fun KeyboardKey(data: ScreenKeyData) {
 
     Box(modifier = keyModifier) {
         KeyLegends(key, legendSizes, legendDisplay)
-        KeyReleaseAnimation(state.releasedKey.value, state.isPasswordField, config.animationSpeed, keySize.dp)
+        KeyReleaseAnimation(
+            feedback = state.releasedFeedback.value,
+            isPasswordField = state.isPasswordField,
+            config = KeyReleaseAnimationConfig(
+                type = config.keyAnimationType,
+                speed = config.animationSpeed,
+                helperSpeed = config.animationHelperSpeed,
+                keySize = keySize,
+            ),
+        )
     }
 }
 
@@ -78,7 +88,7 @@ private data class KeyboardKeyState(
     val interactionSource: MutableInteractionSource,
     val isPressed: Boolean,
     val isDragged: MutableState<Boolean>,
-    val releasedKey: MutableState<String?>,
+    val releasedFeedback: MutableState<ReleasedKeyFeedback?>,
     val gestureContext: KeyGestureContext,
     val tapActions: List<KeyAction>,
 )
@@ -93,8 +103,8 @@ private fun rememberKeyboardKeyState(data: ScreenKeyData): KeyboardKeyState {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isDragged = remember { mutableStateOf(false) }
-    val releasedKey = remember { mutableStateOf<String?>(null) }
-    val releaseState = KeyActionReleaseState(scope, isDragged, releasedKey, config.animationHelperSpeed)
+    val releasedFeedback = remember { mutableStateOf<ReleasedKeyFeedback?>(null) }
+    val releaseState = KeyActionReleaseState(isDragged, releasedFeedback)
     val gestureState = remember { KeyGestureState() }
     val key = data.key
     val tapActions = if (config.spacebarMultiTaps) buildTapActions(key) else listOf(key.center.action)
@@ -115,5 +125,5 @@ private fun rememberKeyboardKeyState(data: ScreenKeyData): KeyboardKeyState {
             scope,
         )
 
-    return KeyboardKeyState(isPasswordField, interactionSource, isPressed, isDragged, releasedKey, gestureContext, tapActions)
+    return KeyboardKeyState(isPasswordField, interactionSource, isPressed, isDragged, releasedFeedback, gestureContext, tapActions)
 }

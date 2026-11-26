@@ -26,7 +26,13 @@ import com.dessalines.thumbkey.R
 import com.dessalines.thumbkey.db.AppDB
 import com.dessalines.thumbkey.db.AppSettings
 import com.dessalines.thumbkey.db.AppSettingsViewModel
+import com.dessalines.thumbkey.db.DEFAULT_FLOATING_HANDLE_POSITION
+import com.dessalines.thumbkey.db.DEFAULT_FLOATING_X_FRACTION
+import com.dessalines.thumbkey.db.DEFAULT_FLOATING_Y_FRACTION
+import com.dessalines.thumbkey.db.DEFAULT_KEY_ANIMATION_TYPE
+import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_OPACITY
 import com.dessalines.thumbkey.db.DEFAULT_KEYBOARD_LAYOUT
+import com.dessalines.thumbkey.db.DEFAULT_SWIPE_TRAIL_ENABLED
 import com.dessalines.thumbkey.utils.SimpleTopAppBar
 import com.dessalines.thumbkey.utils.keyboardLayoutsSetFromDbIndexString
 import com.dessalines.thumbkey.utils.updateLayouts
@@ -146,6 +152,12 @@ private fun resetAppSettingsToDefault(appSettingsViewModel: AppSettingsViewModel
             id = 1,
             lastVersionCodeViewed = appSettingsViewModel.appSettings.value?.lastVersionCodeViewed ?: 0,
             viewedChangelog = appSettingsViewModel.appSettings.value?.viewedChangelog ?: 1,
+            keyboardOpacity = DEFAULT_KEYBOARD_OPACITY,
+            floatingHandlePosition = DEFAULT_FLOATING_HANDLE_POSITION,
+            floatingXFraction = DEFAULT_FLOATING_X_FRACTION,
+            floatingYFraction = DEFAULT_FLOATING_Y_FRACTION,
+            keyAnimationType = DEFAULT_KEY_ANIMATION_TYPE,
+            swipeTrailEnabled = DEFAULT_SWIPE_TRAIL_ENABLED,
         ),
     )
 }

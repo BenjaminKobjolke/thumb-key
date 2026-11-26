@@ -32,6 +32,8 @@ internal data class KeyboardEnvironment(
     val lastAction: MutableState<Pair<KeyAction, TimeMark>?>,
     val keyboardSettings: KeyboardDefinitionSettings,
     val config: KeyboardScreenConfig,
+    val swipeTrailState: SwipeTrailState,
+    val swipeTrailEnabled: Boolean,
     val capsLock: Boolean,
     val legendHeight: Int,
     val legendWidth: Int,
@@ -61,6 +63,8 @@ internal data class KeyboardEnvironmentInput(
     val onSwitchLanguage: () -> Unit,
     val onChangePosition: ((KeyboardPosition) -> KeyboardPosition) -> Unit,
     val onToggleHideLetters: () -> Unit,
+    val swipeTrailState: SwipeTrailState,
+    val swipeTrailEnabled: Boolean,
 )
 
 internal data class KeyboardCallbacksInput(
@@ -91,6 +95,8 @@ internal fun keyboardEnvironment(input: KeyboardEnvironmentInput): KeyboardEnvir
         lastAction = input.lastAction,
         keyboardSettings = input.keyboardDefinition.settings,
         config = config,
+        swipeTrailState = input.swipeTrailState,
+        swipeTrailEnabled = input.swipeTrailEnabled,
         capsLock = input.modeState.capsLock,
         legendHeight = config.legendHeight,
         legendWidth = config.legendWidth,

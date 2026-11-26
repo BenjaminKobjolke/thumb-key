@@ -169,7 +169,8 @@ private val CYCLE_LEFT_POSITIONS =
     mapOf(
         KeyboardPosition.Right to KeyboardPosition.Center,
         KeyboardPosition.Center to KeyboardPosition.Left,
-        KeyboardPosition.Left to KeyboardPosition.Dual,
+        KeyboardPosition.Left to KeyboardPosition.Floating,
+        KeyboardPosition.Floating to KeyboardPosition.Dual,
         KeyboardPosition.Dual to KeyboardPosition.Right,
     )
 
@@ -178,12 +179,13 @@ private val CYCLE_RIGHT_POSITIONS =
         KeyboardPosition.Left to KeyboardPosition.Center,
         KeyboardPosition.Center to KeyboardPosition.Right,
         KeyboardPosition.Right to KeyboardPosition.Dual,
-        KeyboardPosition.Dual to KeyboardPosition.Left,
+        KeyboardPosition.Dual to KeyboardPosition.Floating,
+        KeyboardPosition.Floating to KeyboardPosition.Left,
     )
 
-private fun cycleLeft(position: KeyboardPosition): KeyboardPosition = CYCLE_LEFT_POSITIONS.getValue(position)
+internal fun cycleLeft(position: KeyboardPosition): KeyboardPosition = CYCLE_LEFT_POSITIONS.getValue(position)
 
-private fun cycleRight(position: KeyboardPosition): KeyboardPosition = CYCLE_RIGHT_POSITIONS.getValue(position)
+internal fun cycleRight(position: KeyboardPosition): KeyboardPosition = CYCLE_RIGHT_POSITIONS.getValue(position)
 
 private fun handleOtherKeyAction(
     action: KeyAction,

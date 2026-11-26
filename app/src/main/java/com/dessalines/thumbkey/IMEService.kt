@@ -1,13 +1,16 @@
 package com.dessalines.thumbkey
 
 import android.inputmethodservice.InputMethodService
+import android.inputmethodservice.InputMethodService.Insets
 import android.util.Log
+import android.view.Window
 import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.IntRect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -21,6 +24,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.dessalines.thumbkey.db.DEFAULT_CLIPBOARD_HISTORY_ENABLED
 import com.dessalines.thumbkey.db.DEFAULT_DISABLE_FULLSCREEN_EDITOR
+import com.dessalines.thumbkey.db.DEFAULT_POSITION
 import com.dessalines.thumbkey.db.DEFAULT_SHOW_ON_SCREEN_KEYBOARD
 import com.dessalines.thumbkey.db.DEFAULT_SWITCH_IME_MODE
 import com.dessalines.thumbkey.db.DEFAULT_USE_PRIVATE_CLIPBOARD
@@ -32,6 +36,7 @@ import com.dessalines.thumbkey.utils.EMPTY_SUGGESTION_CONTEXT
 import com.dessalines.thumbkey.utils.ImeSwitchMode
 import com.dessalines.thumbkey.utils.KeyboardDefinition
 import com.dessalines.thumbkey.utils.KeyboardLayout
+import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.TAG
 import com.dessalines.thumbkey.utils.ThumbKeyClipboardManager
 import com.dessalines.thumbkey.utils.learnTypedWord
@@ -55,7 +60,6 @@ class IMEService :
             currentKeyboardDefinition =
                 resolveKeyboardDefinition(KeyboardLayout.entries[layoutIndex], appSettings.keyModifications)
         }
-
         val view = ComposeKeyboardView(this, settingsRepo, clipboardRepo)
         window?.window?.decorView?.let { decorView ->
             decorView.setViewTreeLifecycleOwner(this)
@@ -71,7 +75,6 @@ class IMEService :
     }
 
     var currentKeyboardDefinition: KeyboardDefinition? = null
-
     // While set, the keys type into this field of the keyboard's own, like sketch mode's
     // search, instead of the app's
     private var inputRedirect: InputConnection? = null
@@ -79,25 +82,27 @@ class IMEService :
     fun setInputRedirect(connection: InputConnection?) {
         inputRedirect = connection
     }
-
     val isInputRedirected: Boolean get() = inputRedirect != null
 
     // The framework's connection is null while no text field is bound, and the framework itself
     // calls this. Kotlin would check a platform value returned as non-null and throw, so pass it
     // through unchecked, as the Java method does. Nullable would break every caller.
     override fun getCurrentInputConnection(): InputConnection = inputRedirect ?: unchecked(super.getCurrentInputConnection())
-
     /** The app's text field, even while the keys type into the keyboard's own field. */
     val appInputConnection: InputConnection get() = super.getCurrentInputConnection()
 
     var suggestionContext by mutableStateOf(EMPTY_SUGGESTION_CONTEXT)
         private set
-
     var acceptBestSuggestion: (() -> Unit)? = null
 
     // Sketch mode's drawing, kept while the keyboard is closed and opened again
     val sketchState = SketchState()
     private var clipboardManager: ThumbKeyClipboardManager? = null
+    private val floatingImeWindow = FloatingImeWindow(this) { isFullscreenMode }
+    private fun isFloatingPosition(position: Int?): Boolean = (position ?: DEFAULT_POSITION) == KeyboardPosition.Floating.ordinal
+
+    fun onFloatingBounds(bounds: IntRect) = floatingImeWindow.onFloatingBounds(bounds)
+    fun onNavBarBottomInsetChanged(bottomPx: Int) = floatingImeWindow.onNavBarBottomInsetChanged(bottomPx)
 
     /**
      * This is called every time the keyboard is brought up.
@@ -116,24 +121,40 @@ class IMEService :
         // its drawing
         sketchState.searching = false
         sketchState.list = null
+        floatingImeWindow.setFloatingMode(
+            isFloatingPosition(
+                (application as ThumbkeyApplication).appSettingsRepository.appSettings.value?.position,
+            ),
+        )
         val view = this.setupView()
         this.setInputView(view)
+        window?.window?.let { floatingImeWindow.applyWindowLayout(it) }
     }
-
     // Lifecycle Methods
     private var lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
 
     private fun handleLifecycleEvent(event: Lifecycle.Event) = lifecycleRegistry.handleLifecycleEvent(event)
-
     override val lifecycle = lifecycleRegistry
 
     override fun onCreate() {
         super.onCreate()
         savedStateRegistryController.performRestore(null)
         handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-
         // Initialize clipboard manager
         val app = application as ThumbkeyApplication
+        floatingImeWindow.setFloatingMode(
+            isFloatingPosition(app.appSettingsRepository.appSettings.value?.position),
+        )
+        app.appSettingsRepository.appSettings.observe(this) { settings ->
+            if (floatingImeWindow.setFloatingMode(isFloatingPosition(settings?.position))) {
+                window?.window?.let { floatingImeWindow.applyWindowLayout(it) }
+                updateFullscreenMode()
+                window?.window?.decorView?.let { decorView ->
+                    decorView.requestApplyInsets()
+                    decorView.requestLayout()
+                }
+            }
+        }
         clipboardManager = ThumbKeyClipboardManager(this, app.clipboardRepository)
         clipboardManager?.startListening()
         clipboardManager?.clearExpired()
@@ -145,7 +166,25 @@ class IMEService :
         super.onDestroy()
         handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     }
+    override fun onConfigureWindow(
+        win: Window,
+        isFullscreen: Boolean,
+        isCandidatesOnly: Boolean,
+    ) {
+        super.onConfigureWindow(win, isFullscreen, isCandidatesOnly)
+        floatingImeWindow.applyWindowLayout(win, isFullscreen, isCandidatesOnly)
+    }
 
+    override fun onEvaluateFullscreenMode(): Boolean = floatingImeWindow.shouldEvaluateFullscreenMode(super.onEvaluateFullscreenMode())
+    override fun onComputeInsets(outInsets: Insets) {
+        super.onComputeInsets(outInsets)
+        floatingImeWindow.computeInsets(outInsets)
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        floatingImeWindow.onConfigurationChanged()
+    }
     // Cursor update Methods
     override fun onUpdateCursorAnchorInfo(cursorAnchorInfo: CursorAnchorInfo) {
         super.onUpdateCursorAnchorInfo(cursorAnchorInfo)
@@ -159,7 +198,6 @@ class IMEService :
                 cursorAnchorInfo.selectionStart != selectionStart ||
                     cursorAnchorInfo.selectionEnd != selectionEnd
             }
-
         currentKeyboardDefinition?.settings?.textProcessor?.handleCursorUpdate(
             this,
             CursorSelectionUpdate(
@@ -179,7 +217,6 @@ class IMEService :
                 extractSuggestionContext(appInputConnection.getTextBeforeCursor(128, 0)?.toString().orEmpty())
             }
     }
-
     override fun onEvaluateInputViewShown(): Boolean {
         val settingsRepo = (application as ThumbkeyApplication).appSettingsRepository
         val settings = settingsRepo.appSettings.getValue()
@@ -192,7 +229,6 @@ class IMEService :
         return super.onEvaluateInputViewShown() ||
             showOnScreenKeyboard
     }
-
     // Disable the fullscreen text editor if set by the user
     override fun onUpdateExtractingVisibility(ei: EditorInfo) {
         val settingsRepo = (application as ThumbkeyApplication).appSettingsRepository
@@ -205,7 +241,6 @@ class IMEService :
     }
 
     fun didCursorMove(): Boolean = cursorMoved
-
     fun ignoreNextCursorMove() {
         // This gets reset on the next call to `onUpdateCursorAnchorInfo`
         ignoreCursorMove = true
@@ -217,7 +252,6 @@ class IMEService :
         SummeraDictation.onKeyboardHidden(this)
         super.onWindowHidden()
     }
-
     override fun onFinishInputView(finishingInput: Boolean) {
         // Must run before super, which commits any composing text as it stands.
         // Running after it would let the processor write its pending text a second time.
@@ -234,7 +268,6 @@ class IMEService :
     private var cursorMoved: Boolean = false
     private var selectionStart: Int = 0
     private var selectionEnd: Int = 0
-
     // ViewModelStore Methods
     override val viewModelStore = ViewModelStore()
 
@@ -242,7 +275,6 @@ class IMEService :
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
     override val savedStateRegistry: SavedStateRegistry =
         savedStateRegistryController.savedStateRegistry
-
     fun clipboardUsePrivate(): Boolean {
         val settingsRepo = (application as ThumbkeyApplication).appSettingsRepository
         val settings = settingsRepo.appSettings.getValue()
@@ -256,11 +288,9 @@ class IMEService :
         val settings = settingsRepo.appSettings.getValue()
         return ImeSwitchMode.entries[settings?.switchImeMode ?: DEFAULT_SWITCH_IME_MODE]
     }
-
     fun clipboardAddPrivateClip(text: String): Unit? = clipboardManager?.addPrivateClip(text)
 
     fun clipboardWasLastCopyDoneViaSystem(): Boolean = clipboardManager?.wasLastCopyOperationDoneViaSystem() ?: true
-
     fun clipboardGetLastClip(): String? = clipboardManager?.getLastClip()
 }
 

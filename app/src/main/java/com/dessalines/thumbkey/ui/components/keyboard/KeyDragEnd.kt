@@ -7,6 +7,7 @@ import com.dessalines.thumbkey.utils.CircularDragAction
 import com.dessalines.thumbkey.utils.KeyAction
 import com.dessalines.thumbkey.utils.KeyItemC
 import com.dessalines.thumbkey.utils.SlideType
+import com.dessalines.thumbkey.utils.SwipeDirection
 import com.dessalines.thumbkey.utils.SwipeNWay
 import com.dessalines.thumbkey.utils.circularDirection
 import com.dessalines.thumbkey.utils.doneKeyAction
@@ -18,6 +19,7 @@ private enum class DragEndEffect { NONE, DISPATCH_ACTION, DELETE_SELECTION, FINI
 private data class DragEndResult(
     val action: KeyAction,
     val effect: DragEndEffect,
+    val originDirection: SwipeDirection? = null,
 )
 
 /** Finishes a drag and returns the action recorded for subsequent multi-tap handling. */
@@ -28,7 +30,7 @@ internal fun handleKeyDragEnd(
 ): KeyAction {
     val result = resolveDragEnd(ctx, keys, gesture)
     applyDragEndEffect(ctx, result)
-    doneKeyAction(result.action, ctx.releaseState)
+    doneKeyAction(result.action, ctx.releaseState, result.originDirection)
     return result.action
 }
 
@@ -45,7 +47,8 @@ private fun resolveDragEnd(
 
         needsSwipeResolution(ctx) -> {
             ctx.state.hasSlideMoveCursorTriggered = false
-            DragEndResult(resolveSwipeAction(keys, gesture, SwipeSettings.from(ctx.data.environment.config)), DragEndEffect.DISPATCH_ACTION)
+            val resolved = resolveSwipeActionWithOrigin(keys, gesture, SwipeSettings.from(ctx.data.environment.config))
+            DragEndResult(resolved.first, DragEndEffect.DISPATCH_ACTION, resolved.second)
         }
 
         ctx.data.key.slideType == SlideType.DELETE -> {
@@ -139,17 +142,23 @@ internal fun resolveSwipeAction(
     keys: SwipeKeys,
     gesture: SwipeGesture,
     settings: SwipeSettings,
-): KeyAction {
+): KeyAction = resolveSwipeActionWithOrigin(keys, gesture, settings).first
+
+internal fun resolveSwipeActionWithOrigin(
+    keys: SwipeKeys,
+    gesture: SwipeGesture,
+    settings: SwipeSettings,
+): Pair<KeyAction, SwipeDirection?> {
     val finalOffsetThreshold = settings.minSwipeLength * DRAG_RETURN_THRESHOLD_FACTOR
     val maxOffsetBigEnough = gesture.maxOffset.getDistance() >= settings.minSwipeLength
     val finalOffsetSmallEnough = isFinalOffsetSmallEnough(keys, gesture, settings, finalOffsetThreshold)
 
     return if (maxOffsetBigEnough && finalOffsetSmallEnough) {
-        circularAction(keys, gesture, settings, finalOffsetThreshold)
-            ?: dragReturnAction(keys, gesture, settings)
-            ?: keys.key.center.action
+        circularAction(keys, gesture, settings, finalOffsetThreshold)?.let { it to null }
+            ?: dragReturnActionWithOrigin(keys, gesture, settings)
+            ?: (keys.key.center.action to null)
     } else {
-        swipeAction(keys, gesture, settings) ?: keys.key.center.action
+        swipeActionWithOrigin(keys, gesture, settings) ?: (keys.key.center.action to null)
     }
 }
 
@@ -192,26 +201,28 @@ private fun circularKeyAction(
         CircularDragAction.Numeric -> keys.numericKey?.center?.action
     }
 
-private fun dragReturnAction(
+private fun dragReturnActionWithOrigin(
     keys: SwipeKeys,
     gesture: SwipeGesture,
     settings: SwipeSettings,
-): KeyAction? {
+): Pair<KeyAction, SwipeDirection?>? {
     if (!settings.dragReturnEnabled) return null
     val direction =
         swipeDirection(gesture.maxOffset.x, gesture.maxOffset.y, settings.minSwipeLength, swipeType(keys))
-    return keys.key.getSwipe(direction)?.swipeReturnAction
+    val action = keys.key.getSwipe(direction)?.swipeReturnAction
         ?: keys.oppositeCaseKey?.getSwipe(direction)?.action
         ?: keys.ghostKey?.getSwipe(direction)?.swipeReturnAction
+    return action?.let { it to direction }
 }
 
-private fun swipeAction(
+private fun swipeActionWithOrigin(
     keys: SwipeKeys,
     gesture: SwipeGesture,
     settings: SwipeSettings,
-): KeyAction? {
+): Pair<KeyAction, SwipeDirection?>? {
     val direction = swipeDirection(gesture.offsetX, gesture.offsetY, settings.minSwipeLength, swipeType(keys))
-    return keys.key.getSwipe(direction)?.action ?: keys.ghostKey?.getSwipe(direction)?.action
+    val action = keys.key.getSwipe(direction)?.action ?: keys.ghostKey?.getSwipe(direction)?.action
+    return action?.let { it to direction }
 }
 
 private fun swipeType(keys: SwipeKeys) = if (keys.ghostKey == null) keys.key.swipeType else SwipeNWay.EIGHT_WAY

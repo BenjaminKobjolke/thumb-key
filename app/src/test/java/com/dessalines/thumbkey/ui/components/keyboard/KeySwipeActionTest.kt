@@ -5,6 +5,8 @@ import com.dessalines.thumbkey.utils.CircularDragAction
 import com.dessalines.thumbkey.utils.KeyAction
 import com.dessalines.thumbkey.utils.KeyC
 import com.dessalines.thumbkey.utils.KeyItemC
+import com.dessalines.thumbkey.utils.SwipeDirection
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
 import kotlin.math.PI
@@ -30,6 +32,16 @@ class KeySwipeActionTest {
         val ghostKey = key("ghost").copy(right = key("ghost right").center)
         val ghostAction = resolveSwipeAction(keys(key("center"), ghostKey = ghostKey), rightSwipe(), settings())
         assertSame(ghostKey.right!!.action, ghostAction)
+    }
+
+    @Test
+    fun resolvedSwipeCarriesItsOriginDirectionIntoFeedback() {
+        val key = key("center").copy(right = key("right").center)
+
+        val resolved = resolveSwipeActionWithOrigin(keys(key), rightSwipe(), settings())
+
+        assertSame(key.right!!.action, resolved.first)
+        assertEquals(SwipeDirection.RIGHT, resolved.second)
     }
 
     @Test

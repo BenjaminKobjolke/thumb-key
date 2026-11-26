@@ -2,10 +2,6 @@ package com.dessalines.thumbkey.utils
 
 import androidx.compose.runtime.MutableState
 import com.dessalines.thumbkey.IMEService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 internal fun performKeyAction(
     action: KeyAction,
@@ -23,27 +19,28 @@ fun buildTapActions(keyItem: KeyItemC): List<KeyAction> {
 }
 
 internal data class KeyActionReleaseState(
-    val scope: CoroutineScope,
     val pressed: MutableState<Boolean>,
-    val releasedKey: MutableState<String?>,
-    val animationHelperSpeed: Int,
+    val releasedFeedback: MutableState<ReleasedKeyFeedback?>,
 )
 
 internal fun doneKeyAction(
     action: KeyAction,
     releaseState: KeyActionReleaseState,
+    originDirection: SwipeDirection? = null,
 ) {
     releaseState.pressed.value = false
-    releaseState.scope.launch {
-        delay(releaseState.animationHelperSpeed.toLong().milliseconds)
-        releaseState.releasedKey.value = null
-    }
-    releaseState.releasedKey.value =
+    val displayText =
         when (action) {
             is KeyAction.CommitText -> action.text
             is KeyAction.Sketch.CommitCandidate -> action.displayText
             else -> null
-        }
+        } ?: return
+    releaseState.releasedFeedback.value =
+        ReleasedKeyFeedback(
+            text = displayText,
+            originDirection = originDirection,
+            id = (releaseState.releasedFeedback.value?.id ?: 0L) + 1L,
+        )
 }
 
 internal fun autoCapitalize(

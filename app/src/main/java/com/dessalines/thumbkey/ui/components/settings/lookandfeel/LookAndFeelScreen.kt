@@ -64,6 +64,7 @@ fun LookAndFeelScreen(
                     LookAndFeelKeySizingItems(form, ::updateLookAndFeel)
                     LookAndFeelKeyAppearanceItems(form, ::updateLookAndFeel)
                     LookAndFeelAnimationItems(form, ::updateLookAndFeel)
+                    LookAndFeelFloatingItems(form, ::updateLookAndFeel)
                     SettingsDivider()
                     LookAndFeelHapticItems(form, ::updateLookAndFeel)
                     SettingsDivider()

@@ -2,7 +2,14 @@ package com.dessalines.thumbkey.ui.components.keyboard
 
 import android.content.Context
 import com.dessalines.thumbkey.db.AppSettings
+import com.dessalines.thumbkey.db.DEFAULT_FLOATING_HANDLE_POSITION
+import com.dessalines.thumbkey.db.DEFAULT_FLOATING_X_FRACTION
+import com.dessalines.thumbkey.db.DEFAULT_FLOATING_Y_FRACTION
+import com.dessalines.thumbkey.db.MAX_KEYBOARD_OPACITY
+import com.dessalines.thumbkey.db.MIN_KEYBOARD_OPACITY
 import com.dessalines.thumbkey.utils.CircularDragAction
+import com.dessalines.thumbkey.utils.FloatingHandlePosition
+import com.dessalines.thumbkey.utils.KeyAnimationType
 import com.dessalines.thumbkey.utils.KeyboardLayout
 import com.dessalines.thumbkey.utils.KeyboardPosition
 import com.dessalines.thumbkey.utils.getAutoKeyWidth
@@ -45,9 +52,15 @@ data class KeyboardScreenConfig(
     val slideHoldEnabled: Boolean,
     val animationSpeed: Int,
     val animationHelperSpeed: Int,
+    val keyAnimationType: KeyAnimationType,
     val minSwipeLength: Int,
     val slideSensitivity: Int,
     val clipboardHistoryEnabled: Boolean,
+    val keyboardOpacity: Int,
+    val floatingHandlePosition: FloatingHandlePosition,
+    val floatingXFraction: Float,
+    val floatingYFraction: Float,
+    val swipeTrailEnabled: Boolean,
 ) {
     private data class KeyDimensions(
         val width: Int,
@@ -60,8 +73,8 @@ data class KeyboardScreenConfig(
             context: Context,
         ): KeyDimensions {
             val width =
-                if (settings.autoSizeKeys.toBool()) {
-                    getAutoKeyWidth(settings.keyboardLayout, settings.keyPadding, KeyboardPosition.entries[settings.position], context)
+                if (settings.autoSizeKeys.toBool() && KeyboardPosition.fromStoredValue(settings.position) != KeyboardPosition.Floating) {
+                    getAutoKeyWidth(settings.keyboardLayout, settings.keyPadding, KeyboardPosition.fromStoredValue(settings.position), context)
                 } else {
                     settings.keyWidth
                 }
@@ -74,17 +87,14 @@ data class KeyboardScreenConfig(
             context: Context,
         ): KeyboardScreenConfig {
             val keyboardLayout = settings.keyboardLayout
-            val position = KeyboardPosition.entries[settings.position]
+            val position = KeyboardPosition.fromStoredValue(settings.position)
             val keyPadding = settings.keyPadding
             val dimensions = keyDimensions(settings, context)
 
             return KeyboardScreenConfig(
-                layout = KeyboardLayout.entries[keyboardLayout],
-                keyMods = settings.keyModifications,
-                position = position,
-                positionPadding = settings.positionPadding,
-                pushupSize = settings.pushupSize,
-                ignoreBottomPadding = settings.ignoreBottomPadding.toBool(),
+                layout = KeyboardLayout.entries[keyboardLayout], keyMods = settings.keyModifications,
+                position = position, positionPadding = settings.positionPadding,
+                pushupSize = settings.pushupSize, ignoreBottomPadding = settings.ignoreBottomPadding.toBool(),
                 autoCapitalize = settings.autoCapitalize.toBool(),
                 spacebarMultiTaps = settings.spacebarMultiTaps.toBool(),
                 switchToLettersAfterSpace = settings.switchToLettersAfterSpace.toBool(),
@@ -92,13 +102,10 @@ data class KeyboardScreenConfig(
                 slideCursorMovementMode = settings.slideCursorMovementMode,
                 slideSpacebarDeadzoneEnabled = settings.slideSpacebarDeadzoneEnabled.toBool(),
                 slideBackspaceDeadzoneEnabled = settings.slideBackspaceDeadzoneEnabled.toBool(),
-                keyBorderWidth = settings.keyBorderWidth,
-                vibrateOnTap = settings.vibrateOnTap.toBool(),
-                vibrateOnSlide = settings.vibrateOnSlide.toBool(),
-                soundOnTap = settings.soundOnTap.toBool(),
-                hideLetters = settings.hideLetters.toBool(),
-                hideSymbols = settings.hideSymbols.toBool(),
-                backdropEnabled = settings.backdropEnabled.toBool(),
+                keyBorderWidth = settings.keyBorderWidth, vibrateOnTap = settings.vibrateOnTap.toBool(),
+                vibrateOnSlide = settings.vibrateOnSlide.toBool(), soundOnTap = settings.soundOnTap.toBool(),
+                hideLetters = settings.hideLetters.toBool(), hideSymbols = settings.hideSymbols.toBool(),
+                backdropEnabled = settings.backdropEnabled.toBool() && position != KeyboardPosition.Floating,
                 keyPadding = keyPadding,
                 legendWidth = dimensions.width,
                 legendHeight = dimensions.height,
@@ -114,9 +121,15 @@ data class KeyboardScreenConfig(
                 slideHoldEnabled = settings.slideHoldEnabled.toBool(),
                 animationSpeed = settings.animationSpeed,
                 animationHelperSpeed = settings.animationHelperSpeed,
+                keyAnimationType = KeyAnimationType.entries.getOrElse(settings.keyAnimationType) { KeyAnimationType.SlideFromTop },
                 minSwipeLength = settings.minSwipeLength,
                 slideSensitivity = settings.slideSensitivity,
                 clipboardHistoryEnabled = settings.clipboardHistoryEnabled.toBool(),
+                keyboardOpacity = settings.keyboardOpacity.coerceIn(MIN_KEYBOARD_OPACITY, MAX_KEYBOARD_OPACITY),
+                floatingHandlePosition = FloatingHandlePosition.entries.getOrElse(settings.floatingHandlePosition) { FloatingHandlePosition.entries[DEFAULT_FLOATING_HANDLE_POSITION] },
+                floatingXFraction = settings.floatingXFraction.takeIf(Float::isFinite)?.coerceIn(0f, 1f) ?: DEFAULT_FLOATING_X_FRACTION,
+                floatingYFraction = settings.floatingYFraction.takeIf(Float::isFinite)?.coerceIn(0f, 1f) ?: DEFAULT_FLOATING_Y_FRACTION,
+                swipeTrailEnabled = settings.swipeTrailEnabled.toBool(),
             )
         }
     }
