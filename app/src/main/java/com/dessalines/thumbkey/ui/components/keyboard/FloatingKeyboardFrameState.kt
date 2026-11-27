@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Density
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.abs
 
+/** Groups the remembered gesture, drag, position, and environment state used by the floating keyboard frame. */
 internal data class FloatingKeyboardFrameState(
     val gesture: FloatingGestureState,
     val dragPin: MutableState<FloatingPin?>,
@@ -32,6 +33,15 @@ internal data class FloatingKeyboardFrameState(
     val coroutineScope: CoroutineScope,
     val slideHapticConstant: Int,
 )
+
+internal fun normalizeFloatingKeyboardPosition(
+    xFraction: Float,
+    yFraction: Float,
+): Offset =
+    Offset(
+        xFraction.coerceIn(0f, 1f),
+        yFraction.coerceIn(0f, 1f),
+    )
 
 @Composable
 internal fun rememberFloatingKeyboardFrameState(config: FloatingKeyboardFrameConfig): FloatingKeyboardFrameState {
@@ -52,11 +62,7 @@ internal fun rememberFloatingKeyboardFrameState(config: FloatingKeyboardFrameCon
     val isDragging = remember { mutableStateOf(false) }
     val isHandlePressed = remember { mutableStateOf(false) }
     val lastActivityTick = remember { mutableIntStateOf(0) }
-    val storedPosition =
-        Offset(
-            config.floatingXFraction.coerceIn(0f, 1f),
-            config.floatingYFraction.coerceIn(0f, 1f),
-        )
+    val storedPosition = normalizeFloatingKeyboardPosition(config.floatingXFraction, config.floatingYFraction)
 
     LaunchedEffect(storedPosition) {
         val pending = gesture.pendingPosition
